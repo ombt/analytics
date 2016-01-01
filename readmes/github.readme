@@ -1,0 +1,50 @@
+
+login: ombt
+password: XXXXXXXXXX
+
+to set user and email:
+
+ombt> git config --global user.email "mike.a.rumore@gmail.com"
+ombt> git config --global user.name "mike rumore"
+
+if behind a proxy, then do somthing like this:
+
+ombt> git config --global http.proxy "http://rm-proxy.panasonic.com:8102/"
+
+to clone a repo and maintain changes:
+
+ombt> git clone https://github.com/ombt/ombt.git
+ombt> git gui
+
+ombt> git clone https://github.com/ombt/analytics.git
+ombt> git gui
+
+to get all the repos, do this:
+
+ombt> git clone https://github.com/ombt/ombt.git
+ombt> git clone https://github.com/ombt/analytics.git
+ombt> git clone https://github.com/ombt/csv.git
+ombt> git clone https://github.com/ombt/db.git
+ombt> git clone https://github.com/ombt/raw.git
+
+to push new files or changes:
+
+ombt> git add .
+ombt> git commit
+ombt> git push
+
+for csv and db directories, use these commands to keep the original
+files. the .gitignore files are set up to ignore all csv files and
+expanded sqlite database files. only the compressed files are pushed
+to git hub.
+
+to compress, but keep the original file:
+
+gzip --keep *.csv
+or
+gzip --keep <sqlite-db-file>
+
+to uncompress and keep the gz file around:
+
+gunzip --keep *.gz
+
