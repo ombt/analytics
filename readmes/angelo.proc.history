@@ -1,0 +1,25 @@
+cd csv
+export CSV_BASE_PATH=$(pwd)
+cd ..
+cd raw
+lf
+cd t*
+lf
+cd an*
+lf
+cd cells
+lf
+find *-[12345]-* -type f -print | maih2csv.pl -l out -c -R angelo_npm_w1
+cd
+cd ana*
+lf
+cd csv
+cd ..
+cd db
+export DB_BASE_PATH=$(pwd)
+cd ../csv
+cd *
+cd *
+csv2db.pl -r -f -R angelo_npm_w1 *csv
+csv2dt
+.pl -r -f -R angelo_npm_w1 *csv

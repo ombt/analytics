@@ -1,0 +1,47 @@
+#
+export OMBT_ANALYTICS_BASE=$(pwd)
+#
+export OMBT_CSV_BASE_PATH=${OMBT_ANALYTICS_BASE}/csv
+export OMBT_DB_BASE_PATH=${OMBT_ANALYTICS_BASE}/db
+export OMBT_HW_BASE_PATH=${OMBT_ANALYTICS_BASE}/hw
+export OMBT_RAW_BASE_PATH=${OMBT_ANALYTICS_BASE}/raw
+export OMBT_RDATA_BASE_PATH=${OMBT_ANALYTICS_BASE}/rdata
+#
+PATH="${OMBT_ANALYTICS_BASE}/bin:${PATH}"
+#
+cdbase ()
+{
+    cd $OMBT_ANALYTICS_BASE "${@}"
+    pwd
+}
+cdroot ()
+{
+    cd $OMBT_ANALYTICS_BASE "${@}"
+    pwd
+}
+cddb ()
+{
+    cd $OMBT_DB_BASE_PATH "${@}"
+    pwd
+}
+cdcsv ()
+{
+    cd $OMBT_CSV_BASE_PATH "${@}"
+    pwd
+}
+cdraw ()
+{
+    cd $OMBT_RAW_BASE_PATH "${@}"
+    pwd
+}
+cdrdata ()
+{
+    cd $OMBT_RDATA_BASE_PATH "${@}"
+    pwd
+}
+cdhw ()
+{
+    cd $OMBT_HW_BASE_PATH "${@}"
+    pwd
+}
+
