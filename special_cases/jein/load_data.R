@@ -3,15 +3,15 @@ jein_load_db_data <- function(nrows=-1,at_home=FALSE)
 {
     print(paste("Start ...", Sys.time()))
     #
-    db_path = "/home/MRumore/analytics/db"
-    db_name = "jein"
+    # db_path = "/home/MRumore/analytics/db"
+    # db_name = "jein"
     #
-    if ((at_home) ||
-        (dirname(getwd()) == "/home/ombt/sandbox/ombt/rsrc"))
-    {
+    # if ((at_home) ||
+        # (dirname(getwd()) == "/home/ombt/sandbox/ombt/rsrc"))
+    # {
         db_path = "./"
         db_name = "CSV2DB"
-    }
+    # }
     #
     db = sqlite_open_db(db_path, db_name)
     #
