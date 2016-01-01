@@ -25,3 +25,8 @@ lhead <- function(dfrm)
 {
     lapply(dfrm, head)
 }
+
+lnames <- function(dfrm) 
+{
+    lapply(dfrm, names)
+}
