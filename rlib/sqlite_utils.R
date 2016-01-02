@@ -146,7 +146,8 @@ sqlite_load_nv_table_from_db <- function(db, table_name, nrows=0)
         NAME  = nv_tbl[irec,"NAME"]
         VALUE = nv_tbl[irec,"VALUE"]
         #
-        new_tbl[FID,NAME] = VALUE
+        # OLD = new_tbl[FID,NAME] = VALUE
+        new_tbl[new_tbl$FID==FID,NAME] = VALUE
     }
     #
     new_tbl
