@@ -1,0 +1,148 @@
+#
+# export PM_FTS_ENABLE FALSE
+# export PM_FTS_HUNG_MON TRUE
+# export FTS_COMPRESSION FALSE
+# export HEALTHCHECK_ENABLE F
+# export FEEDER_ANYWHERE_ENABLE F
+# export FEEDER_ANYWHERE_ENABLE=T
+# export GANG_WRITE_ENABLE F
+# export LNB_MAIN_SPLICE_WRITE F
+#
+# enable tasklib debug statements.
+#
+# export TASK_LIB_DEBUG="F"
+# export TASK_LIB_DEBUG="S"
+#
+# LNB_SIM_WITH_MOUNT="Module-1 Module-2"
+# LNB_SIM_WITHOUT_MOUNT="Module-3 Module-4"
+# LNB_SIM_WITHOUT_MOUNT="Module-2"
+# LNB_SIM_WITH_MOUNT=LNB1
+# LNB_SIM_WITH_MOUNT="Module-5 Module-7"
+#
+# LNB_SIM_WITH_MOUNT=LNB1
+# LNB_SIM_WITHOUT_MOUNT=LNB1
+LNB_SIM_WITHOUT_MOUNT="Module-5"
+# LNB_SIM_WITH_MOUNT="Module-3"
+#
+# LNB_AUDIT=LNB1
+LNB_AUDIT=
+#
+# LPMD=
+LPMD="Route-5 1005"
+#
+# PT200_ARGS="PT-01 1002" # PT-HOST ROUTE_ID
+PT200_ARGS=
+#
+cd ~/cim
+#
+killcim
+#
+umount.all.lnb
+umount.all.pt200
+#
+mount
+sleep 2
+#
+zapnode ~/cim/data
+zapnode ~/cim/pfadata/cells
+#
+db.truncate.all.tables
+db.truncate.prod.alert.tables
+db.truncate.lock.tables
+#
+pm_start
+#
+route_editor &
+route_status &
+system_config &
+#
+touch /tmp/restart.$$ 
+#
+cd cimc_event_loggerd
+#
+grep -q LOCAL_DEBUG .DEBUG_FLAGS
+if [[ $? -ne 0 ]]
+then
+	echo -e "\nERROR: cimc_event_loggerd NOT built with LOCAL_DEBUG!\n"
+	exit 2
+fi
+#
+restart.process /tmp/restart.$$ 2 cimc_event_loggerd &
+cd ..
+#
+cd system_checker_daemon
+grep -q LOCAL_DEBUG .DEBUG_FLAGS
+if [[ $? -ne 0 ]]
+then
+	echo -e "\nERROR: system_checker_daemon NOT built with LOCAL_DEBUG!\n"
+	exit 2
+fi
+# strace -F -f system_checker_daemon >out2 2>&1 &
+restart.process /tmp/restart.$$ 2 system_checker_daemon &
+#
+# hack to cause problems !!!
+# echo "STARTING SECOND SYSTEM CHECKER DAEMON !!!"
+# (sleep 10; ./system_checker_daemon;) &
+#
+cd ..
+#
+cd lnb_interface 
+#
+if [[ ! -z "${LNB_SIM_WITH_MOUNT}" ]]
+then
+	for module in ${LNB_SIM_WITH_MOUNT}
+	do
+		restart.process /tmp/restart.$$ 2 lnb_interface -c ${module} 1>/tmp/${module}.c.out 2>&1 &
+		restart.process /tmp/restart.$$ 2 lnb_interface -m ${module} 1>/tmp/${module}.m.out 2>&1 &
+		restart.process /tmp/restart.$$ 2 lnb_interface -s 2 -U -t ${module} 1>/tmp/${module}.t.out 2>&1 &
+	done
+fi
+#
+if [[ ! -z "${LNB_SIM_WITHOUT_MOUNT}" ]]
+then
+	for module in ${LNB_SIM_WITHOUT_MOUNT}
+	do
+		restart.process /tmp/restart.$$ 2 lnb_interface -c ${module} 1>/tmp/${module}.c.out 2>&1 &
+		restart.process /tmp/restart.$$ 2 lnb_interface -m ${module} 1>/tmp/${module}.m.out 2>&1 &
+		restart.process /tmp/restart.$$ 2 lnb_interface -s 1 -U -t ${module} 1>/tmp/${module}.t.out 2>&1 &
+	done
+fi
+#
+cd ..
+#
+cd lnb_data_auditor
+#
+if [[ ! -z "${LNB_AUDIT}" ]]
+then
+	if [[ -x "lnb_data_auditor" ]]
+	then
+		for module in ${LNB_AUDIT}
+		do
+			restart.process /tmp/restart.$$ 2 lnb_data_auditor -m ${module} 1>/tmp/${module}.out 2>&1 &
+		done
+	fi
+fi
+#
+cd ..
+#
+cd pt_file_monitor
+#
+if [[ ! -z "${PT200_ARGS}" ]]
+then
+	restart.process /tmp/restart.$$ 2 pt_file_monitor ${PT200_ARGS} 1>/tmp/pt.out 2>&1 &
+fi
+#
+cd ..
+#
+db_query_tool &
+#
+system_checker &
+#
+if [[ ! -z "${LPMD}" ]]
+then
+	cd lpmd
+	restart.process /tmp/restart.$$ 2 ./lpmd ${LPMD} 1>/tmp/lpmd.out 2>&1 &
+	cd ..
+fi
+#
+exit 0

@@ -1,0 +1,58 @@
+-- start table: panel_placement_header
+-- start metadata:
+-- table_name	field_name	is_identity	user_type_id	type_name	precision
+-- panel_placement_header	panel_equipment_id	0	108	numeric	38
+-- panel_placement_header	equipment_id	0	108	numeric	38
+-- panel_placement_header	master_placement_id	0	108	numeric	38
+-- panel_placement_header	panel_placement_id	1	108	numeric	38
+-- panel_placement_header	timestamp	0	108	numeric	38
+-- panel_placement_header	trx_product_id	0	231	nvarchar	0
+-- end metadata:
+-- end table: panel_placement_header
+
+-- start table: panel_placement_details
+-- start metadata:
+-- table_name	field_name	is_identity	user_type_id	type_name	precision
+-- panel_placement_details	panel_placement_id	0	108	numeric	38
+-- panel_placement_details	reel_id	0	108	numeric	38
+-- panel_placement_details	nc_placement_id	0	108	numeric	38
+-- panel_placement_details	pattern_no	0	108	numeric	38
+-- panel_placement_details	z_num	0	108	numeric	38
+-- panel_placement_details	pu_num	0	231	nvarchar	0
+-- panel_placement_details	part_no	0	262	udt_part_no	0
+-- panel_placement_details	custom_area1	0	264	udt_lot_no	0
+-- panel_placement_details	custom_area2	0	263	udt_vendor_no	0
+-- panel_placement_details	custom_area3	0	231	nvarchar	0
+-- panel_placement_details	custom_area4	0	262	udt_part_no	0
+-- panel_placement_details	ref_designator	0	231	nvarchar	0
+-- end metadata:
+-- end table: panel_placement_details
+
+select 
+    count(master_placement_id) as 'different ids count'
+from
+    panel_placement_header
+where
+    master_placement_id <> panel_placement_id
+go
+select 
+    count(master_placement_id) as 'equal ids count'
+from
+    panel_placement_header
+where
+    master_placement_id = panel_placement_id
+go
+
+
+-- select 
+--     panel_equipment_id,
+--     equipment_id,
+--     master_placement_id,
+--     panel_placement_id,
+--     timestamp,
+--     trx_product_id
+-- from
+--     panel_placement_header
+-- where
+--     master_placement_id <> panel_placement_id
+-- go

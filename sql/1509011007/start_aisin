@@ -1,0 +1,85 @@
+#
+# export PM_FTS_ENABLE FALSE
+# export PM_FTS_HUNG_MON TRUE
+# export FTS_COMPRESSION FALSE
+# export HEALTHCHECK_ENABLE F
+# export FEEDER_ANYWHERE_ENABLE F
+# export FEEDER_ANYWHERE_ENABLE=T
+# export GANG_WRITE_ENABLE F
+# export LNB_MAIN_SPLICE_WRITE F
+#
+# enable tasklib debug statements.
+#
+# export TASK_LIB_DEBUG="F"
+# export TASK_LIB_DEBUG="S"
+#
+# LNB_SIM_WITH_MOUNT="Module-1 Module-2"
+# LNB_SIM_WITHOUT_MOUNT="Module-3 Module-4"
+# LNB_SIM_WITHOUT_MOUNT="Module-2"
+# LNB_SIM_WITH_MOUNT=LNB1
+# LNB_SIM_WITH_MOUNT="Module-5 Module-7"
+#
+# LNB_SIM_WITH_MOUNT=LNB1
+LNB_SIM_WITHOUT_MOUNT="NPM_LNB_AS8461_A NPM_LNB_AS8461_B"
+#
+# LNB_SIM_WITHOUT_MOUNT="Module-3"
+# LNB_SIM_WITH_MOUNT="Module-3"
+#
+# LNB_AUDIT=LNB1
+LNB_AUDIT=
+#
+# PT200_ARGS="PT-01 1002" # PT-HOST ROUTE_ID
+PT200_ARGS=
+#
+cd ~/cim
+#
+killcim
+#
+umount.all.lnb
+umount.all.pt200
+#
+mount
+sleep 2
+#
+zapnode ~/cim/data
+zapnode ~/cim/pfadata
+#
+# db.truncate.all.tables
+# db.truncate.prod.alert.tables
+# db.truncate.lock.tables
+#
+pm_start
+#
+route_editor &
+system_config &
+#
+touch /tmp/restart.$$ 
+#
+cd lnb_interface 
+#
+if [[ ! -z "${LNB_SIM_WITH_MOUNT}" ]]
+then
+	for module in ${LNB_SIM_WITH_MOUNT}
+	do
+		restart.process /tmp/restart.$$ 2 lnb_interface -c ${module} 1>/tmp/${module}.c.out 2>&1 &
+		restart.process /tmp/restart.$$ 2 lnb_interface -m ${module} 1>/tmp/${module}.m.out 2>&1 &
+		restart.process /tmp/restart.$$ 2 lnb_interface -s 2 -U -t ${module} 1>/tmp/${module}.t.out 2>&1 &
+	done
+fi
+#
+if [[ ! -z "${LNB_SIM_WITHOUT_MOUNT}" ]]
+then
+	for module in ${LNB_SIM_WITHOUT_MOUNT}
+	do
+		restart.process /tmp/restart.$$ 2 lnb_interface -c ${module} 1>/tmp/${module}.c.out 2>&1 &
+		restart.process /tmp/restart.$$ 2 lnb_interface -m ${module} 1>/tmp/${module}.m.out 2>&1 &
+		restart.process /tmp/restart.$$ 2 lnb_interface -s 1 -U -t ${module} 1>/tmp/${module}.t.out 2>&1 &
+	done
+fi
+#
+cd ..
+#
+db_query_tool &
+# restart.process /tmp/restart.$$ 2 mgmt_datad 1>/tmp/mgmt.datad.out 2>&1 &
+#
+exit 0

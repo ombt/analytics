@@ -1,0 +1,50 @@
+--
+-- panel_placement_header panel_equipment_id 
+-- panel_placement_header equipment_id 
+-- panel_placement_header master_placement_id 
+-- panel_placement_header panel_placement_id 
+-- panel_placement_header timestamp 
+-- panel_placement_header trx_product_id 
+-- 
+-- panels panel_id
+-- panels equipment_id
+-- panels nc_version
+-- panels start_time
+-- panels end_time
+-- panels panel_equipment_id
+-- panels panel_source
+-- panels panel_trace
+-- panels stage_no
+-- panels lane_no
+-- panels job_id
+-- panels setup_id
+-- panels trx_product_id
+-- 
+-- nc_summary setup_id
+-- nc_summary equipment_id
+-- nc_summary nc_version
+-- nc_summary tva
+-- nc_summary double_feeder_flag
+-- nc_summary glue_total
+-- nc_summary solder_total
+-- 
+-- nc_placement_detail nc_placement_id
+-- nc_placement_detail idnum
+-- nc_placement_detail ref_designator
+-- nc_placement_detail part_name
+-- nc_placement_detail pattern_number
+-- nc_placement_detail nc_version
+-- 
+-- panel_placement_details panel_placement_id
+-- panel_placement_details reel_id
+-- panel_placement_details nc_placement_id
+-- panel_placement_details pattern_no
+-- panel_placement_details z_num
+-- panel_placement_details pu_num
+-- panel_placement_details part_no
+-- panel_placement_details custom_area1
+-- panel_placement_details custom_area2
+-- panel_placement_details custom_area3
+-- panel_placement_details custom_area4
+-- panel_placement_details ref_designator
+--
