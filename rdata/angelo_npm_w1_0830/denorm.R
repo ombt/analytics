@@ -87,6 +87,11 @@ sqlcmd = paste("select ",
                "fd.TIMESTAMP asc",
                sep="")
 #
+#     write.table(x, file = "", append = FALSE, quote = TRUE, sep = " ",
+#                 eol = "\n", na = "NA", dec = ".", row.names = TRUE,
+#                 col.names = TRUE, qmethod = c("escape", "double"),
+#                 fileEncoding = "")
+#
 sqlcmd2 = paste("select ",
                "fd.MACHINE,",
                "fd.LANE,",
