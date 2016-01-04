@@ -1,0 +1,90 @@
+alter table
+    ADDITIONAL_INFO_NPM_HDR_BY_BOARD
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    ADDITIONAL_INFO_NPM_HDR
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    ADDITIONAL_INFO_NPM_HDR_RAW
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    NOZZLE_NPM_HDR_BY_BOARD
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    NOZZLE_NPM_HDR
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    NOZZLE_NPM_HDR_RAW
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    PRODUCTION_COUNT_REPORTS_NPM_HDR_BY_BOARD
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    PRODUCTION_COUNT_REPORTS_NPM_HDR
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    PRODUCTION_COUNT_REPORTS_NPM_HDR_RAW
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    PRODUCTION_REPORTS_NPM_HDR_BY_BOARD
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    PRODUCTION_REPORTS_NPM_HDR
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    PRODUCTION_REPORTS_NPM_HDR_RAW
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    PRODUCTION_TIME_REPORTS_NPM_HDR_BY_BOARD
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    PRODUCTION_TIME_REPORTS_NPM_HDR
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    PRODUCTION_TIME_REPORTS_NPM_HDR_RAW
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    Z_CASS_NPM_HDR_BY_BOARD
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    Z_CASS_NPM_HDR
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go
+alter table
+    Z_CASS_NPM_HDR_RAW
+alter column
+    TRX_PRODUCTID NVARCHAR(255) NULL
+go

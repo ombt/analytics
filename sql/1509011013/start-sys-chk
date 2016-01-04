@@ -1,0 +1,18 @@
+#
+cd ~/cim
+#
+killcim
+#
+pm_start
+#
+route_editor &
+#
+cd system_checker_daemon
+./system_checker_daemon 1> sys-chk-dae.out 2>&1 &
+cd ..
+#
+cd system_checker
+./system_checker 1> sys-chk-gui.out 2>&1 &
+cd ..
+#
+exit 0

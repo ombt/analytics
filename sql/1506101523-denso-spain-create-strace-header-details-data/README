@@ -1,0 +1,26 @@
+
+1) use this database for testing these scripts:
+
+DB_NAME=DENSO_SPAIN
+DB_SERVER=10.140.65.90
+DB_PORT_NO=1433
+
+EXCEPTION_DB_SERVER=10.140.65.90
+
+=== DB Version ===
+Database Version 8.5.0.4
+=== CIM Version ===
+8.5.0.4.P2
+=== Build Num ===
+4
+=== Site Name ===
+Denso BCN
+=== Site Locn ===
+Sant Fruitos del Bages
+=== DGS Server ===
+=== DGS DB Server ===
+
+2) this script creates denormailize data for strace header and strace details.
+
+	routes.barcode.sql
+
