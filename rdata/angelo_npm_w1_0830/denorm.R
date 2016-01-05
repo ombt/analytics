@@ -1,4 +1,96 @@
 #
+# $BRecg
+# [1] "FID"   "IDNUM" "BRecX" "BRecY"
+# 
+# $FILENAME_TO_IDS
+# [1] "FNAME" "FID"  
+# 
+# $MountPickupFeeder
+#  [1] "FID"       "BLKCode"   "BLKSerial" "UseF"      "PartsName" "FAdd"     
+#  [7] "FSAdd"     "ReelID"    "UseR"      "Pickup"    "PMiss"     "RMiss"    
+# [13] "DMiss"     "MMiss"     "HMiss"     "TRSMiss"  
+# 
+# $HeightCorrect
+# [1] "FID"           "B"             "IDNUM"         "MeasureResult"
+# 
+# $MountExchangeReel
+#  [1] "FID"       "BLKCode"   "BLKSerial" "Ftype"     "FAdd"      "FSAdd"    
+#  [7] "Use"       "PEStatus"  "PCStatus"  "Remain"    "Init"      "PartsName"
+# [13] "Custom1"   "Custom2"   "Custom3"   "Custom4"   "ReelID"    "PartsEmp" 
+# 
+# $MountPickupNozzle
+#  [1] "FID"        "Head"       "NHAdd"      "NCAdd"      "BLKCode"   
+#  [6] "BLKSerial"  "UseR"       "NozzleName" "Pickup"     "PMiss"     
+# [11] "RMiss"      "DMiss"      "MMiss"      "HMiss"      "TRSMiss"   
+# 
+# $MountLatestReel
+#  [1] "FID"       "BLKCode"   "BLKSerial" "Ftype"     "FAdd"      "FSAdd"    
+#  [7] "Use"       "PEStatus"  "PCStatus"  "Remain"    "Init"      "PartsName"
+# [13] "Custom1"   "Custom2"   "Custom3"   "Custom4"   "ReelID"    "PartsEmp" 
+# 
+# $MountQualityTrace
+#  [1] "FID"         "B"           "IDNUM"       "TURN"        "MS"         
+#  [6] "TS"          "FAdd"        "FSAdd"       "FBLKCode"    "FBLKSerial" 
+# [11] "NHAdd"       "NCAdd"       "NBLKCode"    "NBLKSerial"  "ReelID"     
+# [16] "F"           "RCGX"        "RCGY"        "RCGA"        "TCX"        
+# [21] "TCY"         "MPosiRecX"   "MPosiRecY"   "MPosiRecA"   "MPosiRecZ"  
+# [26] "THMAX"       "THAVE"       "MNTCX"       "MNTCY"       "MNTCA"      
+# [31] "TLX"         "TLY"         "InspectArea" "DIDNUM"      "DS"         
+# [36] "DispenseID"  "PARTS"       "WarpZ"      
+# 
+# $FID_DATA
+#  [1] "FID"       "FTYPE"     "DATE"      "TIMESTAMP" "MACHINE"   "LANE"     
+#  [7] "STAGE"     "OUTPUT"    "MJSID"     "LOTNAME"   "LOTNUMBER" "SERIAL"   
+# [13] "PRODUCTID" "PRODUCT"  
+# 
+# $MountNormalTrace
+# [1] "FID"    "B"      "IDNUM"  "FAdd"   "FSAdd"  "NHAdd"  "NCAdd"  "ReelID"
+# 
+# $InspectionData
+#  [1] "FID"           "BadBlock"      "BadBoard"      "BadParts"     
+#  [5] "Block"         "LotBadBlock"   "LotBadBoard"   "LotBadParts"  
+#  [9] "LotBlock"      "LotOKParts"    "LotRetryBoard" "OKParts"      
+# [13] "RetryBoard"   
+# 
+# $Count
+#  [1] "FID"           "BNDRcgStop"    "BNDStop"       "Board"        
+#  [5] "BRcgStop"      "Bwait"         "CDErr"         "CMErr"        
+#  [9] "CnvStop"       "CPErr"         "CRErr"         "CTErr"        
+# [13] "Cwait"         "FBStop"        "Fwait"         "JointPassWait"
+# [17] "JudgeStop"     "LotBoard"      "LotModule"     "McFwait"      
+# [21] "McRwait"       "MHRcgStop"     "Module"        "OtherLStop"   
+# [25] "OthrStop"      "Pwait"         "Rwait"         "SCEStop"      
+# [29] "SCStop"        "Swait"         "TDispense"     "TDMiss"       
+# [33] "THMiss"        "TMMiss"        "TPickup"       "TPMiss"       
+# [37] "TPriming"      "Trbl"          "TRMiss"        "TRSErr"       
+# [41] "TRSMiss"      
+# 
+# $CycleTime
+# [1] "FID"    "CTime1" "CTime2" "CTime3"
+# 
+# $Index
+#  [1] "FID"        "Author"     "AuthorType" "Comment"    "Date"      
+#  [6] "Diff"       "Format"     "Machine"    "MJSID"      "Version"   
+# 
+# $Information
+#  [1] "FID"          "BcrStatus"    "Code"         "Lane"         "LotName"     
+#  [6] "LotNumber"    "Output"       "PlanID"       "ProductID"    "Rev"         
+# [11] "Serial"       "SerialStatus" "Stage"       
+# 
+# $Time
+#  [1] "FID"           "Actual"        "BNDRcgStop"    "BNDStop"      
+#  [5] "BRcg"          "BRcgStop"      "Bwait"         "CDErr"        
+#  [9] "Change"        "CMErr"         "CnvStop"       "CPErr"        
+# [13] "CRErr"         "CTErr"         "Cwait"         "DataEdit"     
+# [17] "FBStop"        "Fwait"         "Idle"          "JointPassWait"
+# [21] "JudgeStop"     "Load"          "McFwait"       "McRwait"      
+# [25] "Mente"         "MHRcgStop"     "Mount"         "OtherLStop"   
+# [29] "OthrStop"      "PowerON"       "PRDStop"       "Prod"         
+# [33] "ProdView"      "Pwait"         "Rwait"         "SCEStop"      
+# [37] "SCStop"        "Swait"         "TotalStop"     "Trbl"         
+# [41] "TRSErr"        "UnitAdjust"   
+# 
+#
 # sqlcmd = paste("select ",
 #                "fd.FID,",
 #                "fd.FTYPE,",
@@ -162,24 +254,25 @@ denorm.count.sql = paste("select ",
                "fd.TIMESTAMP asc",
                sep="")
 
-denorm.nozzle.sql = paste("select ",
+denorm.feeder.sql = paste("select ",
                "fd.MACHINE,",
                "fd.LANE,",
                "fd.STAGE,",
                "fd.TIMESTAMP,",
                "fd.PRODUCT,",
-               "c.NHAdd,",
-               "c.NCAdd,",
+               "c.FAdd,",     
+               "c.FSAdd,",     
                "fd.FID,",
                "fnm.FNAME,",
                "fd.OUTPUT,",
                "fd.SERIAL,",
                "fd.PRODUCTID,",
-               "c.Head,",
-               "c.BLKCode,",
-               "c.BLKSerial,",
-               "c.UseR,",
-               "c.NozzleName,",
+               "c.BLKCode,",   
+               "c.BLKSerial,", 
+               "c.UseF,",      
+               "c.PartsName,", 
+               "c.ReelID,",    
+               "c.UseR,",      
                "c.Pickup,",
                "c.PMiss,",
                "c.RMiss,",
@@ -188,7 +281,7 @@ denorm.nozzle.sql = paste("select ",
                "c.HMiss,",
                "c.TRSMiss ",
                "from FID_DATA fd ",
-               "inner join 'MountPickupNozzle' c on fd.FID = c.FID ",
+               "inner join 'MountPickupFeeder' c on fd.FID = c.FID ",
                "inner join 'FILENAME_TO_IDS' fnm on fd.FID = fnm.FID ",
                "group by ",
                "fd.MACHINE,",
@@ -196,14 +289,17 @@ denorm.nozzle.sql = paste("select ",
                "fd.STAGE,",
                "fd.TIMESTAMP,",
                "fd.PRODUCT,",
-               "c.NHAdd,",
-               "c.NCAdd ",
+               "c.FAdd,",     
+               "c.FSAdd ",     
                "order by ",
                "fd.MACHINE asc,",
                "fd.LANE asc,",
                "fd.STAGE asc,",
                "fd.TIMESTAMP asc,",
                "fd.PRODUCT asc,",
-               "c.NHAdd asc,",
-               "c.NCAdd asc",
+               "c.FAdd asc,",     
+               "c.FSAdd asc",     
                sep="")
+
+# $MountPickupFeeder
+
