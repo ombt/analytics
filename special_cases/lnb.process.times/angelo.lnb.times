@@ -1,0 +1,32 @@
+#
+# input
+#
+# INFO	2016/01/08 10:26:30.503	src/LNBTraceInterface.C	718	718; 20130830000040152-01-1-2-525627--4--525627.u03 preprocess_u0X_file Duration: (sec,nsec)=(0.020292804)
+#
+#
+# output
+#
+# 750-01-4-u03-process_u03_file-0.311851885
+#
+echo "lnno mach output ftype label seconds"
+#
+# grep Duration: L*TR* | 
+# cut -d'	' -f5- | 
+# cut -d' ' -f1,2,4 | 
+# sed -e 's/;//g' \
+#     -e 's/.sec.nsec.=.//' \
+#     -e 's/)//' \
+#     -e 's/+-+/;/g' \
+#     -e 's/ /;/g' \
+#     -e 's/;[^;]*\(u0[13]\);/;\1;/' |
+# cut -d';' -f1,8,10,11
+#
+grep Duration: L*TR* |
+sed 's/^.*LNBTraceInterface.C	[0-9][0-9]*	//;' |
+cut -d- -f1-5,7- | 
+sed 's/;//g; s/ /-/g' | 
+cut -d- -f1,3,7,9,10,12 |
+sed -e 's/-[^-][^-]*.\(u0[13]\)/-\1/' \
+    -e 's/.sec.nsec.=//;' \
+    -e 's/[)(]//g;' \
+    -e 's/-/ /g'
