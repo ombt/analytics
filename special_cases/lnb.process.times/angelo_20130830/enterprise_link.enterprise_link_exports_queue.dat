@@ -1,0 +1,8 @@
+START TABLE: enterprise_link.enterprise_link_exports_queue
+START METADATA:
+table_name	field_name	is_identity	user_type_id	type_name	precision
+END METADATA:
+START DATA:
+ENTERPRISE_LINK_EXPORTS_QUEUE_	TIMESTAMP	TRANSACTION_TYPE	TRANSACTION_ID	EQUIPMENT_ID	IS_PROCESSED
+END DATA:
+END TABLE: enterprise_link.enterprise_link_exports_queue

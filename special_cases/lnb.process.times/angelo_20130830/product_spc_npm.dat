@@ -1,0 +1,12 @@
+START TABLE: product_spc_npm
+START METADATA:
+table_name	field_name	is_identity	user_type_id	type_name	precision
+PRODUCT_SPC_NPM	PRODUCTID	0	231	nvarchar	0
+PRODUCT_SPC_NPM	PROGRAMID	0	231	nvarchar	0
+PRODUCT_SPC_NPM	STAGE	0	108	numeric	38
+PRODUCT_SPC_NPM	TIMESTAMP	0	108	numeric	38
+END METADATA:
+START DATA:
+PRODUCTID	PROGRAMID	STAGE	TIMESTAMP
+END DATA:
+END TABLE: product_spc_npm
