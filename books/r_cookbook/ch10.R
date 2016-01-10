@@ -128,10 +128,15 @@ with(iris, plot(Petal.Length, Petal.Width, pch=as.integer(Species)))
 #    legend(x,y,labels,col=c(color1, color2, ...))
 
 x11()
-# par(mfrow=c(1,2))
+par(mfrow=c(1,2))
 
 f <- as.factor(iris$Species)
+
 with(iris, plot(Petal.Length, Petal.Width, pch=as.integer(Species)))
 legend(1.5, 2.4, as.character(levels(f)), pch=1:length(levels(f)))
+
+with(iris, plot(Petal.Length, Petal.Width, pch=as.integer(Species)))
+legend(0.5, 95, c("estimate", "lower conf limit", "upper conf limit",
+       lty=c("solid","dashed","dotted")))
 
 
