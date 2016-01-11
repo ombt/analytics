@@ -98,7 +98,7 @@ detach()
 #
 
 x11()
-par(mfrow=c(1,2))
+par(mfrow=c(1,3))
 
 barplot(c(3,5,4), col=c("red","white","blue"))
 
@@ -118,8 +118,12 @@ barplot(heights, col=grays)
 
 detach()
 
-
-
-
+rel.hts = (heights-min(heights))/(max(heights)-min(heights))
+garys = gray(1-rel.hts)
+barplot(heights, 
+        col=grays,
+        main="Mean Temp. by Month",
+        names.arg=c("May","Jun","Jul","Aug","Sep"),
+        ylab="Temp (F)")
 
 
