@@ -48,3 +48,9 @@ to uncompress and keep the gz file around:
 
 gunzip --keep *.gz
 
+to uncommit and unstage all files, but keep ALL changes,then
+do this:
+
+git reset HEAD^
+
+
