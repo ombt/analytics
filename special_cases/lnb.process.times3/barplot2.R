@@ -14,17 +14,17 @@ amt = angelo.mean.times
 #            (amt$label == "RH_process_u03_file_msg")),]
 #
 #
-labels_to_keep = c("copy_file-return",
-                   "management_reset-return",
-                   "postprocess_u0X_file-return",
-                   "preprocess_u0X_file-return",
-                   "process_mount_log_file_data-return",
-                   "prod_general_processing-return",
-                   "prod_nozzle_processing-return",
-                   "prod_unitreel_processing-return",
-                   "trace_processing-return")
+#labels_to_keep = c("copy_file-return",
+#                   "management_reset-return",
+#                   "postprocess_u0X_file-return",
+#                   "preprocess_u0X_file-return",
+#                   "process_mount_log_file_data-return",
+#                   "prod_general_processing-return",
+#                   "prod_nozzle_processing-return",
+#                   "prod_unitreel_processing-return",
+#                   "trace_processing-return")
 #
-amt = amt[amt$label %in% labels_to_keep,]
+#amt = amt[amt$label %in% labels_to_keep,]
 amt
 #
 ftypes  = sort(unique(amt$filetype))

@@ -1,104 +1,55 @@
 #
 # create bar plot of LNB processing times for Angelo data.
 #
-angelo.mean.times
+att = angelo.total.times
+att
 #
-# output are all the same. remove column.
-#
-amt = angelo.mean.times
-#
-#amt = amt[!((amt$label == "RH_process_trace_file_msg") |
-#            (amt$label == "process_u01_file") |
-#            (amt$label == "process_u03_file") |
-#            (amt$label == "RH_process_u01_file_msg") |
-#            (amt$label == "RH_process_u03_file_msg")),]
-#
-#
-#labels_to_keep = c("copy_file-return",
-#                   "management_reset-return",
-#                   "postprocess_u0X_file-return",
-#                   "preprocess_u0X_file-return",
-#                   "process_mount_log_file_data-return",
-#                   "prod_general_processing-return",
-#                   "prod_nozzle_processing-return",
-#                   "prod_unitreel_processing-return",
-#                   "trace_processing-return")
-#
-#amt = amt[amt$label %in% labels_to_keep,]
-amt
-#
-ftypes  = sort(unique(amt$filetype))
+ftypes = unique(att$filetype)
 ftypes
-machnos = sort(unique(as.character(amt$machno)))
+#
+machnos = unique(as.character(att$machno))
 machnos
-labels  = unique(amt$label)
-labels
-lanes = sort(unique(as.character(amt$lane)))
+#
+lanes = unique(as.character(att$lane))
 lanes
 #
-tmsd = matrix(0,
-              nrow=length(labels),
-              ncol=(length(ftypes)*length(machnos)*length(lanes)))
-tmsd
+ttmsd = matrix(0, 
+               nrow=length(machnos),
+               ncol=length(ftypes)*length(lanes))
+ttmsd
 #
-colnames(tmsd) = 
-    sort(as.vector(outer(as.vector(outer(ftypes, machnos, paste)),
-                         lanes,
-                         paste)))
-rownames(tmsd) = sort(labels)
-tmsd
+colnames(ttmsd) = 
+    sort(as.vector(outer(ftypes, lanes, FUN=paste)))
+rownames(ttmsd) = sort(machnos)
+ttmsd
 #
 for (ftype in ftypes)
 {
-    for (machno in machnos)
+    for (lane in lanes)
     {
-        for (lane in lanes)
+        ftype_lane = paste(ftype, lane)
+        for (machno in machnos)
         {
-            ftype_machno_lane = paste(ftype, machno, lane)
-            # print(ftype_machno);
-            for (label in labels)
+            if (machno %in% att[(att$filetype == ftype) &
+                                (att$lane == as.integer(lane)),
+                                "machno"])
             {
-                # print(label);
-                # print(amt[(amt$filetype == ftype) & (amt$machno == as.integer(machno)),"label"])
-                if (label %in% amt[(amt$filetype == ftype) &
-                                   (amt$machno == as.integer(machno)) &
-                                   (amt$lane == as.integer(lane)),"label"])
-                {
-                    tmsd[label,ftype_machno_lane] =
-                        amt[(amt$filetype == ftype) &
-                            (amt$machno == as.integer(machno)) &
-                            (amt$lane == as.integer(lane)) &
-                            (amt$label == label), "seconds"]
-                }
+                ttmsd[machno,ftype_lane] =
+                    att[(att$filetype == ftype) &
+                        (att$machno == as.integer(machno)) &
+                        (att$lane == as.integer(lane)), "seconds"]
             }
         }
     }
 }
-tmsd
+ttmsd
 #
 par(mar=c(4,4,2,1))
 par(oma=c(0,0,0,0))
-barplot(tmsd,
-        main="Trace Proc Times per U0X, Machine, Lane",
-        col=rainbow(nrow(tmsd)),
-        legend=rownames(tmsd),
-        ylim=c(0,0.6),
-        xlab="U0X MACHINE LANE",
+barplot(ttmsd,
+        main="Machine Trace Proc Times per U0X, Lane",
+        col=rainbow(nrow(ttmsd)),
+        legend=rownames(ttmsd),
+        ylim=c(0,2),
+        xlab="U0X LANE",
         ylab="SECONDS")
-#
-# remove "RH_process_u03_file_msg", etc since these
-# are double counting.
-#
-jpeg()
-par(mar=c(4,4,2,1))
-par(oma=c(0,0,0,0))
-barplot(tmsd,
-        main="Trace Proc Times per U0X, Machine, Lane",
-        col=rainbow(nrow(tmsd)),
-        legend=rownames(tmsd),
-        ylim=c(0,1),
-        xlab="U0X MACHINE LANE",
-        ylab="SECONDS")
-dev.off()
-
-
