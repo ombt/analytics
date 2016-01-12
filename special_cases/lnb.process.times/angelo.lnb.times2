@@ -10,7 +10,7 @@
 # 750-01-4-u03-process_u03_file-0.311851885
 #
 # echo "lnno mach output ftype label seconds"
-echo "time;machno;stage;lane;serialno;output;filetype;label;lnno;seconds"
+echo "time;machno;stage;lane;serialno;output;filetype;label;start;end;seconds"
 grep Duration: L*TR* | 
 sed -e 's/^.*20130830/20130830/' |
 cut -d- -f1-5,7- | 
