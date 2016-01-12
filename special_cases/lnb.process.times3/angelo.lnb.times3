@@ -1,0 +1,42 @@
+#
+# input
+#
+# INFO	2016/01/08 10:26:30.503	src/LNBTraceInterface.C	718	718; 20130830000040152-01-1-2-525627--4--525627.u03 preprocess_u0X_file Duration: (sec,nsec)=(0.020292804)
+#
+# LNB_TR_INTERFACE_MA_NPM-W1_APP_20160108202941.log:INFO  2016/01/08 20:31:23.360 src/NanoSecTime.C       247     247; 20130830000040134-01-1-2-525627--3--525627.  u01 src/LNBTraceInterface.C-management_reset-6327 Duration: (sec,nsec)=(0.000000472)
+#
+# output
+#
+# 750-01-4-u03-process_u03_file-0.311851885
+#
+echo "time;machno;stage;lane;serialno;output;filetype;label;start;end;seconds"
+grep Duration: L*TR* | 
+sed -e 's/^.*20130830/20130830/' |
+cut -d- -f1-5,7- | 
+sed -e 's/ /-/g' |
+sed -e 's/-[^-][^-]*.\(u0[13]\)/-\1/' \
+    -e 's/.sec.nsec.=//;' \
+    -e 's/[)(]//g;' \
+    -e 's/-/;/g' |
+cut -d';' -f1,2,3,4,5,6,8,10,11,12,14 
+#
+# grep Duration: L*TR* | 
+# cut -d'	' -f5- | 
+# cut -d' ' -f1,2,4 | 
+# sed -e 's/;//g' \
+#     -e 's/.sec.nsec.=.//' \
+#     -e 's/)//' \
+#     -e 's/+-+/;/g' \
+#     -e 's/ /;/g' \
+#     -e 's/;[^;]*\(u0[13]\);/;\1;/' |
+# cut -d';' -f1,8,10,11
+#
+# grep Duration: L*TR* |
+# sed 's/^.*LNBTraceInterface.C	[0-9][0-9]*	//;' |
+# cut -d- -f1-5,7- | 
+# sed 's/;//g; s/ /-/g' | 
+# cut -d- -f1,3,7,9,10,12 |
+# sed -e 's/-[^-][^-]*.\(u0[13]\)/-\1/' \
+#     -e 's/.sec.nsec.=//;' \
+#     -e 's/[)(]//g;' \
+#     -e 's/-/ /g'
