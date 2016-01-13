@@ -6,6 +6,17 @@ closedevs <- function()
     while (dev.cur() > 1) { dev.off() }
 }
 
+closealldevs <- function()
+{
+    closedevs()
+}
+
+mysrc <- function(file)
+{
+    closealldevs()
+    source(file=file, echo=TRUE, max.deparse.length=10000)
+}
+
 lnrow <- function(dfrm) 
 {
     lapply(dfrm, nrow)
