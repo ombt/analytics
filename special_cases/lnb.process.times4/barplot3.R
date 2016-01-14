@@ -75,12 +75,15 @@ labels
 lanes = sort(unique(as.character(amt$lane)))
 lanes
 #
+ylims = c(0, max(unique(amt[,"seconds"])))
+#
 plot_angelo(amt, 
             ftypes, 
             machnos, 
             labels, 
             lanes, 
-            c(0,1))
+            c(0,0.5),
+            FALSE)
 #
 # only u01
 #
@@ -88,13 +91,15 @@ ftypes = "u01"
 ftypes
 labels  = unique(amt[amt$filetype=="u01","label"])
 labels
+ylims = c(0, max(unique(amt[amt$filetype=="u01","seconds"])))
 #
 plot_angelo(amt, 
             ftypes, 
             machnos, 
             labels, 
             lanes, 
-            c(0,0.2), 
+            # c(0,0.2), 
+            1.5*ylims,
             TRUE)
 #
 # only u03
@@ -103,12 +108,14 @@ ftypes = "u03"
 ftypes
 labels  = unique(amt[amt$filetype=="u03","label"])
 labels
+ylims = c(0, max(unique(amt[amt$filetype=="u03","seconds"])))
 #
 plot_angelo(amt, 
             ftypes, 
             machnos, 
             labels, 
             lanes, 
-            c(0,0.2), 
+            # c(0,0.2), 
+            1.5*ylims,
             TRUE)
 #
