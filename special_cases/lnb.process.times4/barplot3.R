@@ -8,7 +8,8 @@ plot_angelo <- function(amt,
                         machnos,
                         labels,
                         lanes,
-                        ylim)
+                        ylim,
+                        beside=FALSE)
 {
     tmsd = matrix(0,
                   nrow=length(labels),
@@ -58,7 +59,7 @@ plot_angelo <- function(amt,
             main="Trace Proc Times per U0X, Machine, Lane",
             col=rainbow(nrow(tmsd)),
             legend=rownames(tmsd),
-            ylim=ylim,
+            ylim=ylim, beside=beside,
             xlab="U0X MACHINE LANE",
             ylab="SECONDS")
 }
@@ -74,7 +75,12 @@ labels
 lanes = sort(unique(as.character(amt$lane)))
 lanes
 #
-plot_angelo(amt, ftypes, machnos, labels, lanes, c(0,1))
+plot_angelo(amt, 
+            ftypes, 
+            machnos, 
+            labels, 
+            lanes, 
+            c(0,1))
 #
 # only u01
 #
@@ -83,7 +89,13 @@ ftypes
 labels  = unique(amt[amt$filetype=="u01","label"])
 labels
 #
-plot_angelo(amt, ftypes, machnos, labels, lanes, c(0,0.4))
+plot_angelo(amt, 
+            ftypes, 
+            machnos, 
+            labels, 
+            lanes, 
+            c(0,0.2), 
+            TRUE)
 #
 # only u03
 #
@@ -92,5 +104,11 @@ ftypes
 labels  = unique(amt[amt$filetype=="u03","label"])
 labels
 #
-plot_angelo(amt, ftypes, machnos, labels, lanes, c(0,0.4))
+plot_angelo(amt, 
+            ftypes, 
+            machnos, 
+            labels, 
+            lanes, 
+            c(0,0.2), 
+            TRUE)
 #
