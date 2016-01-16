@@ -195,4 +195,143 @@ sqrt(sum((y-fitted(model))^2))
 # from the 3rd Q, this indicates some skew. also the mean should
 # be zero. if non-zero, then the curve is shifted.
 #
+
+u = 1:20
+v = 1:20
+w = 1:20
+
+y = u + v*v + w*w*w + runif(20, min=-5, max=5)
+y
+
+dfrm = data.frame(y=y, u=u, v=v, w=w)
+dfrm
+
+model = lm(y~u+v+w, data=dfrm)
+model
 summary(model)
+
+model = lm(y~u+v, data=dfrm)
+model
+summary(model)
+
+model = lm(y~u, data=dfrm)
+model
+summary(model)
+
+#
+# Call:
+#
+# shows model used when calling lm().
+#
+# Residuals:
+# 
+# regression residuals should have a normal distribution with
+# a mean of zero and Q1 and Q3 equidistant from the the mean.
+#
+# the sign of the median will show the skew of the distribution
+# if any. 
+#
+# Coefficienst:
+#
+# will show each coefficient with the value derived using
+# least-squares, also, t-value and Pr(>|t|) is shown. Pr values
+# greater than 0.05 indicate the variable is NOT significant.
+#
+# flags:
+# *** means 0<p<0.001
+# ** means 0.001<p<0.01
+# * means 0.01<p<0.05
+# . means 0.05<p<0,1
+# (blank) means 0.1<p<1.0
+#
+# residual standard error:
+#
+# standard deviation of rhe residuals.
+#
+# R^2 (coefficient of determinination)
+#
+# measure of model quality. bigger is better.
+# use adjusted value.
+#
+# F statistic -
+#
+# model is significant of any of the coefficients is non-zero.
+#
+
+#
+# 11.5 - performing a linear regression with out an intercept.#
+#
+# do this:
+# lm(y ~ x + 0)
+#
+# yes, give lm) a zero to suppress the constant term.
+#
+
+x = 1:20
+y = x*x
+
+model = lm(y ~ x + 0)
+model
+
+summary(model)
+
+#
+# 11.6 - performing linear regression with interaction terms.
+#
+# lm(y ~ u*v)
+#
+# uses model
+#
+# yi = b1 + b1*ui + b2+vi + b3*ui*vi
+#
+# b3*ui*vi is called the interaction term.
+#
+# y ~ u*v*w
+#
+# use this model:
+#
+# yi = b0 + 
+#      b1ui + b2vi + b3wi + 
+#      b4uivi + b5uiwi + b6viwi + +
+#      b7uiviwi + ei
+#
+# y ~ u + v + w + u:v:w
+#
+# uses this model:
+#
+# yi = b0 + b1ui + b2vi + b3wi + b4uiviwi + ei
+#
+# many different formulas can be defined.
+#
+# (u + v + ... + w)^2
+#
+# use all variables and their interaction terms,
+#
+# (u + v + ... + w)^3 
+#
+# use all variables, 1st order and 2nd order interactions.
+#
+# etc.
+#
+# x*(u + v + ... + w)
+#
+# same as x*u + x*v + ... + x*w and 
+# same as x + u + v + ... + w + x:u + x:v ... x:w
+#
+# x:(u + v + ... w) 
+#
+# same as x:u + x:v + ... + x:w
+#
+# these are all the same:
+#
+# y ~ u*v
+# y ~ u + v + u:v
+# y ~ (u + v)^2
+#
+# all define this:
+#
+# yi = b0 + b1ui + b2vu +b3uivi + ei
+#
+#
+#
+# 
