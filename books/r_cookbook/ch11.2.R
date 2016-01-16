@@ -286,3 +286,6 @@ plot(m2$residuals)
 plot(log(x),log(y))
 plot(m3$fitted.values)
 plot(m3$residuals)
+
+
+
