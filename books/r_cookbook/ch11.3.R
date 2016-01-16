@@ -124,6 +124,69 @@ m = lm(y ~ x1 + x2)
 x11()
 plot(m, which=1)
 
+#
+# 11.15 - diagnosing a linear regression
+#
+
+x1 = 1:100
+x2 = x1^2
+
+y = 5*x1 + 8*x2 + 100 + rnorm(100, sd=100)
+
+m = lm(y ~ x2)
+
+# requires R version >= 3.2.0
+#
+# library(car)
+# outlier.test(m)
+#
+# check F statistis when using summary function.
+#
+# summary(m)
+#
+# p-value must be less than 0.05.
+#
+# plotting can show possible problems
+#
+# plot(m)
+#
+# look for this:
+#
+# residual vs fitted - points are randomly scattered with no pattern.
+#
+# normal Q-Q plot - points are on the line indicating the residuals
+# follow a normal distribution.
+#
+# scale-location and residuals vs leverage plots, the points are
+# in a group with none to far from the center.
+#
+# 
+
+x11()
+par(mfrow=c(2,3))
+plot(m)
+
+#
+# 11.16 - identifying influential observations
+#
+# use this:
+#
+# influence.measures(m)
+#
+# reports several statistics:
+#
+# DFBETAS, DFFITS, covariaince ratio, cook's distance,
+# hat matrix values.
+#
+# if any of these statistic identify an obervation as influential,
+# then the observation is marked with a '*'
+#
+
+influence.measures(m)
+
+# for more info:
+# help(influence.measures)
+
 
 
 
