@@ -273,4 +273,16 @@ m3 = lm(log(y) ~ log(x))
 m3
 
 #
+par(mfrow=c(3,3))
 
+plot(x,y)
+plot(m1$fitted.values)
+plot(m1$residuals)
+
+plot(x,sqrt(y))
+plot(m1$fitted.values)
+plot(m2$residuals)
+
+plot(log(x),log(y))
+plot(m3$fitted.values)
+plot(m3$residuals)
