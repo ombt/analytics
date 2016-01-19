@@ -53,4 +53,10 @@ do this:
 
 git reset HEAD^
 
+to reset the entire node to the latest version and undo *all* changes
+currently in the node, do this:
+
+git reset --hard origin/master
+
+this will erase files and recreated deleted files.
 
