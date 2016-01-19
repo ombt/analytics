@@ -89,5 +89,23 @@ v[(seq_along(v) %% n ) == 0]
 v[c(FALSE,TRUE)]
 v[c(TRUE,FALSE)]
 
+#
+# 12.9 - finding pairwise minimums or maximums
+#
+# minimums for rows of values or maximums.
+#
+
+x1 = floor(rnorm(30,sd=50))
+x2 = floor(rnorm(30,sd=50))
+x3 = floor(rnorm(30,sd=50))
+
+df = data.frame(x1=x1,
+                x2=x2,
+                x3=x3,
+                pmin=pmin(x1,x2,x3),
+                pmax=pmax(x1,x2,x3))
+df
+
+
 
 
