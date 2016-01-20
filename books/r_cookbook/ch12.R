@@ -106,6 +106,206 @@ df = data.frame(x1=x1,
                 pmax=pmax(x1,x2,x3))
 df
 
+#
+# 12.10 - generating all combinations of several factors
+#
+# expand.grid(f,g)
+#
+
+sides = factor(c("heads","tails"))
+faces = factor(c("1 pip", paste(2:6, "pips"))) 
+
+expand.grid(faces, sides)
+expand.grid(sides, sides)
+expand.grid(faces, faces)
+
+#
+# flattening a data frame
+#
+# as.matrix(dfrm)
+#
+# mean(as.matrix(dfrm)
+#
+
+x = floor(rnorm(12,sd=30))
+y = floor(rnorm(12,sd=30))
+z = floor(rnorm(12,sd=30))
+
+(d = data.frame(x=x,y=y,z=z))
+
+mean(as.matrix(d))
+
+#
+# 12.12 - sorting a data frame
+#
+# dfrm = dfrm[order(dfrm$key),]
+#
+
+n=20
+
+x = floor(rnorm(n,mean=100,sd=30))
+x
+
+y[1:n] = NA
+
+x>=130
+y[x>=130]
+y[x>=130] = ">=1sigma";
+y
+
+x<=70
+y[x<=70]
+y[x<=70] = "<=-1sigma";
+y
+
+!((x<=70) | (x>=130))
+y[!((x<=70) | (x>=130))]
+y[!((x<=70) | (x>=130))] = "middle"
+y
+
+d = data.frame(x=x, y=y)
+d$y = as.factor(d$y)
+d
+
+d=d[order(d$y),]
+d
+
+#
+# 12.13 - sorting by two or more columns.
+#
+# dfrm = dfrm[order(dfrm$key1,dfrm$key2),]
+#
+
+#
+# 12.14 srtipping attributes from a variable
+#
+# to remove all attributes:
+#
+# attributes(v) = NULL
+#
+# to remove a specific attribute:
+#
+# attr(v, "attributeName") = NULL
+
+x = 1:20
+y = 3*x
+
+m = lm(y ~ x)
+
+slope = coef(m)[2]
+slope
+
+attributes(slope) = NULL
+slope
+
+slope = coef(m)[2]
+slope
+
+attr(slope, "names") = NULL
+slope
+
+# 
+# 12.15 - revealing the structure of an object.
+#
+# class(x)
+# mode(x)
+# str(x)
+#
+
+x = 1:20
+y = 3*x
+m = lm(y ~ x)
+
+print(m)
+
+class(m)
+
+mode(m)
+
+names(m)
+
+m$coefficients
+
+str(m)
+
+#
+# 12.16 - timing your code
+#
+# performance measures for executed code.
+#
+# system.time(...)
+#
+
+testfunc <- function(n) { sum(rnorm(n)) }
+
+for (n in 2:7)
+{
+    print(paste("10^n is", 10^n))
+    print(system.time(testfunc(10^n)))
+}
+
+#
+# 12.17 - suppress warnings and error messages
+#
+# suppressMessage(annoyingFunction())
+#
+# suppressWarnings(annoyingFunction())
+#
+
+#
+# 12.18 - taking function arguments from a list.
+#
+# do.call(function, list)
+#
+
+vec = c(1,3,5,7,9)
+mean(vec)
+
+numbers = list(1,3,5,7,9)
+# does not work
+# mean(numbers)
+
+mean(unlist(numbers))
+
+lists = list(col1=c(7,8,9), 
+             col2=c(70,80,90),
+             col2=c(700,800,900))
+
+cbind(lists)
+
+cbind(unlist(lists))
+
+do.call(cbind, lists)
+
+# the same as ...
+cbind(lists[[1]], lists[[2]], lists[[3]])
+
+#
+# 12.19 - defining your binary operators
+#
+# any %...% where ... is any text can be assigned
+# a two-argument function. 
+#
+
+"%+-%" <- function(x,margin) x + c(-1,1)*margin
+
+100 %+-% 14
+
+"%+%" <- function(s1,s2) paste(s1,s2,sep="")
+
+"hello" %+% "world"
+
+# be carefull wih precedence!
+# all user-defined operators have the same precedence.
+# higher than multiplication and division, but less than
+# exponentiation and sequence creattion.
+#
+
+100 %+-% 2*15
+100 %+-% (2*15)
+
+
+
 
 
 
