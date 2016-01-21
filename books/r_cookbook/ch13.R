@@ -113,3 +113,69 @@ plot(x ~ factor(clust),
      main="identified cluster",
      xlab="cluster number")
 
+#
+# 13.7 - predicting a binary-valued variable (logistic regression)
+#
+# a regression model that predicts the probability of a binary event 
+# occurring.
+#
+# call glm() with family=binomial to perform logistic regression. the 
+# result is a model object.
+#
+# m <- glm(b ~ x1 + x2 + x3, family=binomial)
+#
+# here b is a factor with two levels (true or false, 0 or 1)
+# and x1, x2, x3 are predictor variables
+#
+# use the model object, m, and the predict function to predict
+# probability from new data.
+#
+# dfrm = data.frame(x1=value, x2=value, x3=value)
+# predict(m, type="response", newdata=dfrm)
+#
+
+data(pima, package="faraway")
+
+b <- factor(pima$test)
+
+m <- glm(b ~ diastolic + bmi, family=binomial, data=pima)
+
+summary(m)
+
+# since only bmi is significant, then create a reduced model
+# using only bmi.
+
+m.red <- glm(b ~ bmi, family=binomial, data=pima)
+
+newdata <- data.frame(bmi=32.0)
+predict(m.red, type="response", newdata=newdata)
+
+newdata <- data.frame(bmi=quantile(pima$bmi, 0.90))
+predict(m.red, type="response", newdata=newdata)
+
+#
+# 13.8 - bootstrapping a statistic
+#
+# you have a data set and a function to calculate a statistic 
+# for the data set. you want to estimate the confidence interval
+# for the statistic,
+#
+# use the boot package. apply boo function to calculate replicates
+# of the statistic.
+#
+# library(boot)
+# bootfun <- function(data, indices) { ... ; return(statistic); }
+# reps <- boot(data, bootfun, R=999)
+#
+# boot.ci(reps, type=c("perc","bca"))
+#
+
+#
+# 13.9 - factor analysis
+#
+# want to perform a factor analysis on a data set to what the
+# variables have in common.
+#
+# factanal(data, factors=n)
+#
+# 
