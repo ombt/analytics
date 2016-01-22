@@ -164,4 +164,23 @@ mapply(gcd, c(1,2,3), c(9,6,3))
 
 
 
-
+#
+# another way to split by more than one factor:
+#
+# 
+# > split(x, list(x$let, x$g))
+# $a.1
+#    num let g
+# 1   10   a 1
+# 11  21   a 1
+# 
+# $b.1
+#    num let g
+# 7   52   b 1
+# 17  56   b 1
+# 
+# $c.1
+#    num let g
+# 3   12   c 1
+# 13  32   c 1
+# 
