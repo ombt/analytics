@@ -67,7 +67,6 @@ my $rmv_csv_dir = FALSE;
 my $delimiter = "\t";
 my $combine_data = COMBINE_NONE;
 my $filter_sections = FALSE;
-my $combine_lot_files = FALSE;
 #
 my $csv_base_path = undef;
 $csv_base_path = $ENV{'OMBT_CSV_BASE_PATH'} 
@@ -123,7 +122,7 @@ usage: $arg0 [-?] [-h]  \\
         [-S section[,section...] \\
         [-s section[,section...] \\
         [-d delimiter] \\
-        [-r] [-C|-c] [-L] \\
+        [-r] [-C|-c] \\
         maihime-file ...
 
 where:
@@ -154,8 +153,6 @@ where:
          stored in a separate file. the default is to create a 
          directory with the file name and write each section in 
          a separate file.
-    -L - combine separate LOT files into one file keyed by LOT. 
-         default is off.
 
 EOF
 }
@@ -583,22 +580,9 @@ sub export_list_to_csv
 {
     my ($prod_file, $prod_name, $pprod_db, $prod_dir, $section) = @_;
     #
-    my $combine_lot_file = FALSE;
-    $combine_lot_file = TRUE if (($section =~ m/<([0-9]+)>/) &&
-                                 ($combine_lot_files == TRUE));
-    #
-    my $lotno = -1;
     my $csv_file = $section;
     $csv_file =~ s/[\[\]]//g;
-    if ($combine_lot_file == TRUE)
-    {
-        $csv_file =~ s/<([0-9]+)>//g;
-        $lotno = $1;
-    }
-    else
-    {
-        $csv_file =~ s/<([0-9]+)>/_$1/g;
-    }
+    $csv_file =~ s/<([0-9]+)>/_$1/g;
     #
     my $outnm = $prod_dir . '/' . $csv_file . ".csv";
     #
@@ -607,154 +591,77 @@ sub export_list_to_csv
     #
     open(my $outfh, "+>>" , $outnm) || die $!;
     #
-    if ($combine_lot_file == TRUE)
+    if ($combine_data == COMBINE_BY_FILENAME)
     {
-        if ($combine_data == COMBINE_BY_FILENAME)
+        my $pcols = $pprod_db->{$section}->{column_names};
+        if ($print_cols == TRUE)
         {
-            my $pcols = $pprod_db->{$section}->{column_names};
-            if ($print_cols == TRUE)
+            printf $outfh "PRODUCT";
+            foreach my $col (@{$pcols})
             {
-                printf $outfh "PRODUCT%sLOTNO", $delimiter;
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $delimiter, $col;
-                }
-                printf $outfh "\n";
+                printf $outfh "%s%s", $delimiter, $col;
             }
-            #
-            foreach my $prow (@{$pprod_db->{$section}->{data}})
-            {
-                printf $outfh "%s%s%s", $prod_name, $delimiter, $lotno;
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $delimiter, $prow->{$col};
-                }
-                printf $outfh "\n";
-            }
+            printf $outfh "\n";
         }
-        elsif ($combine_data == COMBINE_BY_FILENAME_ID)
+        #
+        foreach my $prow (@{$pprod_db->{$section}->{data}})
         {
-            my $fid = get_filename_id($prod_name);
-            #
-            my $pcols = $pprod_db->{$section}->{column_names};
-            if ($print_cols == TRUE)
+            printf $outfh "%s", $prod_name;
+            foreach my $col (@{$pcols})
             {
-                printf $outfh "FID%sLOTNO", $delimiter;
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $delimiter, $col;
-                }
-                printf $outfh "\n";
+                printf $outfh "%s%s", $delimiter, $prow->{$col};
             }
-            #
-            foreach my $prow (@{$pprod_db->{$section}->{data}})
-            {
-                printf $outfh "%s%s%s", $fid, $delimiter, $lotno;
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $delimiter, $prow->{$col};
-                }
-                printf $outfh "\n";
-            }
+            printf $outfh "\n";
         }
-        else
+    }
+    elsif ($combine_data == COMBINE_BY_FILENAME_ID)
+    {
+        my $fid = get_filename_id($prod_name);
+        #
+        my $pcols = $pprod_db->{$section}->{column_names};
+        if ($print_cols == TRUE)
         {
-            my $pcols = $pprod_db->{$section}->{column_names};
-            if ($print_cols == TRUE)
+            printf $outfh "FID";
+            foreach my $col (@{$pcols})
             {
-                printf $outfh "LOTNO";
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $delimiter, $col;
-                }
-                printf $outfh "\n";
+                printf $outfh "%s%s", $delimiter, $col;
             }
-            #
-            foreach my $prow (@{$pprod_db->{$section}->{data}})
+            printf $outfh "\n";
+        }
+        #
+        foreach my $prow (@{$pprod_db->{$section}->{data}})
+        {
+            printf $outfh "%s", $fid;
+            foreach my $col (@{$pcols})
             {
-                printf $outfh "%s", $lotno;
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $delimiter, $prow->{$col};
-                }
-                printf $outfh "\n";
+                printf $outfh "%s%s", $delimiter, $prow->{$col};
             }
+            printf $outfh "\n";
         }
     }
     else
     {
-        if ($combine_data == COMBINE_BY_FILENAME)
+        my $pcols = $pprod_db->{$section}->{column_names};
+        if ($print_cols == TRUE)
         {
-            my $pcols = $pprod_db->{$section}->{column_names};
-            if ($print_cols == TRUE)
+            my $comma = "";
+            foreach my $col (@{$pcols})
             {
-                printf $outfh "PRODUCT";
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $delimiter, $col;
-                }
-                printf $outfh "\n";
+                printf $outfh "%s%s", $comma, $col;
+                $comma = $delimiter;
             }
-            #
-            foreach my $prow (@{$pprod_db->{$section}->{data}})
-            {
-                printf $outfh "%s", $prod_name;
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $delimiter, $prow->{$col};
-                }
-                printf $outfh "\n";
-            }
+            printf $outfh "\n";
         }
-        elsif ($combine_data == COMBINE_BY_FILENAME_ID)
+        #
+        foreach my $prow (@{$pprod_db->{$section}->{data}})
         {
-            my $fid = get_filename_id($prod_name);
-            #
-            my $pcols = $pprod_db->{$section}->{column_names};
-            if ($print_cols == TRUE)
+            my $comma = "";
+            foreach my $col (@{$pcols})
             {
-                printf $outfh "FID";
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $delimiter, $col;
-                }
-                printf $outfh "\n";
+                printf $outfh "%s%s", $comma, $prow->{$col};
+                $comma = $delimiter;
             }
-            #
-            foreach my $prow (@{$pprod_db->{$section}->{data}})
-            {
-                printf $outfh "%s", $fid;
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $delimiter, $prow->{$col};
-                }
-                printf $outfh "\n";
-            }
-        }
-        else
-        {
-            my $pcols = $pprod_db->{$section}->{column_names};
-            if ($print_cols == TRUE)
-            {
-                my $comma = "";
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $comma, $col;
-                    $comma = $delimiter;
-                }
-                printf $outfh "\n";
-            }
-            #
-            foreach my $prow (@{$pprod_db->{$section}->{data}})
-            {
-                my $comma = "";
-                foreach my $col (@{$pcols})
-                {
-                    printf $outfh "%s%s", $comma, $prow->{$col};
-                    $comma = $delimiter;
-                }
-                printf $outfh "\n";
-            }
+            printf $outfh "\n";
         }
     }
     #
@@ -765,22 +672,9 @@ sub export_name_value_to_csv
 {
     my ($prod_file, $prod_name, $pprod_db, $prod_dir, $section) = @_;
     #
-    my $combine_lot_file = FALSE;
-    $combine_lot_file = TRUE if (($section =~ m/<([0-9]+)>/) &&
-                                 ($combine_lot_files == TRUE));
-    #
-    my $lotno = -1;
     my $csv_file = $section;
     $csv_file =~ s/[\[\]]//g;
-    if ($combine_lot_file == TRUE)
-    {
-        $csv_file =~ s/<([0-9]+)>//g;
-        $lotno = $1;
-    }
-    else
-    {
-        $csv_file =~ s/<([0-9]+)>/_$1/g;
-    }
+    $csv_file =~ s/<([0-9]+)>/_$1/g;
     #
     my $outnm = $prod_dir . '/' . $csv_file . ".csv";
     #
@@ -789,130 +683,59 @@ sub export_name_value_to_csv
     #
     open(my $outfh, "+>>" , $outnm) || die $!;
     #
-    if ($combine_lot_file == TRUE)
+    if ($combine_data == COMBINE_BY_FILENAME)
     {
-        if ($combine_data == COMBINE_BY_FILENAME)
+        if ($print_cols == TRUE)
         {
-            if ($print_cols == TRUE)
-            {
-                printf $outfh "PRODUCT%sLOTNO%sNAME%sVALUE\n", 
-                    $delimiter, 
-                    $delimiter, 
-                    $delimiter;
-            }
-            #
-            foreach my $key (keys %{$pprod_db->{$section}->{data}})
-            {
-                printf $outfh "%s%s%s%s%s%s%s\n", 
-                    $prod_name, 
-                    $delimiter,
-                    $lotno, 
-                    $delimiter,
-                    $key, 
-                    $delimiter,
-                    $pprod_db->{$section}->{data}->{$key};
-            }
+            printf $outfh "PRODUCT%sNAME%sVALUE\n", 
+                $delimiter, 
+                $delimiter;
         }
-        elsif ($combine_data == COMBINE_BY_FILENAME_ID)
+        #
+        foreach my $key (keys %{$pprod_db->{$section}->{data}})
         {
-            my $fid = get_filename_id($prod_name);
-            #
-            if ($print_cols == TRUE)
-            {
-                printf $outfh "FID%sLOTNO%sNAME%sVALUE\n", 
-                    $delimiter, 
-                    $delimiter, 
-                    $delimiter;
-            }
-            #
-            foreach my $key (keys %{$pprod_db->{$section}->{data}})
-            {
-                printf $outfh "%s%s%s%s%s%s%s\n", 
-                    $fid, 
-                    $delimiter,
-                    $lotno, 
-                    $delimiter,
-                    $key, 
-                    $delimiter,
-                    $pprod_db->{$section}->{data}->{$key};
-            }
+            printf $outfh "%s%s%s%s%s\n", 
+                $prod_name, 
+                $delimiter,
+                $key, 
+                $delimiter,
+                $pprod_db->{$section}->{data}->{$key};
         }
-        else
+    }
+    elsif ($combine_data == COMBINE_BY_FILENAME_ID)
+    {
+        my $fid = get_filename_id($prod_name);
+        #
+        if ($print_cols == TRUE)
         {
-            if ($print_cols == TRUE)
-            {
-                printf $outfh "LOTNO%sNAME%sVALUE\n", 
-                    $delimiter, 
-                    $delimiter;
-            }
-            #
-            foreach my $key (keys %{$pprod_db->{$section}->{data}})
-            {
-                printf $outfh "%s%s%s%s%s\n", 
-                    $lotno, 
-                    $delimiter,
-                    $key, 
-                    $delimiter,
-                    $pprod_db->{$section}->{data}->{$key};
-            }
+            printf $outfh "FID%sNAME%sVALUE\n", 
+                $delimiter, 
+                $delimiter;
+        }
+        #
+        foreach my $key (keys %{$pprod_db->{$section}->{data}})
+        {
+            printf $outfh "%s%s%s%s%s\n", 
+                $fid, 
+                $delimiter,
+                $key, 
+                $delimiter,
+                $pprod_db->{$section}->{data}->{$key};
         }
     }
     else
     {
-        if ($combine_data == COMBINE_BY_FILENAME)
+        if ($print_cols == TRUE)
         {
-            if ($print_cols == TRUE)
-            {
-                printf $outfh "PRODUCT%sNAME%sVALUE\n", 
-                    $delimiter, 
-                    $delimiter;
-            }
-            #
-            foreach my $key (keys %{$pprod_db->{$section}->{data}})
-            {
-                printf $outfh "%s%s%s%s%s\n", 
-                    $prod_name, 
-                    $delimiter,
-                    $key, 
-                    $delimiter,
-                    $pprod_db->{$section}->{data}->{$key};
-            }
+            printf $outfh "NAME%sVALUE\n", $delimiter;
         }
-        elsif ($combine_data == COMBINE_BY_FILENAME_ID)
+        #
+        foreach my $key (keys %{$pprod_db->{$section}->{data}})
         {
-            my $fid = get_filename_id($prod_name);
-            #
-            if ($print_cols == TRUE)
-            {
-                printf $outfh "FID%sNAME%sVALUE\n", 
-                    $delimiter, 
-                    $delimiter;
-            }
-            #
-            foreach my $key (keys %{$pprod_db->{$section}->{data}})
-            {
-                printf $outfh "%s%s%s%s%s\n", 
-                    $fid, 
-                    $delimiter,
-                    $key, 
-                    $delimiter,
-                    $pprod_db->{$section}->{data}->{$key};
-            }
-        }
-        else
-        {
-            if ($print_cols == TRUE)
-            {
-                printf $outfh "NAME%sVALUE\n", $delimiter;
-            }
-            #
-            foreach my $key (keys %{$pprod_db->{$section}->{data}})
-            {
-                printf $outfh "%s%s%s\n", 
-                    $key, 
-                    $delimiter,
-                    $pprod_db->{$section}->{data}->{$key};
-            }
+            printf $outfh "%s%s%s\n", 
+                $key, 
+                $delimiter,
+                $pprod_db->{$section}->{data}->{$key};
         }
     }
     #
@@ -1035,7 +858,7 @@ sub process_file
 ######################################################################
 #
 my %opts;
-if (getopts('?hwWv:B:R:P:l:d:rLCcs:S:', \%opts) != 1)
+if (getopts('?hwWv:B:R:P:l:d:rCcs:S:', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -1051,10 +874,6 @@ foreach my $opt (%opts)
     elsif ($opt eq 'r')
     {
         $rmv_csv_dir = TRUE;
-    }
-    elsif ($opt eq 'L')
-    {
-        $combine_lot_files = TRUE;
     }
     elsif ($opt eq 'C')
     {

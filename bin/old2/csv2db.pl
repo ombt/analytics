@@ -39,13 +39,27 @@ use constant MAXVERBOSE => 3;
 my $cmd = $0;
 my $log_fh = *STDOUT;
 my $dbh = undef;
+my $create_fid_index = FALSE;
 #
 # cmd line options
 #
 my $logfile = '';
 my $rmv_old_db = FALSE;
 my $delimiter = "\t";
-my $db_path = "/tmp/CSV2DB.$$";
+#
+my $db_base_path = undef;
+$db_base_path = $ENV{'OMBT_DB_BASE_PATH'} 
+    if (exists($ENV{'OMBT_DB_BASE_PATH'}));
+$db_base_path = "." 
+    unless (defined($db_base_path) and ($db_base_path ne ""));
+#
+my $db_rel_path = undef;
+$db_rel_path = $ENV{'OMBT_DB_REL_PATH'} 
+    if (exists($ENV{'OMBT_DB_REL_PATH'}));
+$db_rel_path = "CSV2DB" 
+    unless (defined($db_rel_path) and ($db_rel_path ne ""));
+#
+my $db_path = $db_base_path . '/' . $db_rel_path;
 #
 ######################################################################
 #
@@ -58,16 +72,23 @@ sub usage
 
 usage: $arg0 [-?] [-h] 
         [-l logfile]
-        [-p db_path]
+        [-B base path]
+        [-R relative path]
+        [-P path]
         [-d delimiter]
-        [-r] 
+        [-f] [-r] 
         CSV-file ...
 
 where:
     -? or -h - print this usage.
     -l logfile - log file path
-    -p path - DB path. defaults to $db_path.
+    -B path - base db path, defaults to '${db_base_path}'
+              or use environment variable OMBT_DB_BASE_PATH.
+    -R path - relative db path, defaults to '${db_rel_path}'
+              or use environment variable OMBT_DB_REL_PATH.
+    -P path - db path, defaults to '${db_path}'
     -d delimiter - CSV delimiter characer. default is a tab.
+    -f - create filename ID index if table has FID field.
     -r - remove old DB
 
 EOF
@@ -117,6 +138,7 @@ sub process_file
     #
     (my $tbl_name = $csv_file) =~ s/\.csv$//i;
     $tbl_name =~ s/\./_/g;
+    $tbl_name = basename($tbl_name);
     printf $log_fh "%d: Table: %s\n", __LINE__, $tbl_name;
     #
     # check if table exists.
@@ -128,6 +150,15 @@ sub process_file
         #
         $dbh->do($create_tbl_sql);
         $dbh->commit();
+        #
+        if (($create_fid_index == TRUE) &&
+            (grep( /^FID$/i, @{col_names})))
+        {
+            printf $log_fh "%d: Creating table %s index\n", __LINE__, $tbl_name;
+            my $create_idx_sql = "create index ${tbl_name}_fid_idx on '${tbl_name}' ( FID )";
+            $dbh->do($create_idx_sql);
+            $dbh->commit();
+        }
     }
     #
     # generate insert sql command
@@ -142,11 +173,11 @@ sub process_file
         #
         chomp($row);
         $row =~ s/\r//g;
-        my @data = split /${delimiter}/, $row;
+        my @data = split /${delimiter}/, $row, -1;
         my $insert_sql = $insert_fields . " values ( '" . join("','", @data) . "')";
         if ( ! eval { $dbh->do($insert_sql); 1; } ) 
         {
-            printf $log_fh "%d: ERROR INSERT FAILED: %s\n", __LINE__, $@;
+            printf $log_fh "%d: ERROR: INSERT FAILED: %s\nSQL: %s\n", __LINE__, $@, $insert_sql;
         }
         else
         {
@@ -162,7 +193,7 @@ sub process_file
 ######################################################################
 #
 my %opts;
-if (getopts('?hp:l:d:r', \%opts) != 1)
+if (getopts('?hB:R:P:l:d:rf', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -175,14 +206,30 @@ foreach my $opt (%opts)
         usage($cmd);
         exit 0;
     }
-    elsif ($opt eq 'p')
+    elsif ($opt eq 'P')
     {
-        $db_path = $opts{$opt};
+        $db_path = $opts{$opt} . '/';
         printf $log_fh "\n%d: DB path: %s\n", __LINE__, $db_path;
+    }
+    elsif ($opt eq 'R')
+    {
+        $db_rel_path = $opts{$opt};
+        $db_path = $db_base_path . '/' . $db_rel_path;
+        printf $log_fh "\n%d: DB relative path: %s\n", __LINE__, $db_rel_path;
+    }
+    elsif ($opt eq 'B')
+    {
+        $db_base_path = $opts{$opt} . '/';
+        $db_path = $db_base_path . '/' . $db_rel_path;
+        printf $log_fh "\n%d: DB base path: %s\n", __LINE__, $db_base_path;
     }
     elsif ($opt eq 'r')
     {
         $rmv_old_db = TRUE;
+    }
+    elsif ($opt eq 'f')
+    {
+        $create_fid_index = TRUE;
     }
     elsif ($opt eq 'l')
     {
@@ -197,13 +244,6 @@ foreach my $opt (%opts)
         $delimiter = $opts{$opt};
         $delimiter = "\t" if ( $delimiter =~ /^$/ );
     }
-}
-#
-if (scalar(@ARGV) == 0)
-{
-    printf $log_fh "\n%d: No CSV files given.\n", __LINE__;
-    usage($cmd);
-    exit 2;
 }
 #
 # check if remove old data.
@@ -223,15 +263,6 @@ else
 my $dsn = "dbi:SQLite:dbname=${db_path}";
 my $user = "";
 my $password = "";
-$dbh = DBI->connect($dsn,
-                    $user,
-                    $password,
-                    {
-                        PrintError => 0,
-                        RaiseError => 1,
-                        AutoCommit => 0,
-                        FetchHashKeyName => 'NAME_lc'
-                    });
 #
 # process each file and place data into db.
 #
@@ -242,10 +273,20 @@ if ( -t STDIN )
     #
     if (scalar(@ARGV) == 0)
     {
-        printf $log_fh "%d: No csv files given.\n", __LINE__;
+        printf $log_fh "%d: ERROR: No csv files given.\n", __LINE__;
         usage($cmd);
         exit 2;
     }
+    #
+    $dbh = DBI->connect($dsn,
+                        $user,
+                        $password,
+                        {
+                            PrintError => 0,
+                            RaiseError => 1,
+                            AutoCommit => 0,
+                            FetchHashKeyName => 'NAME_lc'
+                        });
     #
     foreach my $csv_file (@ARGV)
     {
@@ -255,6 +296,17 @@ if ( -t STDIN )
 else
 {
     printf $log_fh "%d: Reading STDIN for list of files ...\n", __LINE__;
+    #
+    $dbh = DBI->connect($dsn,
+                        $user,
+                        $password,
+                        {
+                            PrintError => 0,
+                            RaiseError => 1,
+                            AutoCommit => 0,
+                            FetchHashKeyName => 'NAME_lc'
+                        });
+    #
     while( defined(my $csv_file = <STDIN>) )
     {
         chomp($csv_file);
