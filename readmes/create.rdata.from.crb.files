@@ -139,11 +139,11 @@ I will use a set of CRB files for angelo and cicor_20151013.
 	#
 	# all machines
 	#
-	maih2csv.pl -R cicor_20151013 GEN_4052184.CRB
+	maih2csv.pl -R cicor_20151013 -L GEN_4052184.CRB
 	#
 	# only machine 1
 	#
-	maih2csv.pl -R cicor_20151013 MINI_4072524_15.CRB
+	maih2csv.pl -R cicor_20151013 -L MINI_4072524_15.CRB
 	#
 	exit 0
 
@@ -177,11 +177,11 @@ and for angelo:
 	#
 	# all machines
 	#
-	maih2csv.pl -R angelo_npm_w1_0830 PTA635AA001_BA001_CA001.CRB
+	maih2csv.pl -R angelo_npm_w1_0830 -L PTA635AA001_BA001_CA001.CRB
 	#
 	# only machine 1
 	#
-	maih2csv.pl -R angelo_npm_w1_1_0830 PTA635AA001_BA001_CA001.CRB
+	maih2csv.pl -R angelo_npm_w1_1_0830 -L PTA635AA001_BA001_CA001.CRB
 	#
 	exit 0
 
