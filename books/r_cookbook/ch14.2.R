@@ -1,3 +1,5 @@
+library(zoo)
+library(xts)
 #
 # 14.3 - extracting oldest and newest observations
 #
