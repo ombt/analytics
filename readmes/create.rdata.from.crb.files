@@ -187,6 +187,11 @@ and for angelo:
 
 	angelo> create.crb.csv 
 
+2) Convert CRV csv files to CRB dbs. Do this:
+
+	$ csv2db.pl -r -f -R PTA635AA001_BA001_CA001 CSV_PTA635AA001_BA001_CA001.CRB/*csv
+	$ csv2db.pl -r -f -R GEN_4052184 CSV_GEN_4052184.CRB/*csv
+  	$ csv2db.pl -r -f -R MINI_4072524_15/ CSV_MINI_4072524_15.CRB/*.csv
 
 
 
