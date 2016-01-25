@@ -344,11 +344,152 @@ rollapply(window(zoo.ibm.daily,
 # acf(ts)
 #
 
-ts.ibm.daily <- ts(ibm.daily[,"Open"], 
-                   start=as.Date(ibm.daily[1,"Date"]))
-acf(ts.ibm.daily)
+ts.ibm.open.daily <- ts(ibm.daily[,"Open"], 
+                        start=as.Date(ibm.daily[1,"Date"]))
+x11()
+acf(ts.ibm.open.daily)
 
 #
+# 14.14 - testing a series for autocorrelation
+# 
+# Box.test(ts)
+
+# p-value < 0.05 means autocorrelations exist
+Box.test(ts.ibm.open.daily)
+
+# for small samples, use this:
+Box.test(ts.ibm.open.daily, type="Ljung-Box")
+
+#
+# 14.15 - plotting partial autocorrelation function
+#
+x11()
+# lag k=1 and k=2 are significant. ARIMA model would start
+# with 2 AR coefficients.
+#
+pacf(ts.ibm.open.daily)
+
+#
+# 14.16 - finding lagged correlations between two time series
+#
+# you have two time series and want to determine if there
+# lagged correlations between them
+#
+ts.ibm.high.daily <- ts(ibm.daily[,"High"], 
+                        start=as.Date(ibm.daily[1,"Date"]))
+
+ccf(ts.ibm.open.daily, ts.ibm.high.daily, main="IBM: Open vs High")
+
+cor(ts.ibm.open.daily, ts.ibm.high.daily)
+
+#
+# 14.17 - detrending a time series
+#
+# time series contains a trend that you want removed.
+#
+
+m <- lm(coredata(ts.ibm.open.daily) ~ index(ts.ibm.open.daily))
+m
+
+detr <- zoo(resid(m), index(ts.ibm.open.daily))
+detr
+
+x11()
+par(mfrow=c(1,2))
+plot(ts.ibm.open.daily)
+plot(detr)
+
+#
+# 14.18 - fitting an ARIMA model
+#
+# want to fit an ARIMA model to a time series
+#
+# library(forecast)
+# auto.arima(x)
+#
+# or if parameters are known, p,d,q, then:
+#
+# arima(x, order=c(p,d,q))
+#
+
+library(forecast)
+auto.arima(ts.ibm.open.daily)
+m <- arima(ts.ibm.open.daily, order=c(1,1,1))
+confint(m)
+
+#
+# 14.19 - removing insignificant ARIMA coefficients
+#
+# arima(x, order=c(2,1,2), fixed=c(0,NA,o,NA))
+#
+m <- arima(ts.ibm.open.daily, order=c(1,1,1), fixed=c(NA,0))
+confint(m)
+
+#
+# 14.20 - running diagnostics in an ARIMA model
+#
+# m <- arima(ts.ibm.open.daily, order=c(1,1,1), fixed=c(NA,0), transform=.pars=FALSE)
+# tsdiag(m)
+m <- arima(ts.ibm.open.daily, 
+           order=c(1,1,1), 
+           fixed=c(NA,0), 
+           transform.pars=FALSE)
+#
+# 3 graphs are displayed. these are good things:
+#
+# standardized residuals do not show clusters of volatility
+# autocorrelation shows no significant autocorrelation with the residuals
+# p-values for ljung-box test are large. this means only noise is
+# left in the residuals.
+#
+tsdiag(m)
+
+
+#
+# 14.21 - making forecasts from an ARIMA model.
+#
+m <- arima(ts.ibm.open.daily, 
+           order=c(1,1,1), 
+           fixed=c(NA,0), 
+           transform.pars=FALSE)
+predict(m, n.ahead=10)
+
+#
+# 14.22 - testing for mean reversion.
+#
+# use the Augmented-Dickey-Fuller (ADF) test to see if a 
+# time series reverts back to the mean.
+#
+# library(tseries)
+# adf.test(coredata(ts))
+#
+
+# this test detrends a series
+adf.test(coredata(ts.ibm.open.daily))
+
+library(fUnitRoots)
+# this test has an option to center (detrend) or not center (nc).
+adfTest(coredata(ts.ibm.open.daily), type="nc")
+
+#
+# 14.23 - smoothing a time series
+#
+# smooth a noisy time series
+#
+# library(KernSmooth)
+# gridsize <- length(y)
+# bw <- dpill(t,y,gridsize=gridsize)
+# lp <- locpoly(x=t, y=y, bandwidth=bw, gridsize=gridsize)
+# smooth <- lp$y
+#
+# t is the time variable and t is the time series
+
+# other smoothing functions are:
+# ksmooth
+# lowess
+# HoltWinters
+# 
+# also expsmooth package implements exponential smoothing
 #
 
 
