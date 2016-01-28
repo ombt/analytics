@@ -6,6 +6,8 @@ export OMBT_DB_BASE_PATH=${OMBT_ANALYTICS_BASE}/../db
 export OMBT_HW_BASE_PATH=${OMBT_ANALYTICS_BASE}/hw
 export OMBT_RAW_BASE_PATH=${OMBT_ANALYTICS_BASE}/../raw
 export OMBT_RDATA_BASE_PATH=${OMBT_ANALYTICS_BASE}/../rdata
+export OMBT_STATISTICS_BASE_PATH=${OMBT_ANALYTICS_BASE}/../statistics
+export OMBT_OMBT_BASE_PATH=${OMBT_ANALYTICS_BASE}/../ombt
 #
 PATH="${OMBT_ANALYTICS_BASE}/bin:${PATH}"
 #
@@ -42,6 +44,16 @@ cdrdata ()
 cdhw ()
 {
     cd $OMBT_HW_BASE_PATH "${@}"
+    pwd
+}
+cdstats ()
+{
+    cd $OMBT_STATISTICS_BASE_PATH "${@}"
+    pwd
+}
+cdombt ()
+{
+    cd $OMBT_OMBT_BASE_PATH "${@}"
     pwd
 }
 
