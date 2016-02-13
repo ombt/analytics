@@ -41,3 +41,13 @@ lnames <- function(dfrm)
 {
     lapply(dfrm, names)
 }
+#
+# estimate for e using monte-carlo. just choose a value for N.
+#
+# from R-bloggers
+#
+mc_e <- function(N=100000)
+{
+    1/mean(N*diff(sort(runif(N+1))) > 1)
+}
+
