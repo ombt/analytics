@@ -198,22 +198,112 @@ sub print_xml
     }
 }
 #
+sub accept_token
+{
+    my ($ptokens, $pidx, $lnno) = @_;
+    #
+    printf $log_fh "\n%d: DEBUG - ACCEPTING TOKEN AT %d: %s\n", 
+               __LINE__, 
+               $lnno,
+               $ptokens->[$$pidx] if ($verbose >= MINVERBOSE);
+    $$pidx += 1;
+}
+#
+sub is_end_tag
+{
+    my ($start_tag, $token) = @_;
+    #
+    my $end_tag = $start_tag;
+    $end_tag =~ s?^<?</?;
+    #
+    if ($token eq $end_tag)
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+#
 sub element_xml
 {
     my ($ptokens, $pidx, $maxtoken, $proot) = @_;
     #
-    while ($$pidx < $maxtoken)
+    my $done = FALSE;
+    my $first_start_tag = "";
+    #
+    while (($$pidx < $maxtoken) && ($done == FALSE))
     {
         my $token = $ptokens->[$$pidx];
         #
-        if ($token =~ m?^</[^>]+>$?)
+        if ($token =~ m/^<[^>]+>$/)
         {
-            # end token
+            # a start tag alone
+            if ($first_start_tag eq "")
+            {
+                 $first_start_tag = $token;
+                 #
+                 push @{$proot}, {
+                     NAME       => $token,
+                     VALUE      => undef,
+                     ATTRIBUTES => [],
+                     SIBLINGS   => []
+                 };
+                 accept_token($ptokens, $pidx, __LINE__);
+            }
+            else
+            {
+                element_xml($ptokens, 
+                            $pidx, 
+                            $maxtoken, 
+                            $proot->[$$pidx]->{SIBLINGS});
+            }
         }
-        elsif ($token =~ m?^</[^>]+>(.*)$?)
+        elsif ($token =~ m/^(<[^>]+>)(.+)$/)
         {
+            # a start tag with a value
+            my $tag_name = $1;
+            my $tag_value = $2;
+            push @{$proot}, {
+                NAME       => $tag_name,
+                VALUE      => $tag_value,
+                ATTRIBUTES => [],
+                SIBLINGS   => []
+            };
+            accept_token($ptokens, $pidx, __LINE__);
+            $token = $ptokens->[$$pidx];
+            if (is_end_tag($tag_name, $token) == TRUE)
+            {
+                accept_token($ptokens, $pidx, __LINE__);
+            }
+            else
+            {
+                printf $log_fh "\n%d: ERROR - MISSING END TAG : <%s,%s>\n", 
+                       __LINE__, $tag_name, $token;
+                accept_token($ptokens, $pidx, __LINE__);
+            }
         }
-    } 
+        elsif ($token =~ m/^<\/[^>]+>$/)
+        {
+            if (is_end_tag($first_start_tag, $token) == TRUE)
+            {
+                accept_token($ptokens, $pidx, __LINE__);
+                $done = TRUE;
+            }
+            else
+            {
+                printf $log_fh "\n%d: ERROR - UNEXPECTED END TAG : <%s>\n", 
+                       __LINE__, $token;
+            }
+        }
+        else
+        {
+            printf $log_fh "\n%d: ERROR - UNEXPECTED TOKEN : <%s>\n", 
+                   __LINE__, $token;
+            accept_token($ptokens, $pidx, __LINE__);
+        }
+    }
 }
 #
 sub start_xml
@@ -223,7 +313,7 @@ sub start_xml
     my $token = $ptokens->[$$pidx];
     if ($token =~ m/<.xml\s+version="1.0"\s+encoding="UTF-8".>/)
     {
-        $$pidx += 1;
+        accept_token($ptokens, $pidx, __LINE__);
         element_xml($ptokens, $pidx, $maxtoken, $proot);
     }
     else
@@ -245,7 +335,7 @@ sub parse_xml
                  split("<", $xml_rec);
     my $proot = [ ];
     #
-    printf $log_fh "\n%d: Tokens: \n\t%s\n", 
+    printf $log_fh "\n%d: DEBUG - TOKENS: \n\t%s\n", 
                __LINE__, 
                join("\n\t", @tokens) if ($verbose >= MINVERBOSE);
     #
