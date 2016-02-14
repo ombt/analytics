@@ -230,6 +230,13 @@ sub element_xml
 {
     my ($ptokens, $pidx, $maxtoken, $proot) = @_;
     #
+    printf $log_fh "\n%d: DEBUG - ENTRY: (%s,%s,%s,%s)\n", 
+           __LINE__, 
+           $ptokens, 
+           $pidx, 
+           $maxtoken, 
+           $proot if ($verbose >= MIDVERBOSE);
+    #
     my $done = FALSE;
     my $first_start_tag = "";
     #
@@ -237,7 +244,7 @@ sub element_xml
     {
         my $token = $ptokens->[$$pidx];
         #
-        if ($token =~ m/^<[^>]+>$/)
+        if ($token =~ m/^<[^\/>]+>$/)
         {
             # a start tag alone
             if ($first_start_tag eq "")
@@ -251,16 +258,24 @@ sub element_xml
                      SIBLINGS   => []
                  };
                  accept_token($ptokens, $pidx, __LINE__);
+                 #
+                 my $last_element = scalar(@{$proot})-1;
+                 $proot = $proot->[$last_element]->{SIBLINGS};
             }
             else
             {
+                my $last_element = scalar(@{$proot})-1;
+                #element_xml($ptokens, 
+                #            $pidx, 
+                #            $maxtoken, 
+                #            $proot->[$last_element]->{SIBLINGS});
                 element_xml($ptokens, 
                             $pidx, 
                             $maxtoken, 
-                            $proot->[$$pidx]->{SIBLINGS});
+                            $proot);
             }
         }
-        elsif ($token =~ m/^(<[^>]+>)(.+)$/)
+        elsif ($token =~ m/^(<[^\/>]+>)(.+)$/)
         {
             # a start tag with a value
             my $tag_name = $1;
