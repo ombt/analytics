@@ -34,6 +34,13 @@ use constant MINVERBOSE => 1;
 use constant MIDVERBOSE => 2;
 use constant MAXVERBOSE => 3;
 #
+# message types
+#
+use constant NO_MSGS => 0;
+use constant XML_MSGS => 1;
+use constant PM_MSGS => 2;
+use constant ALL_MSGS => 3;
+#
 ######################################################################
 #
 # globals
@@ -44,8 +51,8 @@ my $log_fh = *STDOUT;
 my $xml = new XML::Simple();
 my $full_trace = TRUE;
 my $print_raw = FALSE;
-my $trace_xml = TRUE;
-my $trace_pm = FALSE;
+my $trace_msg_type = XML_MSGS;
+my $use_private_parser = FALSE;
 #
 # cmd line options
 #
@@ -58,6 +65,14 @@ my %verbose_levels =
     min => MINVERBOSE(),
     mid => MIDVERBOSE(),
     max => MAXVERBOSE()
+);
+#
+my %trace_msg_types =
+(
+    none => NO_MSGS(),
+    xml  => XML_MSGS(),
+    pm   => PM_MSGS(),
+    all  => ALL_MSGS()
 );
 #
 ######################################################################
@@ -73,7 +88,7 @@ usage: $arg0 [-?] [-h]  \\
         [-w | -W |-v level] \\ 
         [-l logfile] \\ 
         [-t | -T] [-R] \\ 
-        [-X] [-P] \\
+        [-P xml|pm|all] [-p] \\
         panacim-log-file ...
 
 where:
@@ -85,8 +100,8 @@ where:
     -t - simple trace, only message command name is listed.
     -T - full trace and translation of messages (default).
     -R - list raw message also. 
-    -X - trace XML messages (default).
-    -P - trace Postmaster messages.
+    -P xml|pm|all - type of message to trace (XML=default).
+    -p - use private parser, if available (only XML for now).
 
 EOF
 }
@@ -183,18 +198,84 @@ sub print_xml
     }
 }
 #
+sub element_xml
+{
+    my ($ptokens, $pidx, $maxtoken, $proot) = @_;
+    #
+    while ($$pidx < $maxtoken)
+    {
+        my $token = $ptokens->[$$pidx];
+        #
+        if ($token =~ m?^</[^>]+>$?)
+        {
+            # end token
+        }
+        elsif ($token =~ m?^</[^>]+>(.*)$?)
+        {
+        }
+    } 
+}
+#
+sub start_xml
+{
+    my ($ptokens, $pidx, $maxtoken, $proot) = @_;
+    #
+    my $token = $ptokens->[$$pidx];
+    if ($token =~ m/<.xml\s+version="1.0"\s+encoding="UTF-8".>/)
+    {
+        $$pidx += 1;
+        element_xml($ptokens, $pidx, $maxtoken, $proot);
+    }
+    else
+    {
+        printf $log_fh "\n%d: ERROR - NOT XML 1.0 DOC: <%s>\n", 
+               __LINE__, $token;
+    }
+    #
+    return($proot);
+}
+#
+sub parse_xml
+{
+    my ($xml_rec) = @_;
+    #
+    my $idx = 0;
+    my @tokens = map { s/^/</; $_; } 
+                 grep { ! /^\s*$/ } 
+                 split("<", $xml_rec);
+    my $proot = [ ];
+    #
+    printf $log_fh "\n%d: Tokens: \n\t%s\n", 
+               __LINE__, 
+               join("\n\t", @tokens) if ($verbose >= MINVERBOSE);
+    #
+    start_xml(\@tokens, \$idx, scalar(@tokens), $proot);
+    #
+    return($proot);
+}
+#
 sub process_xml
 {
     my ($post_raw_nl, $rec) = @_;
     #
     my $done = FALSE;
+    my $booklist = undef;
     #
     if ($rec =~ m/\tDATA OUT:\s*(.*)$/)
     {
         my $do_rec = $1;
         printf $log_fh "\n%d: PanaCIM ==>> LNB - %s\n", 
                __LINE__, $do_rec if ($print_raw == TRUE);
-        my $booklist = $xml->XMLin($do_rec);
+        #
+        if ($use_private_parser == TRUE)
+        {
+            $booklist = parse_xml($do_rec);
+        }
+        else
+        {
+            $booklist = $xml->XMLin($do_rec);
+        }
+        #
         print_xml($post_raw_nl, 
                   "PanaCIM ==>> LNB", 
                   $booklist);
@@ -205,12 +286,23 @@ sub process_xml
         my $di_rec = $1;
         printf $log_fh "\n%d: PanaCIM <<== LNB - %s\n", 
                __LINE__, $di_rec if ($print_raw == TRUE);
-        my $booklist = $xml->XMLin($di_rec);
+        #
+        if ($use_private_parser == TRUE)
+        {
+            $booklist = parse_xml($di_rec);
+        }
+        else
+        {
+            $booklist = $xml->XMLin($di_rec);
+        }
+        #
         print_xml($post_raw_nl, 
                   "PanaCIM <<== LNB", 
                   $booklist);
         $done = TRUE;
     }
+    #
+    $booklist = undef;
     #
     return($done);
 }
@@ -231,15 +323,23 @@ sub process_other
     return($done);
 }
 #
+# use constant NO_MSGS => 0;
+# use constant XML_MSGS => 1;
+# use constant PM_MSGS => 2;
+# use constant ALL_MSGS => 3;
+# my $trace_msg_type = XML_MSGS;
+#
 sub process_rec
 {
     my($post_raw_nl, $rec) = @_;
     #
-    if ($trace_xml == TRUE)
+    if (($trace_msg_type == XML_MSGS) ||
+        ($trace_msg_type == ALL_MSGS))
     {
         return if (process_xml($post_raw_nl, $rec) == TRUE);
     }
-    if ($trace_pm == TRUE)
+    if (($trace_msg_type == PM_MSGS) ||
+        ($trace_msg_type == ALL_MSGS))
     {
         return if (process_pm($post_raw_nl, $rec) == TRUE);
         
@@ -273,8 +373,14 @@ sub process_file
 #
 ######################################################################
 #
+# usage: $arg0 [-?] [-h]  \\ 
+#         [-w | -W |-v level] \\ 
+#         [-l logfile] \\ 
+#         [-t | -T] [-R] \\ 
+#         [-P xml|pm|all] [-p] \\
+#
 my %opts;
-if (getopts('?XPRtThwWv:l:', \%opts) != 1)
+if (getopts('?hwWv:l:tTRP:p', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -307,13 +413,26 @@ foreach my $opt (%opts)
     {
         $print_raw = TRUE;
     }
-    elsif ($opt eq 'X')
+    elsif ($opt eq 'p')
     {
-        $trace_xml = TRUE;
+        $use_private_parser = TRUE;
     }
     elsif ($opt eq 'P')
     {
-        $trace_pm = TRUE;
+        if ($opts{$opt} =~ m/^[0123]$/)
+        {
+            $trace_msg_type = $opts{$opt};
+        }
+        elsif (exists($trace_msg_types{$opts{$opt}}))
+        {
+            $trace_msg_type = $trace_msg_types{$opts{$opt}};
+        }
+        else
+        {
+            printf $log_fh "\n%d: Invalid message type: $opts{$opt}\n", __LINE__;
+            usage($cmd);
+            exit 2;
+        }
     }
     elsif ($opt eq 'v')
     {
