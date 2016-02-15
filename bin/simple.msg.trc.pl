@@ -868,6 +868,17 @@ foreach my $opt (%opts)
     }
 }
 #
+if (($start_date ne "") &&
+    ($end_date ne "") &&
+    ($start_date gt $end_date))
+{
+    printf $log_fh "%d: ERROR - start date after end date.\n(%s > %s)\n", 
+           __LINE__, 
+           $start_date,
+           $end_date;
+    exit 2;
+}
+#
 if ( -t STDIN )
 {
     #
@@ -875,7 +886,7 @@ if ( -t STDIN )
     #
     if (scalar(@ARGV) == 0)
     {
-        printf $log_fh "%d: No log files given.\n", __LINE__;
+        printf $log_fh "%d: ERROR - No log files given.\n", __LINE__;
         usage($cmd);
         exit 2;
     }
