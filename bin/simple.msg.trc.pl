@@ -53,7 +53,7 @@ my $full_trace = TRUE;
 my $print_raw = FALSE;
 my $trace_msg_type = XML_MSGS;
 my $use_private_parser = FALSE;
-my $deparse_xml = FALSE;
+my $do_deparse_xml = FALSE;
 #
 # cmd line options
 #
@@ -479,7 +479,7 @@ sub process_xml
         $done = TRUE;
     }
     #
-    deparse_xml($booklist) if (($deparse_xml == TRUE) &&
+    deparse_xml($booklist) if (($do_deparse_xml == TRUE) &&
                                ($use_private_parser == TRUE) &&
                                ($done == TRUE));
     #
@@ -594,7 +594,7 @@ foreach my $opt (%opts)
     }
     elsif ($opt eq 'd')
     {
-        $deparse_xml = TRUE;
+        $do_deparse_xml = TRUE;
         printf $log_fh "\n%d: ONLY WORKS IF -p IS ALSO USED.\n",
                __LINE__ if ($use_private_parser != TRUE);
     }
