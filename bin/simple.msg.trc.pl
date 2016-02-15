@@ -504,12 +504,6 @@ sub process_other
     return($done);
 }
 #
-# use constant NO_MSGS => 0;
-# use constant XML_MSGS => 1;
-# use constant PM_MSGS => 2;
-# use constant ALL_MSGS => 3;
-# my $trace_msg_type = XML_MSGS;
-#
 sub process_rec
 {
     my($post_raw_nl, $rec) = @_;
