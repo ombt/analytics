@@ -85,6 +85,11 @@ my %trace_msg_types =
     all  => ALL_MSGS()
 );
 #
+my %xml_tally = ( );
+my %pm_tally = ( );
+my %total_xml_tally = ( TOTAL_MSGS => 0 );
+my %total_pm_tally = ( TOTAL_MSGS => 0 );
+#
 ######################################################################
 #
 # miscellaneous functions
@@ -141,6 +146,64 @@ sub ftrace
     }
 }
 #
+sub tally_ho
+{
+    my ($ptally, $ptotals, $name) = @_;
+    #
+    if (exists($ptally->{$name}))
+    {
+        $ptally->{$name} += 1;
+    }
+    else
+    {
+        $ptally->{$name} = 1;
+    }
+    if (exists($ptotals->{$name}))
+    {
+        $ptotals->{$name} += 1;
+    }
+    else
+    {
+        $ptotals->{$name} = 1;
+    }
+    $ptotals->{TOTAL_MSGS} += 1;
+}
+#
+sub pm_tally_ho
+{
+    my ($name) = @_;
+    #
+    tally_ho(\%pm_tally, \%total_pm_tally, $name);
+}
+#
+sub xml_tally_ho
+{
+    my ($name) = @_;
+    #
+    tally_ho(\%xml_tally, \%total_xml_tally, $name);
+}
+#
+sub init_tally
+{
+    %pm_tally = ( );
+    %xml_tally = ( );
+}
+#
+sub print_tally
+{
+    printf $log_fh "\n%d: XML MSG TALLY:\n", __LINE__;
+    printf $log_fh "$_ = $xml_tally{$_}\n" for sort keys %xml_tally;
+    #
+    printf $log_fh "\n%d: PM MSG TALLY:\n", __LINE__;
+    printf $log_fh "$_ = $pm_tally{$_}\n" for sort keys %pm_tally;
+    #
+    printf $log_fh "\n%d: TOTAL XML MSG TALLY:\n", __LINE__;
+    printf $log_fh "$_ = $total_xml_tally{$_}\n" for sort keys %total_xml_tally;
+    #
+    printf $log_fh "\n%d: TOTAL PM MSG TALLY:\n", __LINE__;
+    printf $log_fh "$_ = $total_pm_tally{$_}\n" for sort keys %total_pm_tally;
+}
+#
 ######################################################################
 #
 # read in PanaCIM log file and filter out XML messages to and from LNB.
@@ -156,6 +219,8 @@ sub print_pm
         $msg_type,
         $rec) = @_;
     ftrace(__LINE__);
+    #
+    pm_tally_ho($msg_class . $msg_type);
     #
     if ($full_trace == TRUE)
     {
@@ -278,6 +343,7 @@ sub print_xml
     #
     if ($full_trace == TRUE)
     {
+        xml_tally_ho($pbooklist->{'Header'}->{'CommandName'});
         printf $log_fh "\n%d: %s %s - %s\n", 
                __LINE__, 
                $tstamp,
@@ -286,15 +352,18 @@ sub print_xml
     }
     elsif ($use_private_parser == TRUE)
     {
+        my $cmdnm = get_value($pbooklist, "<CommandName>");
+        xml_tally_ho($cmdnm);
         printf $log_fh "%s%d: %s %s - %s\n", 
                $post_raw_nl,
                __LINE__, 
                $tstamp,
                $label,
-               get_value($pbooklist, "<CommandName>");
+               $cmdnm;
     }
     else
     {
+        xml_tally_ho($pbooklist->{'Header'}->{'CommandName'});
         printf $log_fh "%s%d: %s %s - %s\n", 
                $post_raw_nl,
                __LINE__, 
@@ -698,6 +767,7 @@ sub process_file
     printf $log_fh "\n%d: Processing PanaCIM Log File: %s\n", 
                    __LINE__, $log_file;
     #
+    init_tally();
     open(my $infh, "<", $log_file) || die $!;
     #
     my $post_raw_nl = '';
@@ -723,6 +793,8 @@ sub process_file
     }
     #
     close($infh);
+    #
+    print_tally();
     #
     return;
 }
