@@ -180,6 +180,57 @@ sub process_pm
     return($done);
 }
 #
+sub start_get_value
+{
+    my ($ptree, $search_name, $pvalue, $pdone) = @_;
+    #
+    if (ref($ptree) eq "ARRAY")
+    {
+        for (my $i=0; ($$pdone == FALSE) && ($i<scalar(@{$ptree})); ++$i)
+        {
+            my $name = $ptree->[$i]->{NAME};
+            if ($search_name eq $name)
+            {
+                if (defined($ptree->[$i]->{VALUE}))
+                {
+                    $$pvalue = $ptree->[$i]->{VALUE};
+                }
+                else
+                {
+                    $$pvalue = "";
+                }
+                $$pdone = TRUE;
+            }
+            elsif (scalar(@{$ptree->[$i]->{SIBLINGS}}) > 0)
+            {
+                start_get_value($ptree->[$i]->{SIBLINGS},
+                                $search_name, 
+                                $pvalue, 
+                                $pdone);
+            }
+        }
+    }
+    else
+    {
+        printf $log_fh "\n%d: ERROR - EXPECTING ARRAY REF: <%s>\n", 
+               __LINE__, 
+               ref($ptree);
+        $$pdone = TRUE;
+    }
+}
+#
+sub get_value
+{
+    my ($ptree, $search_name) = @_;
+    #
+    my $value = "UNKNOWN";
+    my $done = FALSE;
+    #
+    start_get_value($ptree, $search_name, \$value, \$done);
+    #
+    return($value);
+}
+#
 sub print_xml
 {
     my($post_raw_nl, $label, $pbooklist) = @_;
@@ -190,6 +241,14 @@ sub print_xml
                __LINE__, 
                $label,
                Dumper($pbooklist);
+    }
+    elsif ($use_private_parser == TRUE)
+    {
+        printf $log_fh "%s%d: %s - %s\n", 
+               $post_raw_nl,
+               __LINE__, 
+               $label,
+               get_value($pbooklist, "<CommandName>");
     }
     else
     {
