@@ -60,3 +60,7 @@ git reset --hard origin/master
 
 this will erase files and recreated deleted files.
 
+to reset one file, do this:
+
+git checkout HEAD -- filename
+
