@@ -822,8 +822,10 @@ if (getopts('?hwWv:l:tTRP:pdS:E:X:x', \%opts) != 1)
     exit 2;
 }
 #
-foreach my $opt (%opts)
+foreach my $opt (keys %opts)
 {
+    printf "\n%d: Option: $opt, $opts{$opt}\n", __LINE__;
+    #
     if (($opt eq 'h') or ($opt eq '?'))
     {
         usage($cmd);
