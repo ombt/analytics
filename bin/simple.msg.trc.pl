@@ -343,7 +343,15 @@ sub print_xml
     #
     if ($full_trace == TRUE)
     {
-        xml_tally_ho($pbooklist->{'Header'}->{'CommandName'});
+        if ($use_private_parser == TRUE)
+        {
+            my $cmdnm = get_value($pbooklist, "<CommandName>");
+            xml_tally_ho($cmdnm);
+        }
+        else
+        {
+            xml_tally_ho($pbooklist->{'Header'}->{'CommandName'});
+        }
         printf $log_fh "\n%d: %s %s - %s\n", 
                __LINE__, 
                $tstamp,
