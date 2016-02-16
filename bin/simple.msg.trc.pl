@@ -735,9 +735,9 @@ sub date_filter
     if ($verbose < MIDVERBOSE)
     {
         return BEFORE_WINDOW if (($start_date ne "") &&
-                         ($start_date gt $$ptstamp));
+                                 ($start_date gt $$ptstamp));
         return AFTER_WINDOW if (($end_date ne "") &&
-                         ($end_date lt $$ptstamp));
+                                 ($end_date lt $$ptstamp));
         return IN_WINDOW;
     }
     elsif (($start_date ne "") &&
