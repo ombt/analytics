@@ -1,0 +1,2 @@
+#!/usr/bin/ksh
+exec ~exptools/bin/inedit ~lcstools/bin/MYBC "${@}"

@@ -1,0 +1,5 @@
+SHELLBIN=$(HOME)/tools/bin
+#
+gench2ioms
+gench2ioms.sh
+#

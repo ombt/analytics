@@ -1,0 +1,2 @@
+export HOME=${HOME}/.marnetscape
+exec netscape

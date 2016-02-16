@@ -1,0 +1,13 @@
+TCLBIN=$(LCSHUGLIB)
+#
+checkenv.tcl
+checkenv.TCL
+install1=auto_mkindex $(LCSHUGLIB) '*.tcl'
+#
+getoptval.tcl
+getoptval.TCL
+install1=auto_mkindex $(LCSHUGLIB) '*.tcl'
+#
+logging.tcl
+logging.TCL
+install1=auto_mkindex $(LCSHUGLIB) '*.tcl'

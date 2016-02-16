@@ -1,0 +1,10 @@
+SHELLBIN=$(HOME)/tools/bin
+#
+refersim
+refersim.pl
+#
+sendudp
+sendudp.pl
+#
+sndrcvudp
+sndrcvudp.pl

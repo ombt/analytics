@@ -1,0 +1,251 @@
+#!/opt/exp/bin/tclsh
+#
+# attempt to diagnose and cure (recover) sick and ill SPs.
+#
+#########################################################################
+#
+lappend auto_path [file join [file dirname [info script]] ../lib]
+#
+# packages we need 
+#
+package require Expect
+#
+# libraries
+#
+package require db
+package require checkenv
+package require getoptval
+package require checkretval
+package require chooseone
+package require hwmaint
+package require cleis
+#
+# signal handler
+#
+trap {
+	global startok;
+	puts "";
+	set signame [trap -name];
+	set signo [trap -number];
+	puts "\nERROR: Got signal <$signame,$signo>";
+	exit 2;
+} {SIGHUP SIGINT SIGQUIT SIGPIPE SIGTERM SIGBUS};
+#
+# functions
+#
+proc usage { } {
+	global argv0;
+
+	puts "Usage: [file tail $argv0] \[-\?] \[-x] \[-V] \[-S trace level]";
+	puts "	\[-u TL1 username] \[-p TL1 passwd] \[-U username] \[-P passwd]";
+	# puts "	\[-A | -B] \[-a | -m] \[labid]";
+	puts "	\[-K] \[-a | -m] \[labid]";
+	puts "";
+	puts "where:";
+	puts "	-? - usage message";
+	puts "	-V - enable verbose output";
+	puts "	-S tracelevel - set trace to given stack level";
+	puts "	-u username - TL1 login (default is telica)";
+	puts "	-p passwd - TL1 passwd (default is telica)";
+	puts "	-U username - Lynx-OS login (default is root)";
+	puts "	-P passwd - Lynx-OS passwd (default is plexus9000)";
+	# puts "	-A - diagnose and recover only SP-A (default is both SPs)."
+	# puts "	-B - diagnose and recover only SP-B (default is both SPs)."
+	puts "	-K - interrupt SPs and drop into SKDB, then recover."
+	puts "	-a - boot into app mode after recovery."
+	puts "	-m - boot into min mode after recovery."
+	puts "";
+	# puts "Attempt to run sanity checks on an one or both SPs and take";
+	# puts "steps to recover the SP(s), that is, bring them to a sane state.";
+	puts "Attempt to run sanity checks on both SPs and take";
+	puts "steps to recover the SPs, that is, bring them to a sane state.";
+	puts "";
+}
+#
+#########################################################################
+#
+# declarations and default values.
+#
+global env;
+set stracelevel -1;
+set tl1username "telica";
+set tl1passwd "telica";
+set lynxusername "root";
+set lynxpasswd "plexus9000";
+set sps "both";
+set bootmode "none";
+set useskdb 0;
+#
+log_user 0;
+#
+# get cmd line options
+#
+set argc [llength $argv];
+#
+for {set arg 0} {$arg<$argc} {incr arg} {
+	set argval [lindex $argv $arg];
+	switch -regexp -- $argval {
+	{^-x} {
+		# enable TCL debugger
+		debug -now;
+	}
+	{^-V} {
+		# turn on verbose
+		log_user 1;
+	}
+	{^-a} {
+		# boot into app mode when done
+		set bootmode "app";
+	}
+	{^-m} {
+		# boot into min mode when done
+		set bootmode "min";
+	}
+	{^-A} {
+		# check SP-A (not supported for now)
+		set sps "A";
+	}
+	{^-B} {
+		# check SP-B (not supported for now)
+		set sps "B";
+	}
+	{^-K} {
+		# interrupt SPs and drop into kernel debugger, SKDB.
+		set useskdb 1;
+	}
+	{^-S.*} {
+		# set function/stack trace level
+		getoptval $argval stracelevel arg;
+		if {$stracelevel >= 0} {
+			strace $stracelevel;
+		}
+	}
+	{^-u.*} {
+		# get TL1 user name
+		getoptval $argval tl1username arg;
+	}
+	{^-p.*} {
+		# get TL1 passwd
+		getoptval $argval tl1passwd arg;
+	}
+	{^-U.*} {
+		# get Lynx-OS user name
+		getoptval $argval lynxusername arg;
+	}
+	{^-P.*} {
+		# get Lynx-OS passwd
+		getoptval $argval lynxpasswd arg;
+	}
+	{^-\?} {
+		# print help message and quit
+		usage; 
+		exit 0;
+	}
+	{^--} {
+		# skip and done
+		incr arg;
+		break;
+	}
+	{^-.*} {
+		puts "\nERROR: unknown option: $argval\n";
+		usage; 
+		exit 2;
+	}
+	default {
+		# unknown and done
+		break;
+	}
+	}
+}
+#
+# check environment
+checkenv;
+#
+set status [initCleiData];
+if {[isNotOk $status]} {
+	puts "\nERROR: initCleiData Failed: \n$status";
+	exit 2;
+}
+#
+# get labid 
+#
+if {$arg<$argc} {
+	set labid [lindex $argv $arg];
+} elseif {[info exists env(LABID)]} {
+	set labid $env(LABID);
+} else {
+	puts "\nERROR: LABID is neither set nor given.";
+	exit 2;
+}
+#
+global argv0;
+global argv;
+catch { system "lcssyslog -q syslog \"Starting $argv0 $argv.\""; } ignore;
+#
+# open log file
+#
+set logfile "/lcsl100/tmp/recoversps.${labid}.[pid]";
+catch { log_file -noappend -a $logfile; } ignore;
+catch { system /usr/bin/chmod 777 $logfile; } ignore;
+puts "\nLog file is $logfile.";
+#
+# get the lab IPs.
+#
+set status [dbselect obuf chassis "labid req ^$labid\$" "cpu_a_ip cpu_b_ip"];
+if {[isNotOk $status]} {
+	puts "\nERROR: dbselect of relation 'chassis' failed: \n${status}";
+	exit 2;
+}
+if {![info exists obuf] || [llength obuf] == 0} {
+	puts "\nERROR: No IPs found for labid $labid. Unknown labid.";
+	exit 2;
+}
+#
+set ips [lindex $obuf 0];
+set ipdata [split $ips " \t"];
+set sp_a_ip [lindex $ipdata 0];
+set sp_b_ip [lindex $ipdata 1];
+#
+set spips(sp-a) ${sp_a_ip};
+set spips(sp-b) ${sp_b_ip};
+set spips(lynx-a) ${sp_a_ip};
+set spips(lynx-b) ${sp_b_ip};
+set spips(tl1-a) ${sp_a_ip};
+set spips(tl1-b) ${sp_b_ip};
+#
+puts "";
+puts "Attempt to Diagnose/Recover SPs for LABID ${labid}:"
+puts "";
+puts "SP-A IP    : ${sp_a_ip}";
+puts "SP-B IP    : ${sp_b_ip}";
+puts "TL1 Login  : ${tl1username}";
+puts "TL1 Passwd : ${tl1passwd}";
+puts "Lynx Login : ${lynxusername}";
+puts "Lynx Passwd: ${lynxpasswd}";
+puts "Target SPs : ${sps}";
+puts "SKDB flag  : ${useskdb}";
+#
+# start checking the SPs.
+#
+set status [hw_maint_recover_sps ${labid} spips ${tl1username} ${tl1passwd} ${lynxusername} ${lynxpasswd} $sps $useskdb ];
+if {[isNotOk $status]} {
+	puts "\nERROR: hw_maint_recover_sps failed: \n${status}";
+	exit 2;
+}
+#
+# do we reboot the switch?
+#
+global env;
+#
+if {${bootmode} == "app"} {
+	puts "\nBooting switch ${labid} into APP mode.";
+	catch { system "$env(LCSTOOLSBIN)/lcsreboot -a ${labid}"; } ignore;
+} elseif {${bootmode} == "min"} {
+	puts "\nBooting switch ${labid} into MIN mode.";
+	catch { system "$env(LCSTOOLSBIN)/lcsreboot -m ${labid}"; } ignore;
+}
+#
+# all done
+#
+puts "\nDone.";
+exit 0;

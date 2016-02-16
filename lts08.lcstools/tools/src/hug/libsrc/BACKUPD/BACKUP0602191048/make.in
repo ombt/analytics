@@ -1,0 +1,50 @@
+TCLBIN=$(LCSHUGLIB)
+#
+checkenv.tcl
+checkenv.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#
+lock.tcl
+lock.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#
+getoptval.tcl
+getoptval.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#
+chooseone.tcl
+chooseone.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#
+db.tcl
+db.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#
+lcsftp.tcl
+lcsftp.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#
+logging.tcl
+logging.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#
+lcstelnet.tcl
+lcstelnet.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#
+mgcips.tcl
+mgcips.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#
+cfgdata.tcl
+cfgdata.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#
+checkretval.tcl
+checkretval.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#
+scripts.tcl
+scripts.TCL
+install1=pkg_mkindex $(LCSHUGLIB) '*.tcl'
+#

@@ -1,0 +1,13 @@
+CC = CC
+CCFLAGS = -g -xildoff -DDEBUG
+#
+LD = CC
+LDFLAGS = -g -xildoff -DDEBUG
+#
+tstring
+tstring.c
+mystring.c
+#
+tstring2
+tstring2.c
+mystring.c

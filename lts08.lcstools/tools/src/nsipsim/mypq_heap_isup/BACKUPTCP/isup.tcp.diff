@@ -1,0 +1,433 @@
+52a53,54
+> 	mytcpsipip => "127.0.0.1",
+> 	mytcpsipport => 5060,
+86a89,90
+> 		tcpsipip => "127.0.0.1",
+> 		tcpsipport => 5060,
+181a186
+> 		transport => "udp",
+767c772,773
+< 	my ($rawmsg, $prawhdr, $prawdata, $phdrs, $pdatablocks, $reinvite) = @_;
+---
+> 	my ($rawmsg, $prawhdr, $prawdata, $phdrs, $pdatablocks, $reinvite,
+> 		$transport) = @_;
+848a855
+> 			$dialogs{$callid}{transport} = $transport;
+925a933
+> 			$dialogs{$callid}{transport} = $transport;
+1223a1232
+> 	my $transport = $dialogs{$callid}{transport};
+1229c1238
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+1248c1257,1261
+< 	defined(send(SIP, $ackmsg, 0, $paddr)) or die "send: $!";
+---
+> 	if ($transport eq "udp") {
+> 		defined(send(SIP, $ackmsg, 0, $paddr)) or die "send: $!";
+> 	} else {
+> 		die "Unable to determine what to use: TCP or UDP !!!\n";
+> 	}
+1256a1270
+> 	my $transport = $dialogs{$callid}{transport};
+1262c1276
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+1291a1306
+> 	my $transport = $dialogs{$callid}{transport};
+1329a1345
+> 	my $transport = $dialogs{$callid}{transport};
+1365a1382
+> 	my $transport = $dialogs{$callid}{transport};
+1401a1419
+> 	my $transport = $dialogs{$callid}{transport};
+1445a1464
+> 	my $transport = $dialogs{$callid}{transport};
+1451c1470
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+1478a1498
+> 	my $transport = $dialogs{$callid}{transport};
+1484c1504
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+1509a1530
+> 	my $transport = $dialogs{$callid}{transport};
+1515c1536
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+1540a1562
+> 	my $transport = $dialogs{$callid}{transport};
+1576a1599
+> 	my $transport = $dialogs{$callid}{transport};
+1606a1630
+> 	my $transport = $dialogs{$callid}{transport};
+1614c1638
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+1640a1665
+> 	my $transport = $dialogs{$callid}{transport};
+1646c1671
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+1789a1815
+> 	my $transport = $dialogs{$callid}{transport};
+1826a1853
+> 	my $transport = $dialogs{$callid}{transport};
+1863a1891
+> 	my $transport = $dialogs{$callid}{transport};
+1900a1929
+> 	my $transport = $dialogs{$callid}{transport};
+2907,2917d2935
+< 		} elsif (($dndata{$dn}{"handleorigreinvite"} != 0) && 
+< 			 ($phdrs->{msgtype} =~ /INVITE/)) {
+< 			# we have a RE-INVITE. end this call and
+< 			# treat as a new termination.
+< 			removetimer($callid);
+< 			delete $dialogs{$callid};
+< 			changeDnState($dn, "originationstate", "INACTIVE");
+< 			incrstats("originationrefer","inactive");
+< 			incrstats("originationrefer","reinvitesstarted");
+< 			# call parser for new termination
+< 			handleSIP($current_time, $recvpaddr, $rawmsg, 1);
+2971,2981d2988
+< 		} elsif (($dndata{$dn}{"handleorigreinvite"} != 0) && 
+< 			 ($phdrs->{msgtype} =~ /INVITE/)) {
+< 			# we have a RE-INVITE. end this call and
+< 			# treat as a new termination.
+< 			removetimer($callid);
+< 			delete $dialogs{$callid};
+< 			changeDnState($dn, "originationstate", "INACTIVE");
+< 			incrstats("originationrefer","inactive");
+< 			incrstats("originationrefer","reinvitesstarted");
+< 			# call parser for new termination
+< 			handleSIP($current_time, $recvpaddr, $rawmsg, 1);
+3045,3055d3051
+< 		} elsif (($dndata{$dn}{"handleorigreinvite"} != 0) && 
+< 			 ($phdrs->{msgtype} =~ /INVITE/)) {
+< 			# we have a RE-INVITE. end this call and
+< 			# treat as a new termination.
+< 			removetimer($callid);
+< 			delete $dialogs{$callid};
+< 			changeDnState($dn, "originationstate", "INACTIVE");
+< 			incrstats("originationrefer","inactive");
+< 			incrstats("originationrefer","reinvitesstarted");
+< 			# call parser for new termination
+< 			handleSIP($current_time, $recvpaddr, $rawmsg, 1);
+3170,3180d3165
+< 		} elsif (($dndata{$dn}{"handleorigreinvite"} != 0) && 
+< 			 ($phdrs->{msgtype} =~ /INVITE/)) {
+< 			# we have a RE-INVITE. end this call and
+< 			# treat as a new termination.
+< 			removetimer($callid);
+< 			delete $dialogs{$callid};
+< 			changeDnState($dn, "originationstate", "INACTIVE");
+< 			incrstats("originationrefer","inactive");
+< 			incrstats("originationrefer","reinvitesstarted");
+< 			# call parser for new termination
+< 			handleSIP($current_time, $recvpaddr, $rawmsg, 1);
+3216,3226d3200
+< 		} elsif (($dndata{$dn}{"handleorigreinvite"} != 0) && 
+< 			 ($phdrs->{msgtype} =~ /INVITE/)) {
+< 			# we have a RE-INVITE. end this call and
+< 			# treat as a new termination.
+< 			removetimer($callid);
+< 			delete $dialogs{$callid};
+< 			changeDnState($dn, "originationstate", "INACTIVE");
+< 			incrstats("originationrefer","inactive");
+< 			incrstats("originationrefer","reinvitesstarted");
+< 			# call parser for new termination
+< 			handleSIP($current_time, $recvpaddr, $rawmsg, 1);
+3706,3731c3680,3688
+< 			if ($dndata{$dn}{"handletermreinvite"} == 0)
+< 			{
+< 				# busy, send 486
+< 				send486Busy($callid, $phdrs, "contact");
+< 				incrstats("terminationrefer","send486Busy");
+< 				# wait for 486 ACK.
+< 				removetimer($callid);
+< 				changeDnState($dn, "terminationstate", 
+< 					"WAITFOR486ACK");
+< 				starttimer($callid, 
+< 					$dndata{$dn}{"waitingforackduration"}, 
+< 					"WAIT FOR 486 ACK");
+< 				incrstats("terminationrefer","waitfor486ack");
+< 			} else {
+< 				# re-invite handling is enabled.
+< 				# end current call and startup a new
+< 				# termination.
+< 				removetimer($callid);
+< 				delete $dialogs{$callid};
+< 				changeDnState($dn, "terminationstate", 
+< 					"INACTIVE");
+< 				incrstats("terminationrefer","inactive");
+< 				incrstats("terminationrefer","reinvitesstarted");
+< 				# call parser for new termination
+< 				handleSIP($current_time, $recvpaddr, $rawmsg, 1);
+< 			}
+---
+> 			# busy, send 486
+> 			send486Busy($callid, $phdrs, "contact");
+> 			incrstats("termination","send486Busy");
+> 			# wait for 486 ACK.
+> 			removetimer($callid);
+> 			changeDnState($dn, "terminationstate", "WAITFOR486ACK");
+> 			starttimer($callid, $dndata{$dn}{"waitingforackduration"}, 
+> 				"WAIT FOR 486 ACK");
+> 			incrstats("terminationrefer","waitfor486ack");
+3774,3799c3731,3739
+< 			if ($dndata{$dn}{"handletermreinvite"} == 0)
+< 			{
+< 				# busy, send 486
+< 				send486Busy($callid, $phdrs, "contact");
+< 				incrstats("terminationrefer","send486Busy");
+< 				# wait for 486 ACK.
+< 				removetimer($callid);
+< 				changeDnState($dn, "terminationstate", 
+< 					"WAITFOR486ACK");
+< 				starttimer($callid, 
+< 					$dndata{$dn}{"waitingforackduration"}, 
+< 					"WAIT FOR 486 ACK");
+< 				incrstats("terminationrefer","waitfor486ack");
+< 			} else {
+< 				# re-invite handling is enabled.
+< 				# end current call and startup a new
+< 				# termination.
+< 				removetimer($callid);
+< 				delete $dialogs{$callid};
+< 				changeDnState($dn, "terminationstate", 
+< 					"INACTIVE");
+< 				incrstats("terminationrefer","inactive");
+< 				incrstats("terminationrefer","reinvitesstarted");
+< 				# call parser for new termination
+< 				handleSIP($current_time, $recvpaddr, $rawmsg, 1);
+< 			}
+---
+> 			# busy, send 486
+> 			send486Busy($callid, $phdrs, "contact");
+> 			incrstats("terminationrefer","send486Busy");
+> 			# wait for 486 ACK.
+> 			removetimer($callid);
+> 			changeDnState($dn, "terminationstate", "WAITFOR486ACK");
+> 			starttimer($callid, $dndata{$dn}{"waitingforackduration"}, 
+> 				"WAIT FOR 486 ACK");
+> 			incrstats("terminationrefer","waitfor486ack");
+3850,3875c3790,3798
+< 			if ($dndata{$dn}{"handletermreinvite"} == 0)
+< 			{
+< 				# busy, send 486
+< 				send486Busy($callid, $phdrs, "contact");
+< 				incrstats("terminationrefer","send486Busy");
+< 				# wait for 486 ACK.
+< 				removetimer($callid);
+< 				changeDnState($dn, "terminationstate", 
+< 					"WAITFOR486ACK");
+< 				starttimer($callid, 
+< 					$dndata{$dn}{"waitingforackduration"}, 
+< 					"WAIT FOR 486 ACK");
+< 				incrstats("terminationrefer","waitfor486ack");
+< 			} else {
+< 				# re-invite handling is enabled.
+< 				# end current call and startup a new
+< 				# termination.
+< 				removetimer($callid);
+< 				delete $dialogs{$callid};
+< 				changeDnState($dn, "terminationstate", 
+< 					"INACTIVE");
+< 				incrstats("terminationrefer","inactive");
+< 				incrstats("terminationrefer","reinvitesstarted");
+< 				# call parser for new termination
+< 				handleSIP($current_time, $recvpaddr, $rawmsg, 1);
+< 			}
+---
+> 			# busy, send 486
+> 			send486Busy($callid, $phdrs, "contact");
+> 			incrstats("terminationrefer","send486Busy");
+> 			# wait for 486 ACK.
+> 			removetimer($callid);
+> 			changeDnState($dn, "terminationstate", "WAITFOR486ACK");
+> 			starttimer($callid, $dndata{$dn}{"waitingforackduration"}, 
+> 				"WAIT FOR 486 ACK");
+> 			incrstats("terminationrefer","waitfor486ack");
+3962,3988d3884
+< 		} elsif ($phdrs->{msgtype} =~ /INVITE/) {
+< 			if ($dndata{$dn}{"handletermreinvite"} == 0)
+< 			{
+< 				# busy, send 486
+< 				send486Busy($callid, $phdrs, "contact");
+< 				incrstats("terminationrefer","send486Busy");
+< 				# wait for 486 ACK.
+< 				removetimer($callid);
+< 				changeDnState($dn, "terminationstate", 
+< 					"WAITFOR486ACK");
+< 				starttimer($callid, 
+< 					$dndata{$dn}{"waitingforackduration"}, 
+< 					"WAIT FOR 486 ACK");
+< 				incrstats("terminationrefer","waitfor486ack");
+< 			} else {
+< 				# re-invite handling is enabled.
+< 				# end current call and startup a new
+< 				# termination.
+< 				removetimer($callid);
+< 				delete $dialogs{$callid};
+< 				changeDnState($dn, "terminationstate", 
+< 					"INACTIVE");
+< 				incrstats("terminationrefer","inactive");
+< 				incrstats("terminationrefer","reinvitesstarted");
+< 				# call parser for new termination
+< 				handleSIP($current_time, $recvpaddr, $rawmsg, 1);
+< 			}
+4088,4113c3984,3992
+< 			if ($dndata{$dn}{"handletermreinvite"} == 0)
+< 			{
+< 				# busy, send 486
+< 				send486Busy($callid, $phdrs, "contact");
+< 				incrstats("terminationrefer","send486Busy");
+< 				# wait for 486 ACK.
+< 				removetimer($callid);
+< 				changeDnState($dn, "terminationstate", 
+< 					"WAITFOR486ACK");
+< 				starttimer($callid, 
+< 					$dndata{$dn}{"waitingforackduration"}, 
+< 					"WAIT FOR 486 ACK");
+< 				incrstats("terminationrefer","waitfor486ack");
+< 			} else {
+< 				# re-invite handling is enabled.
+< 				# end current call and startup a new
+< 				# termination.
+< 				removetimer($callid);
+< 				delete $dialogs{$callid};
+< 				changeDnState($dn, "terminationstate", 
+< 					"INACTIVE");
+< 				incrstats("terminationrefer","inactive");
+< 				incrstats("terminationrefer","reinvitesstarted");
+< 				# call parser for new termination
+< 				handleSIP($current_time, $recvpaddr, $rawmsg, 1);
+< 			}
+---
+> 			# busy, send 486
+> 			send486Busy($callid, $phdrs, "contact");
+> 			incrstats("termination","send486Busy");
+> 			# wait for 486 ACK.
+> 			removetimer($callid);
+> 			changeDnState($dn, "terminationstate", "WAITFOR486ACK");
+> 			starttimer($callid, $dndata{$dn}{"waitingforackduration"}, 
+> 				"WAIT FOR 486 ACK");
+> 			incrstats("terminationrefer","waitfor486ack");
+5204a5084
+> 	my $transport = $dialogs{$callid}{transport};
+5249a5130
+> 	my $transport = $dialogs{$callid}{transport};
+5294a5176
+> 	my $transport = $dialogs{$callid}{transport};
+5339a5222
+> 	my $transport = $dialogs{$callid}{transport};
+5345c5228
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+5379a5263
+> 	my $transport = $dialogs{$callid}{transport};
+5417a5302
+> 	my $transport = $dialogs{$callid}{transport};
+5455a5341
+> 	my $transport = $dialogs{$callid}{transport};
+5463c5349
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+5498a5385
+> 	my $transport = $dialogs{$callid}{transport};
+5504c5391
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+5552a5440
+> 	my $transport = $dialogs{$callid}{transport};
+5598a5487
+> 	my $transport = $dialogs{$callid}{transport};
+5644a5534
+> 	my $transport = $dialogs{$callid}{transport};
+5650c5540
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+5693a5584
+> 	my $transport = $dialogs{$callid}{transport};
+5699c5590
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+6768a6660
+> 	my $transport = $dialogs{$callid}{transport};
+6828a6721
+> 	my $transport = $dialogs{$callid}{transport};
+6888a6782
+> 	my $transport = $dialogs{$callid}{transport};
+6959a6854
+> 	my $transport = $dialogs{$callid}{transport};
+6965c6860
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+7014a6910
+> 	my $transport = $dialogs{$callid}{transport};
+7074a6971
+> 	my $transport = $dialogs{$callid}{transport};
+7123a7021
+> 	my $transport = $dialogs{$callid}{transport};
+7131c7029
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+7181a7080
+> 	my $transport = $dialogs{$callid}{transport};
+7187c7086
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+7266a7166
+> 	my $transport = $dialogs{$callid}{transport};
+7327a7228
+> 	my $transport = $dialogs{$callid}{transport};
+7388a7290
+> 	my $transport = $dialogs{$callid}{transport};
+7394c7296
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+7452a7355
+> 	my $transport = $dialogs{$callid}{transport};
+7458c7361
+< 	$ackmsg .= "Via: SIP/2.0/UDP ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+---
+> 	$ackmsg .= "Via: SIP/2.0/${transport} ".$parameters{mysipip}.":".$parameters{mysipport}.";branch=".${newbranch}."\r\n";
+9361c9264
+< 	my ($current_time, $recvpaddr, $rawmsg, $reinvite) = @_;
+---
+> 	my ($current_time, $recvpaddr, $rawmsg, $reinvite, $transport) = @_;
+9379c9282
+< 	my $ret = parseSipMsg($rawmsg, \$rawhdr, \$rawdata, \%hdrs, \@datablocks, $reinvite);
+---
+> 	my $ret = parseSipMsg($rawmsg, \$rawhdr, \$rawdata, \%hdrs, \@datablocks, $reinvite, $transport);
+9618c9521
+< 			handleSIP($current_time, $recvpaddr, $msg, 0);
+---
+> 			handleSIP($current_time, $recvpaddr, $msg, 0, "udp");
+9647a9551,9559
+> 
+> 	if ($transport eq "udp") {
+> 		defined(send(SIP, $ackmsg, 0, $paddr)) or die "send: $!";
+> 	} else {
+> 		die "Unable to determine what to use: TCP or UDP !!!\n";
+> 	}
+> 	incrstats("msgs-sent", "BYE");
+> 	return;
+> }

@@ -1,0 +1,40 @@
+SHELLBIN=$(HOME)/tools/bin
+#
+nsipsimisup
+nsipsimisup.PL
+install1 = -(sed "s?/opt/exp/bin/perl?/opt/OV/bin/Perl/bin/perl?" nsipsimisup.PL >/tmp/remotensipsimisup.PL)
+install2 = -(sed "s?/home/lcstools/tools?/NSIPSIM?" /tmp/remotensipsimisup.PL >/tmp/remotensipsim2isup.PL)
+install3 = -(rcp /tmp/remotensipsim2isup.PL root@135.1.235.58:/NSIPSIM/src/nsipsimisup.PL)
+#
+myisup.pm
+myisup.PM
+install1 = -(rcp myisup.PM root@135.1.235.58:/NSIPSIM/src)
+#
+nsipsimadm
+nsipsimadm.PL
+install1 = -(sed "s?/opt/exp/bin/perl?/opt/OV/bin/Perl/bin/perl?" nsipsimadm.PL >/tmp/remotensipsimadm.PL)
+install2 = -(sed "s?/home/lcstools/tools/bin?/NSIPSIM/bin?" /tmp/remotensipsimadm.PL >/tmp/remotensipsim2adm.PL)
+install3 = -(rcp /tmp/remotensipsim2adm.PL root@135.1.235.58:/NSIPSIM/src/nsipsimadm.PL)
+#
+mypqueue.pm
+mypqueue.PM
+install1 = -(rcp mypqueue.PM root@135.1.235.58:/NSIPSIM/src)
+#
+mytimer.pm
+mytimer.PM
+install1 = -(rcp mytimer.PM root@135.1.235.58:/NSIPSIM/src)
+#
+tisup
+tisup.PL
+#
+prtisupmsgs
+prtisupmsgs.PL
+install1 = -(sed "s?/opt/exp/bin/perl?/opt/OV/bin/Perl/bin/perl?" prtisupmsgs.PL >/tmp/remoteprtisupmsgs.PL)
+install2 = -(sed "s?/home/lcstools/tools/bin?/NSIPSIM/bin?" /tmp/remoteprtisupmsgs.PL >/tmp/remoteprtisupmsgs2.PL)
+install3 = -(rcp /tmp/remoteprtisupmsgs2.PL root@135.1.235.58:/NSIPSIM/src/prtisupmsgs.PL)
+#
+testisupmsgs
+testisupmsgs.PL
+install1 = -(sed "s?/opt/exp/bin/perl?/opt/OV/bin/Perl/bin/perl?" testisupmsgs.PL >/tmp/remotetestisupmsgs.PL)
+install2 = -(sed "s?/home/lcstools/tools/bin?/NSIPSIM/bin?" /tmp/remotetestisupmsgs.PL >/tmp/remotetestisupmsgs2.PL)
+install3 = -(rcp /tmp/remotetestisupmsgs2.PL root@135.1.235.58:/NSIPSIM/src/testisupmsgs.PL)

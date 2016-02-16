@@ -1,0 +1,43 @@
+#
+if [[ $# != 2 || ${1} == "-?" ]]
+then
+	echo "usage: ${0} minvalue maxvalue"
+	exit 0
+fi
+#
+integer minvalue
+integer maxvalue
+#
+minvalue=${1}
+maxvalue=${2}
+#
+integer range
+integer r
+integer rdiv
+integer rrem
+integer imax
+integer i
+#
+range=$((maxvalue-minvalue+1))
+imax=${range}
+#
+i=0
+#
+while [[ $i -lt $imax ]]
+do
+	r=$RANDOM
+	rdiv=$((r/range))
+	rrem=$((minvalue+r-rdiv*range))
+	#
+	if [[ ${known[$rrem]} != 1 ]]
+	then
+		i=$((i+1))
+		echo "New number $i: $rrem"
+		known[$rrem]=1
+	# else
+		# echo "Known number $i: $rrem"
+	fi
+	#
+done
+#
+exit 0

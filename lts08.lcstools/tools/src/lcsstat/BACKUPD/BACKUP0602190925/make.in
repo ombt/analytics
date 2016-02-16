@@ -1,0 +1,26 @@
+SHELLBIN=$(HOME)/tools/bin
+#
+lcsstat
+lcsstat.sh
+#
+nlcsstat
+nlcsstat.sh
+#
+# lcsreboot
+# lcsreboot.sh
+#
+lcsloads
+lcsloads.sh
+#
+checkloads
+checkloads.sh
+#
+lcssendemail
+lcssendemail.sh
+#
+lcsdf
+lcsdf.sh
+#
+lcsdu
+lcsdu.sh
+#

@@ -1,0 +1,25 @@
+CC = CC
+CCFLAGS = -g -DDEBUG
+#
+LD = CC
+LDFLAGS = -g -DDEBUG
+#
+semcreate
+semcreate.c
+-lposix4
+#
+semunlink
+semunlink.c
+-lposix4
+#
+semgetvalue
+semgetvalue.c
+-lposix4
+#
+semwait
+semwait.c
+-lposix4
+#
+sempost
+sempost.c
+-lposix4

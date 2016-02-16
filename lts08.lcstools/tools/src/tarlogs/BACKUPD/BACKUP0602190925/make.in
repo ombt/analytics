@@ -1,0 +1,17 @@
+SHELLBIN=$(HOME)/tools/bin
+#
+tarcmlogs
+tarcmlogs.sh
+#
+untarcmlogs
+untarcmlogs.sh
+#
+tarsplogs
+tarsplogs.sh
+#
+tarcmcores
+tarcmcores.sh
+#
+untarcmcores
+untarcmcores.sh
+#

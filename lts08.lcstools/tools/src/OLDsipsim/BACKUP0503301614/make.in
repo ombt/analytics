@@ -1,0 +1,16 @@
+SHELLBIN=$(HOME)/tools/bin
+#
+sipsim
+sipsim.PL
+#
+refersim
+refersim.PL
+#
+sendudp
+sendudp.pl
+#
+sndrcvudp
+sndrcvudp.pl
+#
+mypqueue.pm
+mypqueue.PM

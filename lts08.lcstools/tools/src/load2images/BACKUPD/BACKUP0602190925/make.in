@@ -1,0 +1,6 @@
+SHELLBIN=$(HOME)/tools/bin
+#
+#
+load2images
+load2images.sh
+# install1 = rcp $(SHELLBIN)/tools/bin/load2images lcstools@chibuild.teloca.com:/build/lcstools/bin/load2images

@@ -1,0 +1,4 @@
+SHELLBIN=$(HOME)/bin
+#
+auto_mkindex
+auto_mkindex.sh

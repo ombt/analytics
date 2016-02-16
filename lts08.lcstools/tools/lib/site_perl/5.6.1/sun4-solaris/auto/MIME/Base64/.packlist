@@ -1,0 +1,10 @@
+Base64.bs
+Base64.pm
+Base64.so
+MIME::Base64.3
+MIME::QuotedPrint.3
+QuotedPrint.pm
+decode-base64
+decode-qp
+encode-base64
+encode-qp

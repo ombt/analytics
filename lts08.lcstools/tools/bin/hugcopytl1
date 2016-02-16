@@ -1,0 +1,34 @@
+#
+# copy scripts for HUG
+#
+. setup_lcshug
+#
+if [[ $# == 0 ]]
+then
+	cd $LCSBASESCRIPTS
+	#
+	find . -type d -print |
+	cut -d/ -f2,3 |
+	sort -u |
+	grep / |
+	sed 's?/? ?' |
+	while read labid branch
+	do
+		dbquery -s labloads labid req "^${labid}$" and branch req "^${branch}$" |
+		while read labid2 branch2 cpuload2 status2
+		do
+			lcscopytl1 -b ${branch2} ${branch2} ${cpuload2} ${labid2}
+		done
+	done
+else 
+	for labid in ${*}
+	do
+		dbquery -s labloads labid req "^${labid}$" |
+		while read labid2 branch2 cpuload2 status2
+		do
+			lcscopytl1 -b ${branch2} ${branch2} ${cpuload2} ${labid2}
+		done
+	done
+fi
+#
+exit 0

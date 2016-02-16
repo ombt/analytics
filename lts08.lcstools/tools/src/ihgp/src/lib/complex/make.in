@@ -1,0 +1,9 @@
+CC = CC
+CCFLAGS = -g
+LD = CC
+LDFLAGS = -g
+#
+tcomplex
+tcomplex.c
+mycomplex.c
+-lm

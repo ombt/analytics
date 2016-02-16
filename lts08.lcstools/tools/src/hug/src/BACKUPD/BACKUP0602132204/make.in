@@ -1,0 +1,8 @@
+SHELLBIN=$(HOME)/tools/bin/hug
+#
+chkcfg
+chkcfg.sh
+#
+lcsupdsh
+lcsupdsh.sh
+#

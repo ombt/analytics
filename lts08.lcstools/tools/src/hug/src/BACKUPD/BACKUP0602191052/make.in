@@ -1,0 +1,8 @@
+TCLBIN=$(LCSHUGBIN)
+#
+chkcfg
+chkcfg.TCL
+#
+lcsupdsh
+lcsupdsh.TCL
+#

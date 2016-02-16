@@ -1,0 +1,11 @@
+CC = CC
+# CC = g++
+CCFLAGS = -g
+LD = CC
+# LD = g++
+LDFLAGS = -g
+#
+tcomplex
+tcomplex.c
+mycomplex.c
+-lm

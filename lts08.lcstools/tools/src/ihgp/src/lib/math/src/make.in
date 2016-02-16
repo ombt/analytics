@@ -1,0 +1,49 @@
+CC = CC
+CCFLAGS = -DDEBUG -g -compat=4 -pta -xildoff
+LD = CC
+LDFLAGS = -g -compat=4 -pta -xildoff
+#
+tcomplex
+tcomplex.c
+mycomplex.c
+-lm
+#
+tvector
+tvector.c
+myvector.c
+mycomplex.c
+-lm
+#
+tmatrix
+tmatrix.c
+matrix.c
+myvector.c
+mycomplex.c
+epsilon.c
+-lm
+#
+tgausslup
+tgausslup.c
+gausslup.c
+matrix.c
+myvector.c
+epsilon.c
+-lm
+#
+tgausslup2
+tgausslup2.c
+gausslup.c
+matrix.c
+myvector.c
+epsilon.c
+-lm
+#
+tmatrixops
+tmatrixops.c
+matrixops.c
+matrix.c
+myvector.c
+mycomplex.c
+epsilon.c
+-lm
+#

@@ -1,0 +1,34 @@
+start -> '^' or '$' |
+         '^' or |
+         or '$' |
+         or
+
+or -> and |
+      or '|' and
+
+and -> postfix |
+       and postfix
+
+postfix -> primary |
+           primary '*' |
+           primary '+' |
+           primary '{' times '}' |
+
+times -> number ',' number |
+         number ',' |
+         number
+
+primary -> anychar |
+           '.' |
+           '[' range ']' |
+           '(' or ')' register |
+           '(' or ')' |
+
+range -> '^' range2 |
+         range2
+
+range2 -> anychar '-' anychar range2 |
+	  anychar range2 |
+	  empty
+
+register -> '$' number

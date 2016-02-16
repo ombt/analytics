@@ -1,0 +1,13 @@
+#
+CC=CC
+CCFLAGS=-g 
+#
+LD=CC
+LDFLAGS=-g 
+#
+tepsilon
+tepsilon.c
+epsilon.c
+mycomplex.c
+-lm
+#

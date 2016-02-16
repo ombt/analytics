@@ -1,0 +1,9 @@
+# find cores on both SPs
+cat >/tmp/fc$$ <<EOF
+findcore
+EOF
+#
+telnetsp -V -A -F /tmp/fc$$
+telnetsp -V -B -F /tmp/fc$$
+#
+exit 0

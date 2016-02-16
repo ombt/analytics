@@ -1,0 +1,11 @@
+SHELLBIN=$(LCSHUGLIB)
+#
+checkenv
+checkenv.sh
+#
+getoptval
+getoptval.sh
+#
+logging
+logging.sh
+#

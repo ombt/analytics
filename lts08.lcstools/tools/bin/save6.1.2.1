@@ -1,0 +1,4 @@
+#!/usr/bin/ksh
+. /home/lcstools/tools/bin/setup_lcs 1>/dev/null 2>&1
+#
+exec lcssaveload -d -r lcsbld1.ih.lucent.com!/build/lcstools -O -s -b BP-6-1-2-1 -B ${*} ihlcs4 ihlcswg1 ihlcswg2 ihlcswg3
