@@ -9,105 +9,114 @@ state 0
 
 state 1
 	$accept :  start_$end 
-	start :  start_expr NEWLINE 
-	start :  start_cmd NEWLINE 
-	start :  start_error NEWLINE 
-	start :  start_NEWLINE 
+	start :  start_expr newline 
+	start :  start_cmd newline 
+	start :  start_error newline 
+	start :  start_newline 
 
 	$end  accept
 	error  shift 4
-	NEWLINE  shift 5
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	QUIT  shift 7
-	OUTBASE  shift 8
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	GRAPH  shift 10
 	HELP  shift 9
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NEWLINE  shift 11
+	NOT  shift 29
+	OUTBASE  shift 8
+	PLUS  shift 26
+	POW  shift 34
+	QUIT  shift 7
+	SEMICOLON  shift 12
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
 	expr  goto 2
-	cmd  goto 3
+	mult  goto 21
 	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
+	cmd  goto 3
+	newline  goto 5
 
 state 2
-	start :  start expr_NEWLINE 
+	start :  start expr_newline 
 
-	NEWLINE  shift 42
+	NEWLINE  shift 11
+	SEMICOLON  shift 12
 	.  error
 
+	newline  goto 45
 
 state 3
-	start :  start cmd_NEWLINE 
+	start :  start cmd_newline 
 
-	NEWLINE  shift 43
+	NEWLINE  shift 11
+	SEMICOLON  shift 12
 	.  error
 
+	newline  goto 46
 
 state 4
-	start :  start error_NEWLINE 
+	start :  start error_newline 
 
-	NEWLINE  shift 44
+	NEWLINE  shift 11
+	SEMICOLON  shift 12
 	.  error
 
+	newline  goto 47
 
 state 5
-	start :  start NEWLINE_    (5)
+	start :  start newline_    (5)
 
 	.  reduce 5
 
 
 state 6
-	expr :  or_    (21)
+	expr :  or_    (27)
 	or :  or_OR and 
 
-	OR  shift 45
-	.  reduce 21
+	OR  shift 48
+	.  reduce 27
 
 
 state 7
-	cmd :  QUIT_    (6)
+	cmd :  QUIT_    (8)
 
-	.  reduce 6
+	.  reduce 8
 
 
 state 8
 	cmd :  OUTBASE_LCONST 
 
-	LCONST  shift 46
+	LCONST  shift 49
 	.  error
 
 
 state 9
-	cmd :  HELP_    (8)
+	cmd :  HELP_    (10)
 	cmd :  HELP_EXP 
 	cmd :  HELP_LOG 
 	cmd :  HELP_LOG10 
@@ -121,1977 +130,2206 @@ state 9
 	cmd :  HELP_ATAN 
 	cmd :  HELP_OUTBASE 
 
-	OUTBASE  shift 58
-	EXP  shift 47
-	LOG  shift 48
-	LOG10  shift 49
-	POW  shift 50
-	SQRT  shift 51
-	SIN  shift 52
-	COS  shift 53
-	TAN  shift 54
-	ASIN  shift 55
-	ACOS  shift 56
-	ATAN  shift 57
-	.  reduce 8
+	ACOS  shift 59
+	ASIN  shift 58
+	ATAN  shift 60
+	COS  shift 56
+	EXP  shift 50
+	LOG  shift 51
+	LOG10  shift 52
+	OUTBASE  shift 61
+	POW  shift 53
+	SIN  shift 55
+	SQRT  shift 54
+	TAN  shift 57
+	.  reduce 10
 
 
 state 10
-	or :  and_    (22)
-	and :  and_AND bitor 
+	cmd :  GRAPH_$$23 LPAREN exprlist RPAREN 
+	$$23 : _    (23)
 
-	AND  shift 59
-	.  reduce 22
+	.  reduce 23
 
+	$$23  goto 62
 
 state 11
-	and :  bitor_    (24)
-	bitor :  bitor_BITOR bitxor 
+	newline :  NEWLINE_    (6)
 
-	BITOR  shift 60
-	.  reduce 24
+	.  reduce 6
 
 
 state 12
-	bitor :  bitxor_    (26)
-	bitxor :  bitxor_BITXOR bitand 
+	newline :  SEMICOLON_    (7)
 
-	BITXOR  shift 61
-	.  reduce 26
+	.  reduce 7
 
 
 state 13
-	bitxor :  bitand_    (28)
-	bitand :  bitand_BITAND equality 
+	or :  and_    (28)
+	and :  and_AND bitor 
 
-	BITAND  shift 62
+	AND  shift 63
 	.  reduce 28
 
 
 state 14
-	bitand :  equality_    (30)
-	equality :  equality_EQUAL rel 
-	equality :  equality_NOTEQUAL rel 
+	and :  bitor_    (30)
+	bitor :  bitor_BITOR bitxor 
 
-	EQUAL  shift 63
-	NOTEQUAL  shift 64
+	BITOR  shift 64
 	.  reduce 30
 
 
 state 15
-	equality :  rel_    (32)
+	bitor :  bitxor_    (32)
+	bitxor :  bitxor_BITXOR bitand 
+
+	BITXOR  shift 65
+	.  reduce 32
+
+
+state 16
+	bitxor :  bitand_    (34)
+	bitand :  bitand_BITAND equality 
+
+	BITAND  shift 66
+	.  reduce 34
+
+
+state 17
+	bitand :  equality_    (36)
+	equality :  equality_EQUAL rel 
+	equality :  equality_NOTEQUAL rel 
+
+	EQUAL  shift 67
+	NOTEQUAL  shift 68
+	.  reduce 36
+
+
+state 18
+	equality :  rel_    (38)
 	rel :  rel_LT shift 
 	rel :  rel_GT shift 
 	rel :  rel_LE shift 
 	rel :  rel_GE shift 
 
-	LT  shift 65
-	GT  shift 66
-	LE  shift 67
-	GE  shift 68
-	.  reduce 32
+	GE  shift 72
+	GT  shift 70
+	LE  shift 71
+	LT  shift 69
+	.  reduce 38
 
 
-state 16
-	rel :  shift_    (35)
+state 19
+	rel :  shift_    (41)
 	shift :  shift_LSHIFT add 
 	shift :  shift_RSHIFT add 
 
-	LSHIFT  shift 69
-	RSHIFT  shift 70
-	.  reduce 35
+	LSHIFT  shift 73
+	RSHIFT  shift 74
+	.  reduce 41
 
 
-state 17
-	shift :  add_    (40)
+state 20
+	shift :  add_    (46)
 	add :  add_PLUS mult 
 	add :  add_MINUS mult 
 
-	PLUS  shift 71
-	MINUS  shift 72
-	.  reduce 40
+	MINUS  shift 76
+	PLUS  shift 75
+	.  reduce 46
 
 
-state 18
-	add :  mult_    (43)
+state 21
+	add :  mult_    (49)
 	mult :  mult_STAR cast 
 	mult :  mult_SLASH cast 
 	mult :  mult_PERCENT cast 
 
-	STAR  shift 73
-	SLASH  shift 74
-	PERCENT  shift 75
-	.  reduce 43
+	PERCENT  shift 79
+	SLASH  shift 78
+	STAR  shift 77
+	.  reduce 49
 
-
-state 19
-	mult :  cast_    (46)
-
-	.  reduce 46
-
-
-state 20
-	cast :  unary_    (50)
-
-	.  reduce 50
-
-
-state 21
-	cast :  LPAREN_type RPAREN cast 
-	primary :  LPAREN_expr RPAREN 
-
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	ULCAST  shift 78
-	LCAST  shift 79
-	DCAST  shift 80
-	.  error
-
-	expr  goto 77
-	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
-	type  goto 76
 
 state 22
-	unary :  primary_    (52)
+	mult :  cast_    (52)
 
 	.  reduce 52
 
 
 state 23
-	unary :  PLUS_cast 
+	cast :  unary_    (56)
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	.  error
+	.  reduce 56
 
-	cast  goto 81
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
 
 state 24
-	unary :  MINUS_cast 
+	cast :  LPAREN_type RPAREN cast 
+	primary :  LPAREN_expr RPAREN 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	DCAST  shift 84
+	LCAST  shift 83
+	ULCAST  shift 82
 	.  error
 
-	cast  goto 82
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 81
+	mult  goto 21
+	or  goto 6
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
+	type  goto 80
 
 state 25
-	unary :  TILDE_cast 
+	unary :  primary_    (58)
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	.  error
+	.  reduce 58
 
-	cast  goto 83
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
 
 state 26
-	unary :  NOT_cast 
+	unary :  PLUS_cast 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	cast  goto 84
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	cast  goto 85
+	const  goto 30
+	primary  goto 25
+	unary  goto 23
 
 state 27
-	primary :  const_    (57)
+	unary :  MINUS_cast 
 
-	.  reduce 57
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
 
+	cast  goto 86
+	const  goto 30
+	primary  goto 25
+	unary  goto 23
 
 state 28
-	primary :  EXP_LPAREN expr RPAREN 
+	unary :  TILDE_cast 
 
-	LPAREN  shift 85
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
+	cast  goto 87
+	const  goto 30
+	primary  goto 25
+	unary  goto 23
 
 state 29
-	primary :  LOG_LPAREN expr RPAREN 
+	unary :  NOT_cast 
 
-	LPAREN  shift 86
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
+	cast  goto 88
+	const  goto 30
+	primary  goto 25
+	unary  goto 23
 
 state 30
-	primary :  LOG10_LPAREN expr RPAREN 
+	primary :  const_    (63)
 
-	LPAREN  shift 87
-	.  error
+	.  reduce 63
 
 
 state 31
-	primary :  POW_LPAREN expr COMMA expr RPAREN 
-
-	LPAREN  shift 88
-	.  error
-
-
-state 32
-	primary :  SQRT_LPAREN expr RPAREN 
+	primary :  EXP_LPAREN expr RPAREN 
 
 	LPAREN  shift 89
 	.  error
 
 
-state 33
-	primary :  SIN_LPAREN expr RPAREN 
+state 32
+	primary :  LOG_LPAREN expr RPAREN 
 
 	LPAREN  shift 90
 	.  error
 
 
-state 34
-	primary :  COS_LPAREN expr RPAREN 
+state 33
+	primary :  LOG10_LPAREN expr RPAREN 
 
 	LPAREN  shift 91
 	.  error
 
 
-state 35
-	primary :  TAN_LPAREN expr RPAREN 
+state 34
+	primary :  POW_LPAREN expr COMMA expr RPAREN 
 
 	LPAREN  shift 92
 	.  error
 
 
-state 36
-	primary :  ASIN_LPAREN expr RPAREN 
+state 35
+	primary :  SQRT_LPAREN expr RPAREN 
 
 	LPAREN  shift 93
 	.  error
 
 
-state 37
-	primary :  ACOS_LPAREN expr RPAREN 
+state 36
+	primary :  SIN_LPAREN expr RPAREN 
 
 	LPAREN  shift 94
 	.  error
 
 
-state 38
-	primary :  ATAN_LPAREN expr RPAREN 
+state 37
+	primary :  COS_LPAREN expr RPAREN 
 
 	LPAREN  shift 95
 	.  error
 
 
-state 39
-	const :  ULCONST_    (70)
+state 38
+	primary :  TAN_LPAREN expr RPAREN 
 
-	.  reduce 70
+	LPAREN  shift 96
+	.  error
+
+
+state 39
+	primary :  ASIN_LPAREN expr RPAREN 
+
+	LPAREN  shift 97
+	.  error
 
 
 state 40
-	const :  LCONST_    (71)
+	primary :  ACOS_LPAREN expr RPAREN 
 
-	.  reduce 71
+	LPAREN  shift 98
+	.  error
 
 
 state 41
-	const :  DCONST_    (72)
+	primary :  ATAN_LPAREN expr RPAREN 
 
-	.  reduce 72
+	LPAREN  shift 99
+	.  error
 
 
 state 42
-	start :  start expr NEWLINE_    (2)
+	const :  ULCONST_    (76)
+
+	.  reduce 76
+
+
+state 43
+	const :  LCONST_    (77)
+
+	.  reduce 77
+
+
+state 44
+	const :  DCONST_    (78)
+
+	.  reduce 78
+
+
+state 45
+	start :  start expr newline_    (2)
 
 	.  reduce 2
 
 
-state 43
-	start :  start cmd NEWLINE_    (3)
+state 46
+	start :  start cmd newline_    (3)
 
 	.  reduce 3
 
 
-state 44
-	start :  start error NEWLINE_    (4)
+state 47
+	start :  start error newline_    (4)
 
 	.  reduce 4
 
 
-state 45
+state 48
 	or :  or OR_and 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	and  goto 96
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	and  goto 100
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	mult  goto 21
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
-state 46
-	cmd :  OUTBASE LCONST_    (7)
-
-	.  reduce 7
-
-
-state 47
-	cmd :  HELP EXP_    (9)
+state 49
+	cmd :  OUTBASE LCONST_    (9)
 
 	.  reduce 9
 
 
-state 48
-	cmd :  HELP LOG_    (10)
-
-	.  reduce 10
-
-
-state 49
-	cmd :  HELP LOG10_    (11)
+state 50
+	cmd :  HELP EXP_    (11)
 
 	.  reduce 11
 
 
-state 50
-	cmd :  HELP POW_    (12)
+state 51
+	cmd :  HELP LOG_    (12)
 
 	.  reduce 12
 
 
-state 51
-	cmd :  HELP SQRT_    (13)
+state 52
+	cmd :  HELP LOG10_    (13)
 
 	.  reduce 13
 
 
-state 52
-	cmd :  HELP SIN_    (14)
+state 53
+	cmd :  HELP POW_    (14)
 
 	.  reduce 14
 
 
-state 53
-	cmd :  HELP COS_    (15)
+state 54
+	cmd :  HELP SQRT_    (15)
 
 	.  reduce 15
 
 
-state 54
-	cmd :  HELP TAN_    (16)
+state 55
+	cmd :  HELP SIN_    (16)
 
 	.  reduce 16
 
 
-state 55
-	cmd :  HELP ASIN_    (17)
+state 56
+	cmd :  HELP COS_    (17)
 
 	.  reduce 17
 
 
-state 56
-	cmd :  HELP ACOS_    (18)
+state 57
+	cmd :  HELP TAN_    (18)
 
 	.  reduce 18
 
 
-state 57
-	cmd :  HELP ATAN_    (19)
+state 58
+	cmd :  HELP ASIN_    (19)
 
 	.  reduce 19
 
 
-state 58
-	cmd :  HELP OUTBASE_    (20)
+state 59
+	cmd :  HELP ACOS_    (20)
 
 	.  reduce 20
 
 
-state 59
-	and :  and AND_bitor 
-
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	.  error
-
-	bitor  goto 97
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
-
 state 60
-	bitor :  bitor BITOR_bitxor 
+	cmd :  HELP ATAN_    (21)
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	.  error
+	.  reduce 21
 
-	bitxor  goto 98
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
 
 state 61
-	bitxor :  bitxor BITXOR_bitand 
+	cmd :  HELP OUTBASE_    (22)
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	.  error
+	.  reduce 22
 
-	bitand  goto 99
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
 
 state 62
-	bitand :  bitand BITAND_equality 
+	cmd :  GRAPH $$23_LPAREN exprlist RPAREN 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	LPAREN  shift 101
 	.  error
 
-	equality  goto 100
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
 
 state 63
-	equality :  equality EQUAL_rel 
+	and :  and AND_bitor 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	rel  goto 101
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	bitand  goto 16
+	bitor  goto 102
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	mult  goto 21
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 64
-	equality :  equality NOTEQUAL_rel 
+	bitor :  bitor BITOR_bitxor 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	rel  goto 102
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	bitand  goto 16
+	bitxor  goto 103
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	mult  goto 21
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 65
-	rel :  rel LT_shift 
+	bitxor :  bitxor BITXOR_bitand 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	shift  goto 103
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	bitand  goto 104
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	mult  goto 21
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 66
-	rel :  rel GT_shift 
+	bitand :  bitand BITAND_equality 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	shift  goto 104
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	cast  goto 22
+	const  goto 30
+	equality  goto 105
+	mult  goto 21
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 67
-	rel :  rel LE_shift 
+	equality :  equality EQUAL_rel 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	shift  goto 105
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	cast  goto 22
+	const  goto 30
+	mult  goto 21
+	primary  goto 25
+	rel  goto 106
+	shift  goto 19
+	unary  goto 23
 
 state 68
-	rel :  rel GE_shift 
+	equality :  equality NOTEQUAL_rel 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	shift  goto 106
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	cast  goto 22
+	const  goto 30
+	mult  goto 21
+	primary  goto 25
+	rel  goto 107
+	shift  goto 19
+	unary  goto 23
 
 state 69
-	shift :  shift LSHIFT_add 
+	rel :  rel LT_shift 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	add  goto 107
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	cast  goto 22
+	const  goto 30
+	mult  goto 21
+	primary  goto 25
+	shift  goto 108
+	unary  goto 23
 
 state 70
-	shift :  shift RSHIFT_add 
+	rel :  rel GT_shift 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	add  goto 108
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	cast  goto 22
+	const  goto 30
+	mult  goto 21
+	primary  goto 25
+	shift  goto 109
+	unary  goto 23
 
 state 71
-	add :  add PLUS_mult 
+	rel :  rel LE_shift 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	mult  goto 109
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	cast  goto 22
+	const  goto 30
+	mult  goto 21
+	primary  goto 25
+	shift  goto 110
+	unary  goto 23
 
 state 72
-	add :  add MINUS_mult 
+	rel :  rel GE_shift 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	mult  goto 110
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 20
+	cast  goto 22
+	const  goto 30
+	mult  goto 21
+	primary  goto 25
+	shift  goto 111
+	unary  goto 23
 
 state 73
-	mult :  mult STAR_cast 
+	shift :  shift LSHIFT_add 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	cast  goto 111
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 112
+	cast  goto 22
+	const  goto 30
+	mult  goto 21
+	primary  goto 25
+	unary  goto 23
 
 state 74
-	mult :  mult SLASH_cast 
+	shift :  shift RSHIFT_add 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	cast  goto 112
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	add  goto 113
+	cast  goto 22
+	const  goto 30
+	mult  goto 21
+	primary  goto 25
+	unary  goto 23
 
 state 75
-	mult :  mult PERCENT_cast 
+	add :  add PLUS_mult 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	cast  goto 113
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	cast  goto 22
+	const  goto 30
+	mult  goto 114
+	primary  goto 25
+	unary  goto 23
 
 state 76
-	cast :  LPAREN type_RPAREN cast 
+	add :  add MINUS_mult 
 
-	RPAREN  shift 114
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
+	cast  goto 22
+	const  goto 30
+	mult  goto 115
+	primary  goto 25
+	unary  goto 23
 
 state 77
-	primary :  LPAREN expr_RPAREN 
+	mult :  mult STAR_cast 
 
-	RPAREN  shift 115
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
+	cast  goto 116
+	const  goto 30
+	primary  goto 25
+	unary  goto 23
 
 state 78
-	type :  ULCAST_    (73)
+	mult :  mult SLASH_cast 
 
-	.  reduce 73
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
 
+	cast  goto 117
+	const  goto 30
+	primary  goto 25
+	unary  goto 23
 
 state 79
-	type :  LCAST_    (74)
+	mult :  mult PERCENT_cast 
 
-	.  reduce 74
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
 
+	cast  goto 118
+	const  goto 30
+	primary  goto 25
+	unary  goto 23
 
 state 80
-	type :  DCAST_    (75)
+	cast :  LPAREN type_RPAREN cast 
 
-	.  reduce 75
+	RPAREN  shift 119
+	.  error
 
 
 state 81
-	unary :  PLUS cast_    (53)
+	primary :  LPAREN expr_RPAREN 
 
-	.  reduce 53
+	RPAREN  shift 120
+	.  error
 
 
 state 82
-	unary :  MINUS cast_    (54)
+	type :  ULCAST_    (79)
 
-	.  reduce 54
+	.  reduce 79
 
 
 state 83
-	unary :  TILDE cast_    (55)
+	type :  LCAST_    (80)
 
-	.  reduce 55
+	.  reduce 80
 
 
 state 84
-	unary :  NOT cast_    (56)
+	type :  DCAST_    (81)
 
-	.  reduce 56
+	.  reduce 81
 
 
 state 85
-	primary :  EXP LPAREN_expr RPAREN 
+	unary :  PLUS cast_    (59)
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	.  error
+	.  reduce 59
 
-	expr  goto 116
-	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
 
 state 86
-	primary :  LOG LPAREN_expr RPAREN 
+	unary :  MINUS cast_    (60)
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	.  error
+	.  reduce 60
 
-	expr  goto 117
-	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
 
 state 87
-	primary :  LOG10 LPAREN_expr RPAREN 
+	unary :  TILDE cast_    (61)
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	.  error
+	.  reduce 61
 
-	expr  goto 118
-	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
 
 state 88
-	primary :  POW LPAREN_expr COMMA expr RPAREN 
+	unary :  NOT cast_    (62)
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	.  error
+	.  reduce 62
 
-	expr  goto 119
-	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
 
 state 89
-	primary :  SQRT LPAREN_expr RPAREN 
+	primary :  EXP LPAREN_expr RPAREN 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	expr  goto 120
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 121
+	mult  goto 21
 	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 90
-	primary :  SIN LPAREN_expr RPAREN 
+	primary :  LOG LPAREN_expr RPAREN 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	expr  goto 121
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 122
+	mult  goto 21
 	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 91
-	primary :  COS LPAREN_expr RPAREN 
+	primary :  LOG10 LPAREN_expr RPAREN 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	expr  goto 122
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 123
+	mult  goto 21
 	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 92
-	primary :  TAN LPAREN_expr RPAREN 
+	primary :  POW LPAREN_expr COMMA expr RPAREN 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	expr  goto 123
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 124
+	mult  goto 21
 	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 93
-	primary :  ASIN LPAREN_expr RPAREN 
+	primary :  SQRT LPAREN_expr RPAREN 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	expr  goto 124
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 125
+	mult  goto 21
 	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 94
-	primary :  ACOS LPAREN_expr RPAREN 
+	primary :  SIN LPAREN_expr RPAREN 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	expr  goto 125
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 126
+	mult  goto 21
 	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 95
-	primary :  ATAN LPAREN_expr RPAREN 
+	primary :  COS LPAREN_expr RPAREN 
 
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
-	expr  goto 126
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 127
+	mult  goto 21
 	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 96
-	or :  or OR and_    (23)
-	and :  and_AND bitor 
+	primary :  TAN LPAREN_expr RPAREN 
 
-	AND  shift 59
-	.  reduce 23
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
 
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 128
+	mult  goto 21
+	or  goto 6
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 97
-	and :  and AND bitor_    (25)
-	bitor :  bitor_BITOR bitxor 
+	primary :  ASIN LPAREN_expr RPAREN 
 
-	BITOR  shift 60
-	.  reduce 25
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
 
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 129
+	mult  goto 21
+	or  goto 6
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 98
-	bitor :  bitor BITOR bitxor_    (27)
-	bitxor :  bitxor_BITXOR bitand 
+	primary :  ACOS LPAREN_expr RPAREN 
 
-	BITXOR  shift 61
-	.  reduce 27
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
 
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 130
+	mult  goto 21
+	or  goto 6
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
 
 state 99
-	bitxor :  bitxor BITXOR bitand_    (29)
-	bitand :  bitand_BITAND equality 
+	primary :  ATAN LPAREN_expr RPAREN 
 
-	BITAND  shift 62
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
+
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 131
+	mult  goto 21
+	or  goto 6
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
+
+state 100
+	or :  or OR and_    (29)
+	and :  and_AND bitor 
+
+	AND  shift 63
 	.  reduce 29
 
 
-state 100
-	bitand :  bitand BITAND equality_    (31)
-	equality :  equality_EQUAL rel 
-	equality :  equality_NOTEQUAL rel 
+state 101
+	cmd :  GRAPH $$23 LPAREN_exprlist RPAREN 
 
-	EQUAL  shift 63
-	NOTEQUAL  shift 64
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
+
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 133
+	mult  goto 21
+	or  goto 6
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
+	exprlist  goto 132
+
+state 102
+	and :  and AND bitor_    (31)
+	bitor :  bitor_BITOR bitxor 
+
+	BITOR  shift 64
 	.  reduce 31
 
 
-state 101
-	equality :  equality EQUAL rel_    (33)
-	rel :  rel_LT shift 
-	rel :  rel_GT shift 
-	rel :  rel_LE shift 
-	rel :  rel_GE shift 
+state 103
+	bitor :  bitor BITOR bitxor_    (33)
+	bitxor :  bitxor_BITXOR bitand 
 
-	LT  shift 65
-	GT  shift 66
-	LE  shift 67
-	GE  shift 68
+	BITXOR  shift 65
 	.  reduce 33
 
 
-state 102
-	equality :  equality NOTEQUAL rel_    (34)
+state 104
+	bitxor :  bitxor BITXOR bitand_    (35)
+	bitand :  bitand_BITAND equality 
+
+	BITAND  shift 66
+	.  reduce 35
+
+
+state 105
+	bitand :  bitand BITAND equality_    (37)
+	equality :  equality_EQUAL rel 
+	equality :  equality_NOTEQUAL rel 
+
+	EQUAL  shift 67
+	NOTEQUAL  shift 68
+	.  reduce 37
+
+
+state 106
+	equality :  equality EQUAL rel_    (39)
 	rel :  rel_LT shift 
 	rel :  rel_GT shift 
 	rel :  rel_LE shift 
 	rel :  rel_GE shift 
 
-	LT  shift 65
-	GT  shift 66
-	LE  shift 67
-	GE  shift 68
-	.  reduce 34
-
-
-state 103
-	rel :  rel LT shift_    (36)
-	shift :  shift_LSHIFT add 
-	shift :  shift_RSHIFT add 
-
-	LSHIFT  shift 69
-	RSHIFT  shift 70
-	.  reduce 36
-
-
-state 104
-	rel :  rel GT shift_    (37)
-	shift :  shift_LSHIFT add 
-	shift :  shift_RSHIFT add 
-
-	LSHIFT  shift 69
-	RSHIFT  shift 70
-	.  reduce 37
-
-
-state 105
-	rel :  rel LE shift_    (38)
-	shift :  shift_LSHIFT add 
-	shift :  shift_RSHIFT add 
-
-	LSHIFT  shift 69
-	RSHIFT  shift 70
-	.  reduce 38
-
-
-state 106
-	rel :  rel GE shift_    (39)
-	shift :  shift_LSHIFT add 
-	shift :  shift_RSHIFT add 
-
-	LSHIFT  shift 69
-	RSHIFT  shift 70
+	GE  shift 72
+	GT  shift 70
+	LE  shift 71
+	LT  shift 69
 	.  reduce 39
 
 
 state 107
-	shift :  shift LSHIFT add_    (41)
-	add :  add_PLUS mult 
-	add :  add_MINUS mult 
+	equality :  equality NOTEQUAL rel_    (40)
+	rel :  rel_LT shift 
+	rel :  rel_GT shift 
+	rel :  rel_LE shift 
+	rel :  rel_GE shift 
 
-	PLUS  shift 71
-	MINUS  shift 72
-	.  reduce 41
+	GE  shift 72
+	GT  shift 70
+	LE  shift 71
+	LT  shift 69
+	.  reduce 40
 
 
 state 108
-	shift :  shift RSHIFT add_    (42)
-	add :  add_PLUS mult 
-	add :  add_MINUS mult 
+	rel :  rel LT shift_    (42)
+	shift :  shift_LSHIFT add 
+	shift :  shift_RSHIFT add 
 
-	PLUS  shift 71
-	MINUS  shift 72
+	LSHIFT  shift 73
+	RSHIFT  shift 74
 	.  reduce 42
 
 
 state 109
-	add :  add PLUS mult_    (44)
-	mult :  mult_STAR cast 
-	mult :  mult_SLASH cast 
-	mult :  mult_PERCENT cast 
+	rel :  rel GT shift_    (43)
+	shift :  shift_LSHIFT add 
+	shift :  shift_RSHIFT add 
 
-	STAR  shift 73
-	SLASH  shift 74
-	PERCENT  shift 75
-	.  reduce 44
+	LSHIFT  shift 73
+	RSHIFT  shift 74
+	.  reduce 43
 
 
 state 110
-	add :  add MINUS mult_    (45)
+	rel :  rel LE shift_    (44)
+	shift :  shift_LSHIFT add 
+	shift :  shift_RSHIFT add 
+
+	LSHIFT  shift 73
+	RSHIFT  shift 74
+	.  reduce 44
+
+
+state 111
+	rel :  rel GE shift_    (45)
+	shift :  shift_LSHIFT add 
+	shift :  shift_RSHIFT add 
+
+	LSHIFT  shift 73
+	RSHIFT  shift 74
+	.  reduce 45
+
+
+state 112
+	shift :  shift LSHIFT add_    (47)
+	add :  add_PLUS mult 
+	add :  add_MINUS mult 
+
+	MINUS  shift 76
+	PLUS  shift 75
+	.  reduce 47
+
+
+state 113
+	shift :  shift RSHIFT add_    (48)
+	add :  add_PLUS mult 
+	add :  add_MINUS mult 
+
+	MINUS  shift 76
+	PLUS  shift 75
+	.  reduce 48
+
+
+state 114
+	add :  add PLUS mult_    (50)
 	mult :  mult_STAR cast 
 	mult :  mult_SLASH cast 
 	mult :  mult_PERCENT cast 
 
-	STAR  shift 73
-	SLASH  shift 74
-	PERCENT  shift 75
-	.  reduce 45
+	PERCENT  shift 79
+	SLASH  shift 78
+	STAR  shift 77
+	.  reduce 50
 
-
-state 111
-	mult :  mult STAR cast_    (47)
-
-	.  reduce 47
-
-
-state 112
-	mult :  mult SLASH cast_    (48)
-
-	.  reduce 48
-
-
-state 113
-	mult :  mult PERCENT cast_    (49)
-
-	.  reduce 49
-
-
-state 114
-	cast :  LPAREN type RPAREN_cast 
-
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	.  error
-
-	cast  goto 127
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
 
 state 115
-	primary :  LPAREN expr RPAREN_    (69)
+	add :  add MINUS mult_    (51)
+	mult :  mult_STAR cast 
+	mult :  mult_SLASH cast 
+	mult :  mult_PERCENT cast 
 
-	.  reduce 69
+	PERCENT  shift 79
+	SLASH  shift 78
+	STAR  shift 77
+	.  reduce 51
 
 
 state 116
-	primary :  EXP LPAREN expr_RPAREN 
+	mult :  mult STAR cast_    (53)
 
-	RPAREN  shift 128
-	.  error
+	.  reduce 53
 
 
 state 117
-	primary :  LOG LPAREN expr_RPAREN 
+	mult :  mult SLASH cast_    (54)
 
-	RPAREN  shift 129
-	.  error
+	.  reduce 54
 
 
 state 118
-	primary :  LOG10 LPAREN expr_RPAREN 
+	mult :  mult PERCENT cast_    (55)
 
-	RPAREN  shift 130
-	.  error
+	.  reduce 55
 
 
 state 119
-	primary :  POW LPAREN expr_COMMA expr RPAREN 
+	cast :  LPAREN type RPAREN_cast 
 
-	COMMA  shift 131
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
 	.  error
 
+	cast  goto 134
+	const  goto 30
+	primary  goto 25
+	unary  goto 23
 
 state 120
-	primary :  SQRT LPAREN expr_RPAREN 
+	primary :  LPAREN expr RPAREN_    (75)
 
-	RPAREN  shift 132
-	.  error
+	.  reduce 75
 
 
 state 121
-	primary :  SIN LPAREN expr_RPAREN 
-
-	RPAREN  shift 133
-	.  error
-
-
-state 122
-	primary :  COS LPAREN expr_RPAREN 
-
-	RPAREN  shift 134
-	.  error
-
-
-state 123
-	primary :  TAN LPAREN expr_RPAREN 
+	primary :  EXP LPAREN expr_RPAREN 
 
 	RPAREN  shift 135
 	.  error
 
 
-state 124
-	primary :  ASIN LPAREN expr_RPAREN 
+state 122
+	primary :  LOG LPAREN expr_RPAREN 
 
 	RPAREN  shift 136
 	.  error
 
 
-state 125
-	primary :  ACOS LPAREN expr_RPAREN 
+state 123
+	primary :  LOG10 LPAREN expr_RPAREN 
 
 	RPAREN  shift 137
 	.  error
 
 
+state 124
+	primary :  POW LPAREN expr_COMMA expr RPAREN 
+
+	COMMA  shift 138
+	.  error
+
+
+state 125
+	primary :  SQRT LPAREN expr_RPAREN 
+
+	RPAREN  shift 139
+	.  error
+
+
 state 126
-	primary :  ATAN LPAREN expr_RPAREN 
-
-	RPAREN  shift 138
-	.  error
-
-
-state 127
-	cast :  LPAREN type RPAREN cast_    (51)
-
-	.  reduce 51
-
-
-state 128
-	primary :  EXP LPAREN expr RPAREN_    (58)
-
-	.  reduce 58
-
-
-state 129
-	primary :  LOG LPAREN expr RPAREN_    (59)
-
-	.  reduce 59
-
-
-state 130
-	primary :  LOG10 LPAREN expr RPAREN_    (60)
-
-	.  reduce 60
-
-
-state 131
-	primary :  POW LPAREN expr COMMA_expr RPAREN 
-
-	PLUS  shift 23
-	MINUS  shift 24
-	LPAREN  shift 21
-	TILDE  shift 25
-	NOT  shift 26
-	EXP  shift 28
-	LOG  shift 29
-	LOG10  shift 30
-	POW  shift 31
-	SQRT  shift 32
-	SIN  shift 33
-	COS  shift 34
-	TAN  shift 35
-	ASIN  shift 36
-	ACOS  shift 37
-	ATAN  shift 38
-	ULCONST  shift 39
-	LCONST  shift 40
-	DCONST  shift 41
-	.  error
-
-	expr  goto 139
-	or  goto 6
-	and  goto 10
-	bitor  goto 11
-	bitxor  goto 12
-	bitand  goto 13
-	equality  goto 14
-	rel  goto 15
-	shift  goto 16
-	add  goto 17
-	mult  goto 18
-	cast  goto 19
-	unary  goto 20
-	primary  goto 22
-	const  goto 27
-
-state 132
-	primary :  SQRT LPAREN expr RPAREN_    (62)
-
-	.  reduce 62
-
-
-state 133
-	primary :  SIN LPAREN expr RPAREN_    (63)
-
-	.  reduce 63
-
-
-state 134
-	primary :  COS LPAREN expr RPAREN_    (64)
-
-	.  reduce 64
-
-
-state 135
-	primary :  TAN LPAREN expr RPAREN_    (65)
-
-	.  reduce 65
-
-
-state 136
-	primary :  ASIN LPAREN expr RPAREN_    (66)
-
-	.  reduce 66
-
-
-state 137
-	primary :  ACOS LPAREN expr RPAREN_    (67)
-
-	.  reduce 67
-
-
-state 138
-	primary :  ATAN LPAREN expr RPAREN_    (68)
-
-	.  reduce 68
-
-
-state 139
-	primary :  POW LPAREN expr COMMA expr_RPAREN 
+	primary :  SIN LPAREN expr_RPAREN 
 
 	RPAREN  shift 140
 	.  error
 
 
+state 127
+	primary :  COS LPAREN expr_RPAREN 
+
+	RPAREN  shift 141
+	.  error
+
+
+state 128
+	primary :  TAN LPAREN expr_RPAREN 
+
+	RPAREN  shift 142
+	.  error
+
+
+state 129
+	primary :  ASIN LPAREN expr_RPAREN 
+
+	RPAREN  shift 143
+	.  error
+
+
+state 130
+	primary :  ACOS LPAREN expr_RPAREN 
+
+	RPAREN  shift 144
+	.  error
+
+
+state 131
+	primary :  ATAN LPAREN expr_RPAREN 
+
+	RPAREN  shift 145
+	.  error
+
+
+state 132
+	cmd :  GRAPH $$23 LPAREN exprlist_RPAREN 
+	exprlist :  exprlist_COMMA expr COMMA expr 
+
+	COMMA  shift 147
+	RPAREN  shift 146
+	.  error
+
+
+state 133
+	exprlist :  expr_COMMA expr 
+
+	COMMA  shift 148
+	.  error
+
+
+state 134
+	cast :  LPAREN type RPAREN cast_    (57)
+
+	.  reduce 57
+
+
+state 135
+	primary :  EXP LPAREN expr RPAREN_    (64)
+
+	.  reduce 64
+
+
+state 136
+	primary :  LOG LPAREN expr RPAREN_    (65)
+
+	.  reduce 65
+
+
+state 137
+	primary :  LOG10 LPAREN expr RPAREN_    (66)
+
+	.  reduce 66
+
+
+state 138
+	primary :  POW LPAREN expr COMMA_expr RPAREN 
+
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
+
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 149
+	mult  goto 21
+	or  goto 6
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
+
+state 139
+	primary :  SQRT LPAREN expr RPAREN_    (68)
+
+	.  reduce 68
+
+
 state 140
-	primary :  POW LPAREN expr COMMA expr RPAREN_    (61)
+	primary :  SIN LPAREN expr RPAREN_    (69)
 
-	.  reduce 61
+	.  reduce 69
 
 
-47/127 terminals, 18/600 nonterminals
-76/300 grammar rules, 141/1000 states
+state 141
+	primary :  COS LPAREN expr RPAREN_    (70)
+
+	.  reduce 70
+
+
+state 142
+	primary :  TAN LPAREN expr RPAREN_    (71)
+
+	.  reduce 71
+
+
+state 143
+	primary :  ASIN LPAREN expr RPAREN_    (72)
+
+	.  reduce 72
+
+
+state 144
+	primary :  ACOS LPAREN expr RPAREN_    (73)
+
+	.  reduce 73
+
+
+state 145
+	primary :  ATAN LPAREN expr RPAREN_    (74)
+
+	.  reduce 74
+
+
+state 146
+	cmd :  GRAPH $$23 LPAREN exprlist RPAREN_    (24)
+
+	.  reduce 24
+
+
+state 147
+	exprlist :  exprlist COMMA_expr COMMA expr 
+
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
+
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 150
+	mult  goto 21
+	or  goto 6
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
+
+state 148
+	exprlist :  expr COMMA_expr 
+
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
+
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 151
+	mult  goto 21
+	or  goto 6
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
+
+state 149
+	primary :  POW LPAREN expr COMMA expr_RPAREN 
+
+	RPAREN  shift 152
+	.  error
+
+
+state 150
+	exprlist :  exprlist COMMA expr_COMMA expr 
+
+	COMMA  shift 153
+	.  error
+
+
+state 151
+	exprlist :  expr COMMA expr_    (25)
+
+	.  reduce 25
+
+
+state 152
+	primary :  POW LPAREN expr COMMA expr RPAREN_    (67)
+
+	.  reduce 67
+
+
+state 153
+	exprlist :  exprlist COMMA expr COMMA_expr 
+
+	DCONST  shift 44
+	LCONST  shift 43
+	ULCONST  shift 42
+	ACOS  shift 40
+	ASIN  shift 39
+	ATAN  shift 41
+	COS  shift 37
+	EXP  shift 31
+	LOG  shift 32
+	LOG10  shift 33
+	LPAREN  shift 24
+	MINUS  shift 27
+	NOT  shift 29
+	PLUS  shift 26
+	POW  shift 34
+	SIN  shift 36
+	SQRT  shift 35
+	TAN  shift 38
+	TILDE  shift 28
+	.  error
+
+	add  goto 20
+	and  goto 13
+	bitand  goto 16
+	bitor  goto 14
+	bitxor  goto 15
+	cast  goto 22
+	const  goto 30
+	equality  goto 17
+	expr  goto 154
+	mult  goto 21
+	or  goto 6
+	primary  goto 25
+	rel  goto 18
+	shift  goto 19
+	unary  goto 23
+
+state 154
+	exprlist :  exprlist COMMA expr COMMA expr_    (26)
+
+	.  reduce 26
+
+
+49/127 terminals, 21/600 nonterminals
+82/300 grammar rules, 155/1000 states
 0 shift/reduce, 0 reduce/reduce conflicts reported
-72/601 working sets used
-memory: states,etc. 328/2000, parser 378/4000
-63/3001 distinct lookahead sets
+75/601 working sets used
+memory: states,etc. 355/2000, parser 491/4000
+74/3001 distinct lookahead sets
 74 extra closures
-802 shift entries, 1 exceptions
-54 goto entries
-312 entries saved by goto default
-Optimizer space used: input 1696/2000, output 257/4000
-257 table entries, 79 zero
-maximum spread: 301, maximum offset: 297
+888 shift entries, 1 exceptions
+64 goto entries
+368 entries saved by goto default
+Optimizer space used: input 1885/2000, output 269/4000
+269 table entries, 75 zero
+maximum spread: 303, maximum offset: 291

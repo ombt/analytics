@@ -6,14 +6,14 @@ YACC = /usr/ccs/bin/yacc
 YACCFLAGS = -d -v
 LEX = /usr/ccs/bin/lex
 MAKE = make
-LDFLAGS = 
-LD = cc
+LDFLAGS = -g -DSUN
+LD = CC
 BACKUPDIR = BACKUP
 SHELLBIN = $(HOME)/bin
 ARFLAGS = -r -v
-CCFLAGS = -g
+CCFLAGS = -g -DSUN
 INCLDIRS = 
-CC = cc
+CC = CC
 LPRFLAGS = 
 AR = /usr/ccs/bin/ar
 LPR = mycpr2on1
@@ -24,64 +24,66 @@ ENDLIST =
 .cpp.o:
 		$(CC) $(CCFLAGS) $(INCLDIRS) -c $<
 
-all:		mybc \
+all:		omybc \
 		$(ENDLIST)
 		touch all
 
-mybc:		mybcyacc.o \
-		mybclex.o \
+omybc:		omybcyacc.o \
+		omybclex.o \
 		$(ENDLIST)
-		$(LD) $(LDFLAGS) -o mybc \
-			mybcyacc.o \
-			mybclex.o \
+		$(LD) $(LDFLAGS) -o omybc \
+			omybcyacc.o \
+			omybclex.o \
 			-ll \
 			-ly \
 			-lm \
 			$(ENDLIST)
+		chmod 755 omybc
+		cp omybc /home/rumore/bin/omybc
 
-mybcyacc.o:	mybc.y \
-		./mybc.h \
+omybclex.o:	omybc.l \
+		./omybc.h \
+		omybc.y \
 		$(ENDLIST)
-		$(YACC) $(YACCFLAGS) mybc.y
-		mv y.tab.h mybcyacc.h
-		mv y.tab.c mybcyacc.c
-		$(CC) $(CCFLAGS) $(INCLDIRS) -c mybcyacc.c
+		$(LEX) $(LEXFLAGS) omybc.l
+		mv lex.yy.c omybclex.c
+		$(CC) $(CCFLAGS) $(INCLDIRS) -c omybclex.c
 
-mybclex.o:	mybc.l \
-		./mybc.h \
-		mybc.y \
+omybcyacc.o:	omybc.y \
+		./omybc.h \
 		$(ENDLIST)
-		$(LEX) $(LEXFLAGS) mybc.l
-		mv lex.yy.c mybclex.c
-		$(CC) $(CCFLAGS) $(INCLDIRS) -c mybclex.c
+		$(YACC) $(YACCFLAGS) omybc.y
+		mv y.tab.h omybcyacc.h
+		mv y.tab.c omybcyacc.c
+		$(CC) $(CCFLAGS) $(INCLDIRS) -c omybcyacc.c
 
 clean:
 		-([ -d "Templates.DB" ] && rm -rf Templates.DB;)
 		-([ -d "SunWS_cache" ] && rm -rf SunWS_cache;)
-		-rm -f mybc
-		-rm -f mybcyacc.o
-		-rm -f mybclex.o
+		-rm -f omybc
+		-rm -f omybclex.o
+		-rm -f omybcyacc.o
 
-backup:		mybc.y \
-		mybc.l \
-		./mybc.h \
-		./mybcyacc.h \
+backup:		omybc.l \
+		omybc.y \
+		./omybcyacc.h \
+		./omybc.h \
 		$(ENDLIST)
 		-([ ! -d "./$(BACKUPDIR)" ] && mkdir ./$(BACKUPDIR);)
-		cp mybc.y $(BACKUPDIR)/mybc.y
-		cp mybc.l $(BACKUPDIR)/mybc.l
-		cp ./mybc.h ./$(BACKUPDIR)/mybc.h
-		cp ./mybcyacc.h ./$(BACKUPDIR)/mybcyacc.h
+		cp omybc.l $(BACKUPDIR)/omybc.l
+		cp omybc.y $(BACKUPDIR)/omybc.y
+		cp ./omybcyacc.h ./$(BACKUPDIR)/omybcyacc.h
+		cp ./omybc.h ./$(BACKUPDIR)/omybc.h
 		touch backup
 
-print:		mybc.y \
-		mybc.l \
-		./mybc.h \
-		./mybcyacc.h \
+print:		omybc.l \
+		omybc.y \
+		./omybcyacc.h \
+		./omybc.h \
 		$(ENDLIST)
 		$(LPR) $(LPRFLAGS) \
-			mybc.y \
-			mybc.l \
-			./mybc.h \
-			./mybcyacc.h \
+			omybc.l \
+			omybc.y \
+			./omybcyacc.h \
+			./omybc.h \
 			$(ENDLIST)
