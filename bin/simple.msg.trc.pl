@@ -726,6 +726,12 @@ sub date_filter
     my ($rec, $ptstamp) = @_;
     ftrace(__LINE__);
     #
+    if ($rec !~ m/\t\d\d\d\d\/\d\d\/\d\d \d\d:\d\d:\d\d.\d\d\d\t/)
+    {
+        # does not contain a date. skip it.
+        return BEFORE_WINDOW;
+    }
+    #
     my @data = split("\t", $rec, 3);
     #
     $$ptstamp = $data[1];
