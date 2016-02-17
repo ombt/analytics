@@ -1,8 +1,0 @@
-SHELLBIN=$(HOME)/tools/bin
-#
-copyscripts
-copyscripts.sh
-#
-mkcurrdirs
-mkcurrdirs.sh
-#

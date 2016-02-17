@@ -1,9 +1,0 @@
-CC = cc
-CCFLAGS = -g
-LD = cc
-LDFLAGS = -g
-#
-pdir
-pdir.c
-#
-install1 = cp pdir $(HOME)/bin/pdir

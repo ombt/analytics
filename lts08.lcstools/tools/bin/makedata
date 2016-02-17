@@ -1,8 +1,0 @@
-#!/usr/bin/ksh
-. /home/lcstools/tools/bin/setup_lcs 1>/dev/null 2>&1
-#
-cd /home/lcstools/tools/data
-#
-/usr/ccs/bin/make
-#
-exit $?

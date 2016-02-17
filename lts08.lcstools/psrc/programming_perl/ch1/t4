@@ -1,7 +1,0 @@
-#!/usr/bin/perl
-#
-$array = [ "Jacob", "Mark" ];
-#
-print "array ... @$array \n";
-#
-exit 0

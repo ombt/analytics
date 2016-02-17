@@ -1,3 +1,0 @@
-# telnet to 3gmsclsp
-set -x
-exec rlogin ih6g2-lsp1.ih.lucent.com -l rumore

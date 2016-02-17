@@ -1,2 +1,0 @@
-Demonstrates exposure processing done by coalescing contiguous
-Expose events into a region and using the region as a clip mask.

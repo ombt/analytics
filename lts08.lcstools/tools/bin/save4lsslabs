@@ -1,5 +1,0 @@
-#!/usr/bin/ksh
-# save a load for lss labs only
-. /home/lcstools/tools/bin/setup_lcs 1>/dev/null 2>&1
-#
-exec lcssaveload -B ${*} ihlnc1 ihlnc2 ihlng1 ihlng3 ihlsg1 ihlsg4 

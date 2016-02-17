@@ -1,7 +1,0 @@
-SHELLBIN=$(HOME)/tools/bin
-#
-ptalog.parse
-ptalog.parse.sh
-#
-nptalog.parse
-nptalog.parse.sh

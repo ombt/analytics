@@ -1,4 +1,0 @@
-#!/usr/bin/ksh
-. /home/lcstools/tools/bin/setup_lcs 1>/dev/null 2>&1
-#
-exec lcssaveload -O -s -b BP-6-2-1-0-66 -B ${*} ihlcsdv2 ihlcsg12 ihlcsg21 ihlcsg22 ihlcsdv3 ihlcsg13 ihlcsg14 ihlcsg15 ihlcsg16 ihlcsgw5 ihlcsgw6 ihlcsg23 ihlcsg24 ihlcsgw7 ihlcsgw8 ihlcsgw9 ihlcsg10

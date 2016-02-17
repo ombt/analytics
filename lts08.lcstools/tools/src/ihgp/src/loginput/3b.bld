@@ -1,1 +1,0 @@
-3bcc -c -I$A/hdr/dmert ${*}

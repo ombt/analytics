@@ -1,8 +1,0 @@
-cat cleis |
-while read branch clei type
-do
-	echo "$branch	$clei	none	no	$type"
-done
-#
-exit 0
-

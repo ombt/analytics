@@ -1,7 +1,0 @@
-CC = CC
-CCFLAGS = -g -DKILLPGRP
-LD = CC
-LDFLAGS = -g -DKILLPGRP
-tsys
-tsys.c
-tsystem.c

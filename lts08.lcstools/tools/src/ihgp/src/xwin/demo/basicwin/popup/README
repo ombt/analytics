@@ -1,4 +1,0 @@
-This example demonstrates getting keyboard input.  It implements
-a simple text entry window.  Press a button in the window to get
-the text entry window.  Type to enter text - backspace works, etc.
-Press again (or any key) to exit the application.

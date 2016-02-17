@@ -1,6 +1,0 @@
-#!/usr/bin/perl -w
-#
-use Config;
-print "$Config{d_sigaction}\n";
-#
-exit 0;

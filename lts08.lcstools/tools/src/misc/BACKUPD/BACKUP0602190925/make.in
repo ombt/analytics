@@ -1,5 +1,0 @@
-SHELLBIN=$(HOME)/tools/bin
-#
-lcslocks
-lcslocks.sh
-#

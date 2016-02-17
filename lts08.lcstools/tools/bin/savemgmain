@@ -1,7 +1,0 @@
-#!/usr/bin/ksh
-. /home/lcstools/tools/bin/setup_lcs 1>/dev/null 2>&1
-#
-#exec lcssaveload -d -r lcsbld1.ih.lucent.com!/build/lcstools -b Main -B ${*} ihlcsdv2 ihlcsg11 ihlcsg12 ihlcsg25 ihlcsg21 ihlcsg22 ihlcsg13 ihlcsg14 ihlcsg15 ihlcsg16 ihlcsg17 ihlcsg18 ihlcsg19 ihlcsg20 ihlcsg23 ihlcsg24 ihlcs4 ihlcsg26 ihlcsg27 ihlcsg28 ihlcsgw3 ihlcsgw4 ihlcs3 ihlcsg29 ihlcsgw5 ihlcsgw6 ihlcsdv3 ihlcsgw1 ihlcsgw2 ihlcsgw7 ihlcsgw8 ihlcsgw9 ihlcsg10 ihlcswg1 ihlcswg2 ihlcswg3 ihlcs1
-#
-exec lcssaveload -d -r lcsbld1.ih.lucent.com!/build/lcstools -b Main -B ${*} ihlcsdv2 ihlcsg11 ihlcsg25 ihlcsg21 ihlcsg22 ihlcsg13 ihlcsg14 ihlcsg15 ihlcsg16 ihlcs4 ihlcsg26 ihlcsg31 ihlcsg32 ihlcsg27 ihlcsg29 ihlcsg28 ihlcsg17 ihlcsg18 ihlcsgw1 ihlcsgw2 ihlcs1 ihlcsgw3 ihlcsgw4 ihlcs3 ihlcsg19 ihlcsg20 ihlcsgw5 ihlcsgw6
-#exec lcssaveload -d -b Main -B ${*} ihlcsdv2 ihlcsg11 ihlcsg25 ihlcsg21 ihlcsg22 ihlcsg13 ihlcsg14 ihlcsg15 ihlcsg16 ihlcs4 ihlcsg26 

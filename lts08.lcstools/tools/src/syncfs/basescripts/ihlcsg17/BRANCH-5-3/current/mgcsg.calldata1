@@ -1,3 +1,0 @@
-ed-sip-sys:::::sipport=60000
-#an init is needed to activate the above command
-init-sys:telica::::10

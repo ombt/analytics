@@ -1,9 +1,0 @@
-CC = CC
-CCFLAGS = -g -DDEBUG
-#
-LD = CC
-LDFLAGS = -g -DDEBUG
-#
-ip2bip
-ip2bip.c
-install1 = cp ip2bip $(HOME)/tools/bin/ip2bip

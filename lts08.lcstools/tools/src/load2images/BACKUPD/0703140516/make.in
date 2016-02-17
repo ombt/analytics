@@ -1,7 +1,0 @@
-SHELLBIN=$(HOME)/tools/bin
-#
-load2images
-load2images.sh
-#
-# oload2images
-# oload2images.sh

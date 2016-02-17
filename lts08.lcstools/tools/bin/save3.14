@@ -1,4 +1,0 @@
-#!/usr/bin/ksh
-. /home/lcstools/tools/bin/setup_lcs 1>/dev/null 2>&1
-#
-exec lcssaveload -b BRANCH-3-14 -B ${*} ihlcs2 ihlcsse1

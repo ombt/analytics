@@ -1,4 +1,0 @@
-SHELLBIN=$(HOME)/tools/bin
-#
-setup_lcs
-setup_lcs.sh

@@ -1,6 +1,0 @@
-# HOME=/home2/tester/bin/lcstools
-SHELLBIN=$(HOME)/tools/bin
-#
-MAload2images
-MAload2images.sh
-#

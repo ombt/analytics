@@ -1,5 +1,0 @@
-#!/usr/bin/perl
-#
-print __FILE__ . "'" . __LINE__ . "\n";
-#
-exit 0

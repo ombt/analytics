@@ -1,8 +1,0 @@
-SHELLBIN=$(HOME)/tools/bin
-#
-dbquery
-dbquery.sh
-#
-odbquery
-odbquery.sh
-#

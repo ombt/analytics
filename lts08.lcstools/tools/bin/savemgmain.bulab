@@ -1,4 +1,0 @@
-#!/usr/bin/ksh
-. /home/lcstools/tools/bin/setup_lcs 1>/dev/null 2>&1
-#
-exec lcssaveload -b Main -B ${*} ihlcsdv2 ihlcsg21 ihlcsg22 

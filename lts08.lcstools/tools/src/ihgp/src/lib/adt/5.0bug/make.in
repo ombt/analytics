@@ -1,7 +1,0 @@
-CC = CC
-CCFLAGS = -DDEBUG -g 
-LD = CC
-LDFLAGS = -g 
-#
-tlist
-tlist.c

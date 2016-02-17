@@ -1,7 +1,0 @@
-#!/usr/bin/perl 
-while (<STDIN>)
-{
-	chomp;
-	print $_ . "\n";
-}
-#

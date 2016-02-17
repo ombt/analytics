@@ -1,2 +1,0 @@
-# fix my lousy typing ... ci is from exptools and it corrupts files.
-exec /usr/bin/vi "${@}"

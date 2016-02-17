@@ -1,3 +1,0 @@
-mymk
-mymk.sh
-install1 = rcp mymk integ@lts00:/home/integ/bin

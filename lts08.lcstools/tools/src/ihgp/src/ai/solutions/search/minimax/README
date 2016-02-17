@@ -1,3 +1,0 @@
-Because the minimax class is entirely template based it is made
-an include file (see include/minimax.h). We left this note
-in case you got confused :-).

@@ -1,3 +1,0 @@
-mybsplit
-mybsplit.c
-install1 = cp mybsplit $(HOME)/bin

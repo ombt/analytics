@@ -1,4 +1,0 @@
-SHELLBIN=$(HOME)/bin
-#
-pkg_mkindex
-pkg_mkindex.sh
