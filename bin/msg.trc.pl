@@ -813,21 +813,17 @@ sub process_xml_block
         {
             $first_start_tag = "<" . ${1} . ">";
             $first_end_tag = end_tag($first_start_tag);
-            push @recs, $rec;
         }
         elsif ($rec =~ m/$first_end_tag/)
         {
-            push @recs, $rec;
             $done = TRUE;
         }
-        else
-        {
-            push @recs, $rec;
-        }
+        #
+        push @recs, $rec;
     }
     #
     printf $log_fh "\n%d: XML block: \n\t%s\n", 
-                   __LINE__, join("\n\t", @recs);
+           __LINE__, join("\n\t", @recs) if ($verbose >= MINVERBOSE);
 }
 #
 sub process_file
