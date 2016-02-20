@@ -781,7 +781,7 @@ sub is_xml_start
 {
     my ($rec) = @_;
     #
-    if ($rec =~ m/<.xml\s+version="1.0"\s+encoding="UTF-8".>/)
+    if ($rec =~ m/<.xml\s+version="1.0"\s+encoding="UTF-8".>/i)
     {
         return TRUE;
     }
@@ -794,6 +794,7 @@ sub is_xml_start
 sub process_xml_block
 {
     my ($post_raw_nl, $infh, $rec, $tstamp) = @_;
+    ftrace(__LINE__);
     #
     my @recs = ();
     #
@@ -803,23 +804,30 @@ sub process_xml_block
     my $first_start_tag = "";
     my $first_end_tag = "";
     #
-    while ($rec = <$infh>)
+    while (($done == FALSE) && ($rec = <$infh>))
     {
-        chomp($rec);
+        $rec =~ s/\r*\n$//;
         #
         if (($first_start_tag eq "") &&
-            ($rec =~ m/^(<[^\/>\s]+)/))
+            ($rec =~ m/^<([^\/>\s]+)/))
         {
             $first_start_tag = "<" . ${1} . ">";
             $first_end_tag = end_tag($first_start_tag);
             push @recs, $rec;
         }
-        elsif ($rec eq $end_tag)
+        elsif ($rec =~ m/$first_end_tag/)
         {
             push @recs, $rec;
             $done = TRUE;
         }
+        else
+        {
+            push @recs, $rec;
+        }
     }
+    #
+    printf $log_fh "\n%d: XML block: \n\t%s\n", 
+                   __LINE__, join("\n\t", @recs);
 }
 #
 sub process_file
@@ -838,10 +846,10 @@ sub process_file
     #
     while (my $rec = <$infh>)
     {
-        chomp($rec);
+        $rec =~ s/\r*\n$//;
         #
         my $tstamp = "";
-        my $result = $result = date_filter($rec, \$tstamp);
+        my $result = date_filter($rec, \$tstamp);
         if ($result == IN_WINDOW)
         {
             process_rec($post_raw_nl, $rec, $tstamp);
