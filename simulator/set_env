@@ -1,0 +1,10 @@
+
+export LNB_SIM_ROOT=$(pwd)
+#
+export LNB_SIM_CFG="$LNB_SIM_ROOT/cfg"
+export LNB_SIM_BIN="$LNB_SIM_ROOT/bin"
+export LNB_SIM_LIB="$LNB_SIM_ROOT/lib"
+#
+export LNB_SIM_SRC="$LNB_SIM_ROOT/src"
+export LNB_SIM_LIBSRC="$LNB_SIM_ROOT/libsrc"
+#
