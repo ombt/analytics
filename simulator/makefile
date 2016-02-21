@@ -22,22 +22,25 @@ ifndef LNB_SIM_LIB
 $(error LNB_SIM_LIB is not set)
 endif
 
-bin/%.pl : src/%.PL
+$(LNB_SIM_BIN)/%.pl : src/%.PL
 	cp $< $@
 	chmod 755 $@
 
-lib/%.pm : libsrc/%.PM
+$(LNB_SIM_LIB)/%.pm : libsrc/%.PM
 	cp $< $@
 	chmod 755 $@
 
-all:	bin/lnbsim.pl lib/mypqueue.pm lib/mytimer.pm
+all:	\
+	$(LNB_SIM_BIN)/lnbsim.pl \
+	$(LNB_SIM_LIB)/mypqueue.pm \
+	$(LNB_SIM_LIB)/mytimer.pm
 
-bin/lnbsim.pl:		src/lnbsim.PL
+$(LNB_SIM_BIN)/lnbsim.pl:	src/lnbsim.PL
 
-lib/mypqueue.pm:	libsrc/mypqueue.PM
+$(LNB_SIM_LIB)/mypqueue.pm:	libsrc/mypqueue.PM
 
-lib/mytimer.pm:		libsrc/mytimer.PM
+$(LNB_SIM_LIB)/mytimer.pm:	libsrc/mytimer.PM
 
 clean:
-	-(rm bin/*);
-	-(rm lib/*);
+	-(rm -f $(LNB_SIM_BIN)/*);
+	-(rm -f $(LNB_SIM_LIB)/*);
