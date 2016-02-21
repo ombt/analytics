@@ -8,3 +8,5 @@ export LNB_SIM_LIB="$LNB_SIM_ROOT/lib"
 export LNB_SIM_SRC="$LNB_SIM_ROOT/src"
 export LNB_SIM_LIBSRC="$LNB_SIM_ROOT/libsrc"
 #
+export PATH="${LNB_SIM_BIN}:${PATH}"
+
