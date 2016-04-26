@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# LNB simulator
+# LNB simulator using log files as input
 #
 ########################################################################
 #
