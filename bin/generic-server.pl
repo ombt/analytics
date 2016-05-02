@@ -45,6 +45,21 @@ use constant UNIX_STREAM => 'UNIX_STREAM';
 use constant UNIX_DGRAM => 'UNIX_DGRAM';
 use constant TTY_STREAM => 'TTY_STREAM';
 #
+# type of handlers
+#
+use constant TCP_ECHO_HANDLER => "TCP_ECHO_HANDLER";
+use constant UDP_ECHO_HANDLER => "UDP_ECHO_HANDLER";
+#
+my %client_handlers =
+(
+    TCP_ECHO_HANDLER() => {
+        handler => \&tcp_echo_handler,
+    },
+    UDP_ECHO_HANDLER() => {
+        handler => \&udp_echo_handler,
+    },
+);
+#
 ################################################################
 #
 # globals
@@ -57,6 +72,67 @@ my $default_cfg_file = "generic-server.cfg";
 #
 my $logfile = '';
 my $verbose = NOVERBOSE;
+#
+# default service values
+my %default_service_params =
+(
+    name => {
+        use_default => FALSE(),
+        default_value => "",
+        translate => undef,
+    },
+    type => {
+        use_default => TRUE(),
+        default_value => SOCKET_STREAM(),
+        translate => \&to_uc,
+    },
+    host_name => {
+        use_default => TRUE(),
+        default_value => "localhost",
+        translate => undef,
+    },
+    file_name => {
+        use_default => TRUE(),
+        default_value => "",
+        translate => undef,
+    },
+    port => {
+        use_default => TRUE(),
+        default_value => -1,
+        translate => undef,
+    },
+    handler => {
+        use_default => TRUE(),
+        default_value => undef,
+        translate => undef,
+    },
+    client_handler => {
+        use_default => TRUE(),
+        default_value => undef,
+        translate => \&to_uc,
+    },
+);
+#
+# vectors for select()
+#
+my $rin = '';
+my $win = '';
+my $ein = '';
+#
+my $rout = '';
+my $wout = '';
+my $eout = '';
+#
+# map connection type to create connection routine
+#
+my %create_connection =
+(
+    SOCKET_STREAM() => \&create_socket_stream,
+    SOCKET_DGRAM() => \&create_socket_dgram,
+    UNIX_STREAM() => \&create_unix_stream,
+    UNIX_DGRAM() => \&create_unix_dgram,
+    TTY_STREAM() => undef
+);
 #
 ################################################################
 #
@@ -201,19 +277,34 @@ sub read_file
     return SUCCESS;
 }
 #
+sub fill_in_missing_data
+{
+    my ($pservice) = @_;
+    #
+    foreach my $key (keys %default_service_params)
+    {
+        if (( ! exists($pservice->{$key})) &&
+            ($default_service_params{$key}{use_default} == TRUE))
+        {
+            log_vmin "Defaulting missing %s field.\n", $key;
+            $pservice->{$key} = $default_service_params{$key}{default_value};
+        }
+    }
+}
+#
+sub to_uc
+{
+    my ($in) = @_;
+    return uc($in);
+}
+#
+#
 sub parse_file
 {
     my ($pdata, $pservices) = @_;
     #
-    my $service_name = "";
-    my $service_type = SOCKET_STREAM;
-    my $service_host_name = "localhost";
-    my $service_file_name = ""; # for UNIX sockets
-    my $service_port = -1;      # for TCP/UDP sockets
-    my $service_input_handler = undef;
-    my $service_handler = undef;
-    #
     my $lnno = 0;
+    my $pservice = { };
     #
     foreach my $record (@{$pdata})
     {
@@ -226,63 +317,58 @@ sub parse_file
         }
         elsif ($record =~ m/^\s*service\s*start\s*$/)
         {
-            $service_name = "";
-            $service_type = SOCKET_STREAM;
-            $service_host_name = "localhost";
-            $service_file_name = ""; # for UNIX sockets
-            $service_port = -1;      # for TCP/UDP sockets
-            $service_input_handler = undef;
-            $service_handler = undef;
+            $pservice = { };
         }
         elsif ($record =~ m/^\s*service\s*end\s*$/)
         {
-            if (($service_name ne "") and 
-                (($service_port > 0) or ($service_file_name ne "")))
+            if ((exists($pservice->{name})) &&
+                ($pservice->{name} ne ""))
             {
-                log_msg "Storing service: %s\n", $service_name;
+                my $name = $pservice->{name};
                 #
-                die "ERROR: duplicate service $service_name: $!" 
-                    if (exists($pservices->{${service_name}}));
+                log_msg "Storing service: %s\n", $name;
                 #
-                $pservices->{${service_name}} = 
-                {
-                    name => $service_name,
-                    type => $service_type,
-                    host_name => $service_host_name,
-                    file_name => $service_file_name,
-                    port => $service_port
-                };
+                die "ERROR: duplicate service $name: $!" 
+                    if (exists($pservices->{$name}));
+                #
+                fill_in_missing_data($pservice);
+                $pservices->{$name} = $pservice;
             }
             else
             {
-                log_err "Unknown service name or invalid port.\n";
+                log_err "Unknown service name (%d).\n", $lnno;
+                return FAIL;
             }
-        }
-        elsif ($record =~ m/^\s*name\s*=\s*(.*)$/i)
-        {
-            $service_name = ${1};
-        }
-        elsif ($record =~ m/^\s*type\s*=\s*(.*)$/i)
-        {
-            $service_type = uc(${1});
-        }
-        elsif ($record =~ m/^\s*host_name\s*=\s*(.*)$/i)
-        {
-            $service_host_name = ${1};
-        }
-        elsif ($record =~ m/^\s*file_name\s*=\s*(.*)$/i)
-        {
-            $service_file_name = ${1};
-        }
-        elsif ($record =~ m/^\s*port\s*=\s*(.*)$/i)
-        {
-            $service_port = ${1};
+            #
+            $pservice = { };
         }
         else
         {
-            log_vmin "Skipping record: %s\n", $record;
+            my $found = FALSE;
+            foreach my $key (keys %default_service_params)
+            {
+                if ($record =~ m/^\s*${key}\s*=\s*(.*)$/i)
+                {
+                    log_vmin "Setting %s to %s (%d)\n", $key, ${1}, $lnno;
+                    if (defined($default_service_params{$key}{translate}))
+                    {
+                        # massage the data value
+                        $pservice->{$key} = 
+                            &{$default_service_params{$key}{translate}}(${1});
+                    }
+                    else
+                    {
+                        $pservice->{$key} = ${1};
+                    }
+                    $found = TRUE;
+                    last;
+                }
+            }
+            if ($found == FALSE)
+            {
+                log_warn "Skipping record %d: %s\n", $lnno, $record;
+            }
         }
-        #
     }
     #
     return SUCCESS;
@@ -304,6 +390,410 @@ sub read_cfg_file
         log_err "Processing cfg file %s failed.\n", $cfgfile;
         return FAIL;
     }
+}
+#
+################################################################
+#
+# client handlers
+#
+sub tcp_echo_handler
+{
+    my ($pservice, $pfh_to_service) = @_;
+    #
+    my $pfh = $pservice->{fh};
+printf "echo client file no is ... %d, %s\n", fileno($$pfh), $$pfh;
+    my $data = <$$pfh>;
+    #
+    if (defined($data))
+    {
+        log_msg "input ... <%s>\n", $data;
+    }
+    #
+    send($$pfh, $data, 0);
+}
+#
+sub udp_echo_handler
+{
+    my ($pservice, $pfh_to_service) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $data = <$$pfh>;
+    $pservice->{input} = $data;
+    #
+    if (defined($pservice->{input}))
+    {
+        log_msg "input ... <%s>\n", $pservice->{input};
+    }
+}
+#
+################################################################
+#
+# server and input routines
+#
+sub stdin_handler
+{
+    my ($pservice, $pfh_to_service) = @_;
+    #
+    my $data = <STDIN>;
+    chomp($data);
+    #
+    if (defined($data))
+    {
+        log_msg "input ... <%s>\n", $data;
+    }
+}
+#
+sub socket_stream_handler
+{
+    my ($pservice, $pfh_to_service) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $data = <$$pfh>;
+    $pservice->{input} = $data;
+    #
+    if (defined($pservice->{input}))
+    {
+        log_msg "input ... <%s>\n", $pservice->{input};
+    }
+}
+#
+sub socket_dgram_handler
+{
+    my ($pservice, $pfh_to_service) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    $pservice->{input} = <$$pfh>;
+    #
+    if (defined($pservice->{input}))
+    {
+        log_msg "input ... <%s>\n", $pservice->{input};
+    }
+}
+#
+sub unix_stream_handler
+{
+    my ($pservice, $pfh_to_service) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $data = <$$pfh>;
+    $pservice->{input} = $data;
+    #
+    if (defined($pservice->{input}))
+    {
+        log_msg "input ... <%s>\n", $pservice->{input};
+    }
+}
+#
+sub unix_dgram_handler
+{
+    my ($pservice, $pfh_to_service) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $data = <$$pfh>;
+    $pservice->{input} = $data;
+    #
+    if (defined($pservice->{input}))
+    {
+        log_msg "input ... <%s>\n", $pservice->{input};
+    }
+}
+#
+sub socket_stream_accept_handler
+{
+    my ($pservice, $pfh_to_service) = @_;
+    #
+    # do the accept
+    #
+    my $pfh = $pservice->{fh};
+    my $new_fh = FileHandle->new();
+    if (my $client_paddr = accept($new_fh, $$pfh))
+    {
+        log_msg "accept() succeeded for service %s\n", $pservice->{name};
+        #
+        fcntl($new_fh, F_SETFL, O_NONBLOCK);
+        #
+        my ($client_port, $client_packed_ip) = sockaddr_in($client_paddr);
+        my $client_ascii_ip = inet_ntoa($client_packed_ip);
+        #
+        vec($rin, fileno($new_fh), 1) = 1;
+        vec($ein, fileno($new_fh), 1) = 1;
+        #
+        my $handler = undef;
+        if (exists($pservice->{client_handler}))
+        {
+            $handler = $pservice->{client_handler};
+            die "unknown client handler: $!" 
+                unless (exists($client_handlers{$handler}{handler}));
+            $handler = $client_handlers{$handler}{handler};
+        }
+        else
+        {
+            $handler = \&socket_stream_handler;
+        }
+        #
+        my $pnew_service = 
+        {
+            name => "client_of_" . $pservice->{name},
+            input => '',
+            output => '',
+            client_port => $client_port,
+            client_host_name => $client_ascii_ip,
+            client_paddr => $client_paddr,
+            fh => \$new_fh,
+            accept_fh => $pservice->{fh},
+            handler => $handler,
+        };
+        #
+        $pfh_to_service->{fileno($new_fh)} = $pnew_service;
+    }
+    else
+    {
+        $new_fh = undef;
+        log_err "accept() failed for service %s\n", $pservice->{name};
+    }
+}
+#
+sub set_io_nonblock
+{
+    my ($pservices) = @_;
+    #
+    foreach my $service (keys %{$pservices})
+    {
+        my $pfh = $pservices->{$service}{fh};
+        fcntl($$pfh, F_SETFL, O_NONBLOCK);
+    }
+}
+#
+# event loop for timers and i/o (via select)
+#
+sub run_event_loop
+{
+    my ($pservices, $pfh_to_service) = @_;
+    #
+    # mark all file handles as non-blocking
+    #
+    set_io_nonblock($pservices);
+    #
+    foreach my $service (keys %{$pservices})
+    {
+        my $pfh = $pservices->{$service}{fh};
+        vec($rin, fileno($$pfh), 1) = 1;
+    }
+    #
+    # enter event loop
+    #
+    my $time_to_sleep = 15;
+    #
+    log_msg "Start event loop ...\n";
+    #
+    for (my $done = FALSE; $done == FALSE; )
+    {
+        my ($nf, $timeleft) = select($rout=$rin, 
+                                     $wout=$win, 
+                                     $eout=$ein, 
+                                     $time_to_sleep);
+        if ($timeleft <= 0)
+        {
+            log_msg "Time expired ...\n";
+            $done = TRUE;
+        }
+        elsif ($nf > 0)
+        {
+            log_msg "NF, TIMELEFT ... (%d,%d)\n", $nf, $timeleft;
+            foreach my $fileno (keys %{$pfh_to_service})
+            {
+                if (vec($eout, $fileno, 1))
+                {
+                    #
+                    # EOF or some error
+                    #
+                    vec($rin, $fileno, 1) = 0;
+                    vec($ein, $fileno, 1) = 0;
+                    vec($win, $fileno, 1) = 0;
+                    #
+                    my $pservice = $pfh_to_service->{$fileno};
+                    my $pfh = $pservice->{fh};
+                    close($$pfh);
+                    #
+                    log_msg "closing socket (%d) for service %s ...\n", 
+                            $fileno,
+                            $pservice->{name};
+                    $$pfh_to_service{$fileno} = undef;
+                }
+                elsif (vec($rout, $fileno, 1))
+                {
+                    #
+                    # ready for a read
+                    #
+                    my $pservice = $pfh_to_service->{$fileno};
+                    #
+                    log_msg "input available for %s ...\n", $pservice->{name};
+                    #
+                    # call handler
+                    #
+                    &{$pservice->{handler}}($pservice, $pfh_to_service);
+                }
+            }             
+        }
+    }
+    #
+    log_msg "Event-loop done ...\n";
+    return SUCCESS;
+}
+#
+################################################################
+#
+# create services
+#
+sub add_stdin_to_services
+{
+    my ($pfh_to_service) = @_;
+    #
+    my $fno = fileno(STDIN);
+    #
+    $pfh_to_service->{$fno} =
+    {
+        name => "STDIN",
+        type => TTY_STREAM(),
+        handler => \&stdin_handler,
+    };
+    #
+    log_msg "Adding STDIN service ...\n";
+    log_msg "name ... %s type ... %s\n", 
+        $pfh_to_service->{$fno}->{name},
+        $pfh_to_service->{$fno}->{type};
+    #
+    vec($rin, fileno(STDIN), 1) = 1;
+}
+#
+sub create_socket_stream
+{
+    my ($pservice) = @_;
+    #
+    log_msg "Creating stream socket for %s.\n", $pservice->{name};
+    #
+    my $fh = FileHandle->new;
+    socket($fh, PF_INET, SOCK_STREAM, getprotobyname('tcp'));
+    setsockopt($fh, SOL_SOCKET, SO_REUSEADDR, 1);
+    #
+    my $ipaddr = gethostbyname($pservice->{host_name});
+    defined($ipaddr) or die "gethostbyname: $!";
+    #
+    my $paddr = sockaddr_in($pservice->{port}, $ipaddr);
+    defined($paddr) or die "sockaddr_in: $!";
+    #
+    bind($fh, $paddr) or die "bind: $!";
+    listen($fh, SOMAXCONN) or die "listen: $!";
+    #
+    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    #
+    $pservice->{fh} = \$fh;
+    $pservice->{handler} = \&socket_stream_accept_handler;
+    #
+    return SUCCESS;
+}
+#
+sub create_socket_dgram
+{
+    my ($pservice) = @_;
+    #
+    log_msg "Creating dgram socket for %s.\n", $pservice->{name};
+    #
+    my $fh = FileHandle->new;
+    socket($fh, PF_INET, SOCK_DGRAM, getprotobyname('udp'));
+    setsockopt($fh, SOL_SOCKET, SO_REUSEADDR, 1);
+    #
+    my $ipaddr = gethostbyname($pservice->{host_name});
+    defined($ipaddr) or die "gethostbyname: $!";
+    #
+    my $paddr = sockaddr_in($pservice->{port}, $ipaddr);
+    defined($paddr) or die "sockaddr_in: $!";
+    #
+    bind($fh, $paddr) or die "bind: $!";
+    #
+    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    #
+    $pservice->{fh} = \$fh;
+    $pservice->{handler} = \&socket_dgram_handler;
+    #
+    return SUCCESS;
+}
+#
+sub create_unix_stream
+{
+    my ($pservice) = @_;
+    #
+    log_msg "Creating stream unix pipe for %s.\n", $pservice->{name};
+    #
+    my $fh = FileHandle->new;
+    socket($fh, PF_UNIX, SOCK_STREAM, 0);
+    #
+    unlink($pservice->{file_name});
+    #
+    my $paddr = sockaddr_un($pservice->{file_name});
+    defined($paddr) or die "sockaddr_un: $!";
+    #
+    bind($fh, $paddr) or die "bind: $!";
+    #
+    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    #
+    $pservice->{fh} = \$fh;
+    $pservice->{handler} = \&unix_stream_handler;
+    #
+    return SUCCESS;
+}
+#
+sub create_unix_dgram
+{
+    my ($pservice) = @_;
+    #
+    log_msg "Creating dgram unix pipe for %s.\n", $pservice->{name};
+    #
+    my $fh = FileHandle->new;
+    socket($fh, PF_UNIX, SOCK_DGRAM, 0);
+    #
+    unlink($pservice->{file_name});
+    #
+    my $paddr = sockaddr_un($pservice->{file_name});
+    defined($paddr) or die "sockaddr_un: $!";
+    #
+    bind($fh, $paddr) or die "bind: $!";
+    #
+    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    #
+    $pservice->{fh} = \$fh;
+    $pservice->{handler} = \&unix_dgram_handler;
+    #
+    return SUCCESS;
+}
+#
+sub create_server_connections
+{
+    my ($pservices, $pfh_to_service) = @_;
+    #
+    foreach my $service (keys %{$pservices})
+    {
+        log_msg "Creating server conection for %s ...\n", $service;
+        #
+        my $type = $pservices->{$service}->{type};
+        die "ERROR: connection type $type is unknown: $!" 
+            unless (exists($create_connection{$type}));
+        my $status = &{$create_connection{$type}}(\%{$pservices->{$service}});
+        if ($status == SUCCESS)
+        {
+            my $pfh = $pservices->{$service}{fh};
+            log_msg "Successfully create server socket/pipe for %s (%d)\n", 
+                    $service, fileno($$pfh);
+            $pfh_to_service->{fileno($$pfh)} = $pservices->{$service};
+        }
+        else
+        {
+            log_err "Failed to create server socket/pipe for %s\n", $service;
+            return FAIL;
+        }
+    }
+    #
+    return SUCCESS;
 }
 #
 ################################################################
@@ -390,6 +880,28 @@ else
         }
     }
 }
+#
+# create server sockets or pipes as needed.
+#
+my %fh_to_service = ();
+if (create_server_connections(\%services, \%fh_to_service) != SUCCESS)
+{
+    log_err_exit "create_server_connections failed. Done.\n";
+}
+#
+# monitor stdin for i/o with user.
+#
+add_stdin_to_services(\%fh_to_service);
+#
+# event loop to handle connections, etc.
+#
+if (run_event_loop(\%services, \%fh_to_service) != SUCCESS)
+{
+    log_err_exit "run_event_loop failed. Done.\n";
+}
+#
+log_msg "All is well that ends well.\nDone.\n";
+#
 exit 0;
 
 
@@ -465,7 +977,6 @@ my %create_connection =
     UNIX_STREAM() => \&create_unix_stream,
     UNIX_DGRAM() => \&create_unix_dgram,
     TTY_STREAM() => undef
-# 
 );
 #
 # default servers
@@ -650,7 +1161,6 @@ sub parse_file
     my $service_host_name = "localhost";
     my $service_file_name = ""; # for UNIX sockets
     my $service_port = -1;      # for TCP/UDP sockets
-    my $service_input_handler = undef;
     my $service_handler = undef;
     #
     my $lnno = 0;
@@ -828,6 +1338,8 @@ sub socket_stream_accept_handler
         #
         my ($client_port, $client_packed_ip) = sockaddr_in($client_paddr);
         my $client_ascii_ip = inet_ntoa($client_packed_ip);
+        #
+        fcntl($new_fh, F_SETFL, O_NONBLOCK);
         #
         vec($rin, fileno($new_fh), 1) = 1;
         vec($ein, fileno($new_fh), 1) = 1;
