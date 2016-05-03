@@ -401,15 +401,34 @@ sub tcp_echo_handler
     my ($pservice, $pfh_to_service) = @_;
     #
     my $pfh = $pservice->{fh};
-printf "echo client file no is ... %d, %s\n", fileno($$pfh), $$pfh;
-    my $data = <$$pfh>;
     #
-    if (defined($data))
+    my $nr = 0;
+    my $buffer = undef;
+    while (defined($nr = sysread($$pfh, $buffer, 1024*4)) && ($nr > 0))
     {
-        log_msg "input ... <%s>\n", $data;
+        die $! if ( ! defined(send($$pfh, $buffer, $nr)));
     }
     #
-    send($$pfh, $data, 0);
+    if ( ! defined($nr))
+    {
+        #
+        # EOF or some error
+        #
+        my $fileno = fileno($$pfh);
+        #
+        vec($rin, $fileno, 1) = 0;
+        vec($ein, $fileno, 1) = 0;
+        vec($win, $fileno, 1) = 0;
+        #
+        my $pservice = $pfh_to_service->{$fileno};
+        my $pfh = $pservice->{fh};
+        close($$pfh);
+        #
+        log_msg "closing socket (%d) for service %s ...\n", 
+                $fileno,
+                $pservice->{name};
+        $$pfh_to_service{$fileno} = undef;
+    }
 }
 #
 sub udp_echo_handler
@@ -522,12 +541,14 @@ sub socket_stream_accept_handler
         if (exists($pservice->{client_handler}))
         {
             $handler = $pservice->{client_handler};
+            log_msg "Using %s client handler ...\n", $handler;
             die "unknown client handler: $!" 
                 unless (exists($client_handlers{$handler}{handler}));
             $handler = $client_handlers{$handler}{handler};
         }
         else
         {
+            log_msg "Using standard socket_stream_handler ...\n";
             $handler = \&socket_stream_handler;
         }
         #
@@ -846,6 +867,7 @@ foreach my $opt (%opts)
         local *FH;
         $logfile = $opts{$opt};
         open(FH, '>', $logfile) or die $!;
+        FH->autoflush(0);
         $log_fh = *FH;
         log_msg "Log File: %s\n", $logfile;
     }
