@@ -436,12 +436,33 @@ sub udp_echo_handler
     my ($pservice, $pfh_to_service) = @_;
     #
     my $pfh = $pservice->{fh};
-    my $data = <$$pfh>;
-    $pservice->{input} = $data;
     #
-    if (defined($pservice->{input}))
+    my $nr = 0;
+    my $buffer = undef;
+    while (defined($nr = sysread($$pfh, $buffer, 1024*4)) && ($nr > 0))
     {
-        log_msg "input ... <%s>\n", $pservice->{input};
+        die $! if ( ! defined(send($$pfh, $buffer, $nr)));
+    }
+    #
+    if ( ! defined($nr))
+    {
+        #
+        # EOF or some error
+        #
+        my $fileno = fileno($$pfh);
+        #
+        vec($rin, $fileno, 1) = 0;
+        vec($ein, $fileno, 1) = 0;
+        vec($win, $fileno, 1) = 0;
+        #
+        my $pservice = $pfh_to_service->{$fileno};
+        my $pfh = $pservice->{fh};
+        close($$pfh);
+        #
+        log_msg "closing socket (%d) for service %s ...\n", 
+                $fileno,
+                $pservice->{name};
+        $$pfh_to_service{$fileno} = undef;
     }
 }
 #
