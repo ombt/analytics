@@ -11,6 +11,7 @@ use strict;
 use Getopt::Std;
 use Socket;
 use FileHandle;
+use POSIX qw(:errno_h);
 #
 ################################################################
 #
@@ -247,6 +248,21 @@ sub disable_stdout_buffering
     $|++;
 }
 #
+# check if a function is defined or exists.
+#
+sub function_defined
+{
+    my ($func_name) = @_;
+    if (defined(&{$func_name}))
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+#
 ################################################################
 #
 # read and parse data files.
@@ -400,16 +416,19 @@ sub tcp_echo_handler
 {
     my ($pservice, $pfh_to_service) = @_;
     #
+log_msg "tcp_echo_handler called ...\n";
     my $pfh = $pservice->{fh};
     #
     my $nr = 0;
     my $buffer = undef;
     while (defined($nr = sysread($$pfh, $buffer, 1024*4)) && ($nr > 0))
     {
+log_msg "tcp_echo_handler read something ... <%s>\n", $buffer;
         die $! if ( ! defined(send($$pfh, $buffer, $nr)));
     }
     #
-    if ( ! defined($nr))
+log_msg "tcp_echo_handler nr is ... <%s>\n", $nr;
+    if (( ! defined($nr)) && ($! != EAGAIN))
     {
         #
         # EOF or some error
@@ -730,7 +749,25 @@ sub create_socket_stream
     log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
     #
     $pservice->{fh} = \$fh;
-    $pservice->{handler} = \&socket_stream_accept_handler;
+    if (defined($pservice->{handler}))
+    {
+        my $func_name = $pservice->{handler};
+        if (function_defined($func_name) == TRUE)
+        {
+            # turn off strict so we can convert name to function.
+            no strict 'refs';
+            $pservice->{handler} = \&{$func_name};
+        }
+        else
+        {
+            log_err "Function %s does NOT EXIST.\n", $func_name;
+            return FALSE;
+        }
+    }
+    else
+    {
+        $pservice->{handler} = \&socket_stream_accept_handler;
+    }
     #
     return SUCCESS;
 }

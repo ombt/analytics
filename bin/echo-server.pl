@@ -18,7 +18,7 @@ sub start_thread {
 
 $| ++;
 
-my $listener = IO::Socket::INET->new(LocalPort => 3126,
+my $listener = IO::Socket::INET->new(LocalPort => 20000,
                                      Listen => 5,
                                      Reuse => 1) || 
              die "Cannot create socket\n";
