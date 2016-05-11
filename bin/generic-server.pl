@@ -416,19 +416,17 @@ sub tcp_echo_handler
 {
     my ($pservice, $pfh_to_service) = @_;
     #
-log_msg "tcp_echo_handler called ...\n";
     my $pfh = $pservice->{fh};
     #
     my $nr = 0;
     my $buffer = undef;
     while (defined($nr = sysread($$pfh, $buffer, 1024*4)) && ($nr > 0))
     {
-log_msg "tcp_echo_handler read something ... <%s>\n", $buffer;
         die $! if ( ! defined(send($$pfh, $buffer, $nr)));
     }
     #
-log_msg "tcp_echo_handler nr is ... <%s>\n", $nr;
-    if (( ! defined($nr)) && ($! != EAGAIN))
+    if ((( ! defined($nr)) && ($! != EAGAIN)) ||
+        (defined($nr) && ($nr == 0)))
     {
         #
         # EOF or some error
