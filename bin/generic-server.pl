@@ -121,6 +121,11 @@ my %default_service_params =
         default_value => undef,
         translate => undef,
     },
+    timer_handler => {
+        use_default => TRUE(),
+        default_value => undef,
+        translate => undef,
+    },
     client_handler => {
         use_default => TRUE(),
         default_value => undef,
