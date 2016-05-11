@@ -8,10 +8,24 @@
 #
 use strict;
 #
+my $binpath;
+#
+BEGIN {
+    use File::Basename;
+    #
+    $binpath = dirname($0);
+    $binpath = "." if ($binpath eq "");
+}
+#
 use Getopt::Std;
 use Socket;
 use FileHandle;
 use POSIX qw(:errno_h);
+#
+use lib $binpath;
+#
+use mytimer;
+use mypqueue;
 #
 ################################################################
 #
@@ -134,6 +148,13 @@ my %create_connection =
     UNIX_DGRAM() => \&create_unix_dgram,
     TTY_STREAM() => undef
 );
+#
+# priority queue for scheduling
+#
+my $pq = mypqueue->new();
+die "Unable to create priority queue: $!" unless (defined($pq));
+#
+my $event_loop_done = FALSE;
 #
 ################################################################
 #
@@ -261,6 +282,37 @@ sub function_defined
     {
         return FALSE;
     }
+}
+#
+# start a timer
+#
+sub start_timer
+{
+    my ($fileno, $delta, $label) = @_;
+    #
+    my $timerid = int(rand(1000000000));
+    #
+    if ($delta <= 0)
+    {
+        log_err "Timer length is zero for %s. Skipping it.\n", $fileno;
+        return;
+    }
+    #
+    log_vmin "starttimer: " .
+            "fileno=${fileno} " .
+            "label=${label} " .
+            "delta=${delta} " .
+            "id=$timerid ";
+    #
+    my $ptimer = mytimer->new($fileno, $delta, $timerid, $label);
+    #
+    log_vmin "fileno = $ptimer->{fileno} " .
+            "delta = $ptimer->{delta} " .
+            "expire = $ptimer->{expire} " .
+            "id = $ptimer->{id} " .
+            "label = $ptimer->{label} ";
+    #
+    $pq->enqueue($ptimer);
 }
 #
 ################################################################
@@ -412,6 +464,24 @@ sub read_cfg_file
 #
 # client handlers
 #
+sub null_timer_handler
+{
+    my ($ptimer, $pservice, $pfh_to_service) = @_;
+    #
+    log_msg "null timer handler ... %s\n", $ptimer->{label};
+}
+#
+sub stdin_timer_handler
+{
+    my ($ptimer, $pservice, $pfh_to_service) = @_;
+    #
+    log_msg "sanity timer handler ... %s\n", $ptimer->{label};
+    #
+    start_timer($ptimer->{fileno},
+                $ptimer->{delta},
+                $ptimer->{label});
+}
+#
 sub tcp_echo_handler
 {
     my ($pservice, $pfh_to_service) = @_;
@@ -497,6 +567,10 @@ sub stdin_handler
     if (defined($data))
     {
         log_msg "input ... <%s>\n", $data;
+        if ($data =~ m/^q$/i)
+        {
+            $event_loop_done = TRUE;
+        }
     }
 }
 #
@@ -641,20 +715,65 @@ sub run_event_loop
     #
     # enter event loop
     #
-    my $time_to_sleep = 15;
+    my $sanity_time = 5;
     #
     log_msg "Start event loop ...\n";
     #
-    for (my $done = FALSE; $done == FALSE; )
+    my $mydelta = 0;
+    my $start_time = time();
+    my $current_time = $start_time;
+    my $previous_time = 0;
+    #
+    while ($event_loop_done == FALSE)
     {
+        #
+        # save current time as the last time we did anything.
+        #
+        $previous_time = $current_time;
+        #
+        if ($pq->is_empty())
+        {
+            start_timer(fileno(STDIN),
+                        $sanity_time, 
+                        "sanity-timer");
+        }
+        #
+        my $ptimer = undef;
+        die "Empty timer queue: $!" unless ($pq->front(\$ptimer) == 1);
+        #
+        $mydelta = $ptimer->{expire} - $current_time;
+        $mydelta = 0 if ($mydelta < 0);
+        #
         my ($nf, $timeleft) = select($rout=$rin, 
                                      $wout=$win, 
                                      $eout=$ein, 
-                                     $time_to_sleep);
+                                     $mydelta);
+        #
+        # update current timers
+        #
+        $current_time = time();
+        #
         if ($timeleft <= 0)
         {
-            log_msg "Time expired ...\n";
-            $done = TRUE;
+            log_vmin "Time expired ...\n";
+            #
+            $ptimer = undef;
+            while ($pq->dequeue(\$ptimer) != 0)
+            {
+                if ($ptimer->{expire} > $current_time)
+                {
+                    $pq->enqueue($ptimer);
+                    last;
+                }
+                #
+                my $fileno = $ptimer->{fileno};
+                my $pservice = $pfh_to_service->{$fileno};
+                #
+                &{$pservice->{timer_handler}}($ptimer, 
+                                              $pservice, 
+                                              $pfh_to_service);
+                $ptimer = undef;
+            }
         }
         elsif ($nf > 0)
         {
@@ -715,6 +834,7 @@ sub add_stdin_to_services
         name => "STDIN",
         type => TTY_STREAM(),
         handler => \&stdin_handler,
+        timer_handler => \&stdin_timer_handler,
     };
     #
     log_msg "Adding STDIN service ...\n";
@@ -1621,6 +1741,9 @@ sub run_event_loop
     #
     # enter event loop
     #
+    # start up periodic sanity timer 
+    #
+    start_timer(-1, 
     my $time_to_sleep = 5;
     #
     log_msg "Start event loop ...\n";

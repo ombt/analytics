@@ -5,11 +5,12 @@ sub new {
 	my $self = shift;
 	my $class = ref($self) || $self;
 	#
-	my ($phandler, $expire, $id, $label) = @_;
+	my ($fileno, $delta, $id, $label) = @_;
 	#
 	$self = {};
-	$self->{handler} = $phandler;
-	$self->{expire} = $expire;
+	$self->{fileno} = $fileno;
+	$self->{delta} = $delta;
+	$self->{expire} = time() + $delta;
 	$self->{id} = $id;
 	$self->{label} = $label;
 	$self->{heap} = 0;
@@ -35,10 +36,10 @@ sub heap {
 	return($self->{heap});
 }
 #
-sub rw_handler {
+sub rw_fileno {
 	my $self = shift;
-	$self->{handler} = shift if @_;
-	return($self->{handler});
+	$self->{fileno} = shift if @_;
+	return($self->{fileno});
 }
 sub rw_id {
 	my $self = shift;
@@ -62,7 +63,8 @@ sub dump {
 	#
 	print STDERR "\n";
 	print STDERR "ref class = $class\n";
-	print STDERR "handler = ".$self->{handler}."\n";
+	print STDERR "fileno = ".$self->{fileno}."\n";
+	print STDERR "delta = ".$self->{delta}."\n";
 	print STDERR "expire = ".$self->{expire}."\n";
 	print STDERR "id = ".$self->{id}."\n";
 	print STDERR "label = ".$self->{label}."\n";
