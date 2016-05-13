@@ -64,6 +64,7 @@ use constant TTY_STREAM => 'TTY_STREAM';
 #
 use constant TCP_ECHO_HANDLER => "TCP_ECHO_HANDLER";
 use constant UDP_ECHO_HANDLER => "UDP_ECHO_HANDLER";
+use constant SOCKET_STREAM_HANDLER => "SOCKET_STREAM_HANDLER";
 #
 my %client_handlers =
 (
@@ -72,6 +73,9 @@ my %client_handlers =
     },
     UDP_ECHO_HANDLER() => {
         handler => \&udp_echo_handler,
+    },
+    SOCKET_STREAM_HANDLER() => {
+        handler => \&socket_stream_handler,
     },
 );
 #
@@ -117,11 +121,6 @@ my %default_service_params =
         translate => undef,
     },
     handler => {
-        use_default => TRUE(),
-        default_value => undef,
-        translate => undef,
-    },
-    timer_handler => {
         use_default => TRUE(),
         default_value => undef,
         translate => undef,
@@ -584,12 +583,36 @@ sub socket_stream_handler
     my ($pservice, $pfh_to_service) = @_;
     #
     my $pfh = $pservice->{fh};
-    my $data = <$$pfh>;
-    $pservice->{input} = $data;
     #
-    if (defined($pservice->{input}))
+    my $nr = 0;
+    my $buffer = undef;
+    while (defined($nr = sysread($$pfh, $buffer, 1024*4)) && ($nr > 0))
     {
-        log_msg "input ... <%s>\n", $pservice->{input};
+        my $local_buffer = unpack("H*", $buffer);
+        log_msg "buffer ... <%s>\n", $buffer;
+        log_msg "unpacked buffer ... <%s>\n", $local_buffer;
+    }
+    #
+    if ((( ! defined($nr)) && ($! != EAGAIN)) ||
+        (defined($nr) && ($nr == 0)))
+    {
+        #
+        # EOF or some error
+        #
+        my $fileno = fileno($$pfh);
+        #
+        vec($rin, $fileno, 1) = 0;
+        vec($ein, $fileno, 1) = 0;
+        vec($win, $fileno, 1) = 0;
+        #
+        my $pservice = $pfh_to_service->{$fileno};
+        my $pfh = $pservice->{fh};
+        close($$pfh);
+        #
+        log_msg "closing socket (%d) for service %s ...\n", 
+                $fileno,
+                $pservice->{name};
+        $$pfh_to_service{$fileno} = undef;
     }
 }
 #
