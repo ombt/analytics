@@ -165,6 +165,10 @@ die "Unable to create priority queue: $!" unless (defined($pq));
 #
 my $event_loop_done = FALSE;
 #
+# private data for each service instance
+#
+my %fh_to_data = ();
+#
 ################################################################
 #
 # misc functions
@@ -322,6 +326,35 @@ sub start_timer
             "label = $ptimer->{label} ";
     #
     $pq->enqueue($ptimer);
+}
+#
+sub allocate_fh_data
+{
+    my ($fno) = @_;
+    #
+    $fh_to_data{$fno} =
+    {
+        fh => $fno,
+        input => undef,
+    };
+}
+#
+sub deallocate_fh_data
+{
+    my ($fno) = @_;
+    #
+    if (exists($fh_to_data{$fno}))
+    {
+        delete $fh_to_data{$fno};
+    }
+}
+#
+sub clear_fh_data
+{
+    my ($fno) = @_;
+    #
+    deallocate_fh_data($fno);
+    allocate_fh_data($fno);
 }
 #
 ################################################################
@@ -494,6 +527,18 @@ sub stdin_timer_handler
 sub push_buffer_to_service
 {
     my ($buffer, $pservice, $pfh_to_service) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $fno = fileno($$pfh);
+    #
+    if (defined($fh_to_data{$fno}->{input}))
+    {
+        $fh_to_data{$fno}->{input} .= $buffer;
+    }
+    else
+    {
+        $fh_to_data{$fno}->{input} = $buffer;
+    }
 }
 #
 sub tcp_echo_handler
@@ -529,6 +574,8 @@ sub tcp_echo_handler
                 $fileno,
                 $pservice->{name};
         $$pfh_to_service{$fileno} = undef;
+        delete $$pfh_to_service{$fileno};
+        deallocate_fh_data($fileno);
     }
 }
 #
@@ -627,6 +674,8 @@ sub generic_stream_handler
                 $fileno,
                 $pservice->{name};
         $$pfh_to_service{$fileno} = undef;
+        delete $$pfh_to_service{$fileno};
+        deallocate_fh_data($fileno);
     }
 }
 #
@@ -637,12 +686,15 @@ sub generic_dgram_handler
     log_msg "entering generic_dgram_handler() for %s\n", $pservice->{name};
     #
     my $pfh = $pservice->{fh};
-    my $data = <$$pfh>;
-    $pservice->{input} = $data;
+    my $fno = fileno($$pfh);
     #
-    if (defined($pservice->{input}))
+    my $data = <$$pfh>;
+    #
+    $fh_to_data{$fno}->{input} = $data;
+    #
+    if (defined($fh_to_data{$fno}->{input}))
     {
-        log_msg "input ... <%s>\n", $pservice->{input};
+        log_msg "input ... <%s>\n", $fh_to_data{$fno}->{input};
     }
 }
 #
@@ -732,6 +784,7 @@ sub socket_stream_accept_handler
         };
         #
         $pfh_to_service->{fileno($new_fh)} = $pnew_service;
+        clear_fh_data(fileno($new_fh));
     }
     else
     {
@@ -890,6 +943,8 @@ sub add_stdin_to_services
         handler => \&stdin_handler,
         timer_handler => \&stdin_timer_handler,
     };
+    #
+    clear_fh_data($fno);
     #
     log_msg "Adding STDIN service ...\n";
     log_msg "name ... %s type ... %s\n", 
@@ -1050,6 +1105,7 @@ sub create_server_connections
             log_msg "Successfully create server socket/pipe for %s (%d)\n", 
                     $service, fileno($$pfh);
             $pfh_to_service->{fileno($$pfh)} = $pservices->{$service};
+            clear_fh_data(fileno($$pfh));
         }
         else
         {
