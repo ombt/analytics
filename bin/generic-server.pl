@@ -130,6 +130,11 @@ my %default_service_params =
         default_value => undef,
         translate => \&to_uc,
     },
+    service => {
+        use_default => TRUE(),
+        default_value => undef,
+        translate => undef
+    },
 );
 #
 # vectors for select()
@@ -486,6 +491,11 @@ sub stdin_timer_handler
                 $ptimer->{label});
 }
 #
+sub push_buffer_to_service
+{
+    my ($buffer, $pservice, $pfh_to_service) = @_;
+}
+#
 sub tcp_echo_handler
 {
     my ($pservice, $pfh_to_service) = @_;
@@ -578,9 +588,11 @@ sub stdin_handler
     }
 }
 #
-sub socket_stream_handler
+sub generic_stream_handler
 {
     my ($pservice, $pfh_to_service) = @_;
+    #
+    log_msg "entering generic_stream_handler() for %s\n", $pservice->{name};
     #
     my $pfh = $pservice->{fh};
     #
@@ -591,6 +603,8 @@ sub socket_stream_handler
         my $local_buffer = unpack("H*", $buffer);
         log_msg "buffer ... <%s>\n", $buffer;
         log_msg "unpacked buffer ... <%s>\n", $local_buffer;
+        #
+        push_buffer_to_service($buffer, $pservice, $pfh_to_service);
     }
     #
     if ((( ! defined($nr)) && ($! != EAGAIN)) ||
@@ -616,45 +630,57 @@ sub socket_stream_handler
     }
 }
 #
-sub socket_dgram_handler
+sub generic_dgram_handler
 {
     my ($pservice, $pfh_to_service) = @_;
     #
+    log_msg "entering generic_dgram_handler() for %s\n", $pservice->{name};
+    #
     my $pfh = $pservice->{fh};
-    $pservice->{input} = <$$pfh>;
+    my $data = <$$pfh>;
+    $pservice->{input} = $data;
     #
     if (defined($pservice->{input}))
     {
         log_msg "input ... <%s>\n", $pservice->{input};
     }
+}
+#
+#
+sub socket_stream_handler
+{
+    my ($pservice, $pfh_to_service) = @_;
+    #
+    log_msg "entering socket_stream_handler() for %s\n", $pservice->{name};
+    #
+    generic_stream_handler($pservice, $pfh_to_service);
+}
+#
+sub socket_dgram_handler
+{
+    my ($pservice, $pfh_to_service) = @_;
+    #
+    log_msg "entering socket_dgram_handler() for %s\n", $pservice->{name};
+    #
+    generic_dgram_handler($pservice, $pfh_to_service);
 }
 #
 sub unix_stream_handler
 {
     my ($pservice, $pfh_to_service) = @_;
     #
-    my $pfh = $pservice->{fh};
-    my $data = <$$pfh>;
-    $pservice->{input} = $data;
+    log_msg "entering unix_dgram_handler() for %s\n", $pservice->{name};
     #
-    if (defined($pservice->{input}))
-    {
-        log_msg "input ... <%s>\n", $pservice->{input};
-    }
+    generic_stream_handler($pservice, $pfh_to_service);
 }
 #
 sub unix_dgram_handler
 {
     my ($pservice, $pfh_to_service) = @_;
     #
-    my $pfh = $pservice->{fh};
-    my $data = <$$pfh>;
-    $pservice->{input} = $data;
+    log_msg "entering unix_dgram_handler() for %s\n", $pservice->{name};
     #
-    if (defined($pservice->{input}))
-    {
-        log_msg "input ... <%s>\n", $pservice->{input};
-    }
+    generic_dgram_handler($pservice, $pfh_to_service);
 }
 #
 sub socket_stream_accept_handler
@@ -886,10 +912,24 @@ sub create_socket_stream
     my $ipaddr = gethostbyname($pservice->{host_name});
     defined($ipaddr) or die "gethostbyname: $!";
     #
-    my $paddr = sockaddr_in($pservice->{port}, $ipaddr);
+    my $port = undef;
+    if (exists($pservice->{service}) && 
+        defined($pservice->{service}))
+    {
+        # get port from services file
+        $port = getservbyname($pservice->{service}, 'tcp') or
+            die "Can't get port for service $pservice->{service}: $!";
+        log_msg "getservbyname($pservice->{service}, 'tcp') port = $port\n";
+    }
+    else
+    {
+        $port = $pservice->{port};
+        log_msg "config file port = $port\n";
+    }
+    my $paddr = sockaddr_in($port, $ipaddr);
     defined($paddr) or die "sockaddr_in: $!";
     #
-    bind($fh, $paddr) or die "bind: $!";
+    bind($fh, $paddr) or die "bind error for $pservice->{name}: $!";
     listen($fh, SOMAXCONN) or die "listen: $!";
     #
     log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
@@ -1552,6 +1592,8 @@ sub unix_dgram_handler
 sub socket_stream_accept_handler
 {
     my ($pservice, $pfh_to_service) = @_;
+    #
+    log_msg "entering socket_stream_accept_handler() for %s\n", $pservice->{name};
     #
     # do the accept
     #
