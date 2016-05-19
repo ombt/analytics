@@ -2,6 +2,697 @@
 #
 ################################################################
 #
+# generic server for stream/datagram and socket/unix.
+#
+################################################################
+#
+use strict;
+#
+my $binpath;
+#
+BEGIN {
+    use File::Basename;
+    #
+    $binpath = dirname($0);
+    $binpath = "." if ($binpath eq "");
+}
+#
+use Getopt::Std;
+use Socket;
+use FileHandle;
+use POSIX qw(:errno_h);
+#
+use lib $binpath;
+#
+use mytimer;
+use mypqueue;
+#
+################################################################
+#
+# logical constants
+#
+use constant TRUE => 1;
+use constant FALSE => 0;
+#
+use constant SUCCESS => 1;
+use constant FAIL => 0;
+#
+# verbose levels
+#
+use constant NOVERBOSE => 0;
+use constant MINVERBOSE => 1;
+use constant MIDVERBOSE => 2;
+use constant MAXVERBOSE => 3;
+#
+my %verbose_levels =
+(
+    off => NOVERBOSE(),
+    min => MINVERBOSE(),
+    mid => MIDVERBOSE(),
+    max => MAXVERBOSE()
+);
+#
+# connection types
+#
+use constant SOCKET_STREAM => 'SOCKET_STREAM';
+use constant SOCKET_DGRAM => 'SOCKET_DGRAM';
+use constant UNIX_STREAM => 'UNIX_STREAM';
+use constant UNIX_DGRAM => 'UNIX_DGRAM';
+use constant TTY_STREAM => 'TTY_STREAM';
+#
+################################################################
+#
+# globals
+#
+my $cmd = $0;
+my $log_fh = *STDOUT;
+my $default_cfg_file = "generic-server.cfg";
+#
+# cmd line options
+#
+my $logfile = '';
+my $verbose = NOVERBOSE;
+#
+# priority queue for scheduling
+#
+my $pq = mypqueue->new();
+die "Unable to create priority queue: $!" unless (defined($pq));
+#
+# default service values
+#
+my %default_service_params =
+(
+    name => {
+        use_default => FALSE(),
+        default_value => "",
+        translate => undef,
+    },
+    type => {
+        use_default => TRUE(),
+        default_value => SOCKET_STREAM(),
+        translate => \&to_uc,
+    },
+    host_name => {
+        use_default => TRUE(),
+        default_value => "localhost",
+        translate => undef,
+    },
+    file_name => {
+        use_default => TRUE(),
+        default_value => "",
+        translate => undef,
+    },
+    port => {
+        use_default => TRUE(),
+        default_value => -1,
+        translate => undef,
+    },
+    service => {
+        use_default => TRUE(),
+        default_value => undef,
+        translate => undef,
+    },
+    accept_handler => {
+        use_default => TRUE(),
+        default_value => undef,
+        translate => undef,
+    },
+    io_handler => {
+        use_default => TRUE(),
+        default_value => undef,
+        translate => undef,
+    },
+    service_handler => {
+        use_default => TRUE(),
+        default_value => undef,
+        translate => undef,
+    },
+    timer_handler => {
+        use_default => TRUE(),
+        default_value => undef,
+        translate => undef,
+    },
+);
+#
+################################################################
+#
+# misc functions
+#
+sub usage
+{
+    my ($arg0) = @_;
+    print $log_fh <<EOF;
+
+usage: $arg0 [-?] [-h]  \\ 
+        [-w | -W |-v level] \\ 
+        [-l logfile] \\ 
+        [config-file [config-file2 ...]]
+
+where:
+    -? or -h - print this usage.
+    -w - enable warning (level=min=1)
+    -W - enable warning and trace (level=mid=2)
+    -v - verbose level: 0=off,1=min,2=mid,3=max
+    -l logfile - log file path
+
+config-file is the configuration file containing lists of
+services to create. one or more config files can be given.
+if a config file is not given, then the default is to look
+for the file generic-server.cfg in the current directory.
+
+EOF
+}
+#
+sub log_base
+{
+    my $fmt = shift;
+    my @args = @_;
+    #
+    $fmt = "\n%d: " . $fmt;
+    #
+    my @data = caller(1);
+    #
+    my $pkg = $data[0];
+    my $fnm = $data[1];
+    my $lnno = $data[2];
+    my $subr = $data[3];
+    #
+    printf $log_fh $fmt, $lnno, @args;
+}
+#
+sub log_msg
+{
+    log_base @_;
+}
+#
+sub log_err_exit
+{
+    my $fmt = shift;
+    my @args = @_;
+    log_base "ERROR EXIT: " . $fmt, @args;
+    exit 2;
+}
+#
+sub log_err
+{
+    my $fmt = shift;
+    my @args = @_;
+    log_base "ERROR: " . $fmt, @args;
+}
+#
+sub log_warn
+{
+    my $fmt = shift;
+    my @args = @_;
+    log_base "WARNING: " . $fmt, @args;
+}
+#
+sub log_vmsg
+{
+    my $vlvl = shift;
+    my $fmt = shift;
+    my @args = @_;
+    #
+    $fmt = "\n%d: " . $fmt;
+    #
+    my @data = caller(1);
+    #
+    my $pkg = $data[0];
+    my $fnm = $data[1];
+    my $lnno = $data[2];
+    my $subr = $data[3];
+    #
+    printf $log_fh $fmt, $lnno, @args if ($verbose >= $vlvl);
+}
+#
+sub log_vmin
+{
+    log_vmsg MINVERBOSE, @_;
+}
+#
+sub log_vmid
+{
+    log_vmsg MIDVERBOSE, @_;
+}
+#
+sub log_vmax
+{
+    log_vmsg MAXVERBOSE, @_;
+}
+#
+# disable stdout buffering
+#
+sub disable_stdout_buffering
+{
+    $|++;
+}
+#
+################################################################
+#
+# read and parse data files.
+#
+sub read_file
+{
+    my ($file_nm, $praw_data) = @_;
+    #
+    if ( ! -r $file_nm )
+    {
+        log_err "File %s is NOT readable\n", $file_nm;
+        return FAIL;
+    }
+    #
+    unless (open(INFD, $file_nm))
+    {
+        log_err "Unable to open %s.\n", $file_nm;
+        return FAIL;
+    }
+    @{$praw_data} = <INFD>;
+    close(INFD);
+    #
+    # remove any CR-NL sequences from Windose.
+    chomp(@{$praw_data});
+    s/\r//g for @{$praw_data};
+    #
+    log_vmin "Lines read: %d\n", scalar(@{$praw_data});
+    return SUCCESS;
+}
+#
+sub fill_in_missing_data
+{
+    my ($pservice) = @_;
+    #
+    foreach my $key (keys %default_service_params)
+    {
+        if (( ! exists($pservice->{$key})) &&
+            ($default_service_params{$key}{use_default} == TRUE))
+        {
+            log_vmin "Defaulting missing %s field.\n", $key;
+            $pservice->{$key} = $default_service_params{$key}{default_value};
+        }
+    }
+}
+#
+sub to_uc
+{
+    my ($in) = @_;
+    return uc($in);
+}
+#
+sub parse_file
+{
+    my ($pdata, $pservices) = @_;
+    #
+    my $lnno = 0;
+    my $pservice = { };
+    #
+    foreach my $record (@{$pdata})
+    {
+        log_vmin "Processing record (%d) : %s\n", ++$lnno, $record;
+        #
+        if (($record =~ m/^\s*#/) || ($record =~ m/^\s*$/))
+        {
+            # skip comments or white-space-only lines
+            next;
+        }
+        elsif ($record =~ m/^\s*service\s*start\s*$/)
+        {
+            $pservice = { };
+        }
+        elsif ($record =~ m/^\s*service\s*end\s*$/)
+        {
+            if ((exists($pservice->{name})) &&
+                ($pservice->{name} ne ""))
+            {
+                my $name = $pservice->{name};
+                #
+                log_msg "Storing service: %s\n", $name;
+                #
+                die "ERROR: duplicate service $name: $!" 
+                    if (exists($pservices->{$name}));
+                #
+                fill_in_missing_data($pservice);
+                $pservices->{$name} = $pservice;
+            }
+            else
+            {
+                log_err "Unknown service name (%d).\n", $lnno;
+                return FAIL;
+            }
+            #
+            $pservice = { };
+        }
+        else
+        {
+            my $found = FALSE;
+            foreach my $key (keys %default_service_params)
+            {
+                if ($record =~ m/^\s*${key}\s*=\s*(.*)$/i)
+                {
+                    log_vmin "Setting %s to %s (%d)\n", $key, ${1}, $lnno;
+                    if (defined($default_service_params{$key}{translate}))
+                    {
+                        # massage the data value
+                        $pservice->{$key} = 
+                            &{$default_service_params{$key}{translate}}(${1});
+                    }
+                    else
+                    {
+                        $pservice->{$key} = ${1};
+                    }
+                    $found = TRUE;
+                    last;
+                }
+            }
+            if ($found == FALSE)
+            {
+                log_warn "Skipping record %d: %s\n", $lnno, $record;
+            }
+        }
+    }
+    #
+    return SUCCESS;
+}
+#
+sub read_cfg_file
+{
+    my ($cfgfile, $pservices) = @_;
+    #
+    my @data = ();
+    if ((read_file($cfgfile, \@data) == SUCCESS) &&
+	(parse_file(\@data, $pservices) == SUCCESS))
+    {
+        log_vmin "Successfully processed cfg file %s.\n", $cfgfile;
+        return SUCCESS;
+    }
+    else
+    {
+        log_err "Processing cfg file %s failed.\n", $cfgfile;
+        return FAIL;
+    }
+}
+#
+################################################################
+#
+# create services
+#
+sub add_stdin_to_services
+{
+    my ($pfh_to_service) = @_;
+    #
+    my $fno = fileno(STDIN);
+    #
+    $pfh_to_service->{$fno} =
+    {
+        name => "STDIN",
+        type => TTY_STREAM(),
+        handler => \&stdin_handler,
+        timer_handler => \&stdin_timer_handler,
+    };
+    #
+    clear_fh_data($fno);
+    #
+    log_msg "Adding STDIN service ...\n";
+    log_msg "name ... %s type ... %s\n", 
+        $pfh_to_service->{$fno}->{name},
+        $pfh_to_service->{$fno}->{type};
+    #
+    vec($rin, fileno(STDIN), 1) = 1;
+}
+#
+sub create_socket_stream
+{
+    my ($pservice) = @_;
+    #
+    log_msg "Creating stream socket for %s.\n", $pservice->{name};
+    #
+    my $fh = FileHandle->new;
+    socket($fh, PF_INET, SOCK_STREAM, getprotobyname('tcp'));
+    setsockopt($fh, SOL_SOCKET, SO_REUSEADDR, 1);
+    #
+    my $ipaddr = gethostbyname($pservice->{host_name});
+    defined($ipaddr) or die "gethostbyname: $!";
+    #
+    my $port = undef;
+    if (exists($pservice->{service}) && 
+        defined($pservice->{service}))
+    {
+        # get port from services file
+        $port = getservbyname($pservice->{service}, 'tcp') or
+            die "Can't get port for service $pservice->{service}: $!";
+        log_msg "getservbyname($pservice->{service}, 'tcp') port = $port\n";
+    }
+    else
+    {
+        $port = $pservice->{port};
+        log_msg "config file port = $port\n";
+    }
+    my $paddr = sockaddr_in($port, $ipaddr);
+    defined($paddr) or die "sockaddr_in: $!";
+    #
+    bind($fh, $paddr) or die "bind error for $pservice->{name}: $!";
+    listen($fh, SOMAXCONN) or die "listen: $!";
+    #
+    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    #
+    $pservice->{fh} = \$fh;
+    if (defined($pservice->{handler}))
+    {
+        my $func_name = $pservice->{handler};
+        if (function_defined($func_name) == TRUE)
+        {
+            # turn off strict so we can convert name to function.
+            no strict 'refs';
+            $pservice->{handler} = \&{$func_name};
+        }
+        else
+        {
+            log_err "Function %s does NOT EXIST.\n", $func_name;
+            return FALSE;
+        }
+    }
+    else
+    {
+        $pservice->{handler} = \&socket_stream_accept_handler;
+    }
+    #
+    return SUCCESS;
+}
+#
+sub create_socket_dgram
+{
+    my ($pservice) = @_;
+    #
+    log_msg "Creating dgram socket for %s.\n", $pservice->{name};
+    #
+    my $fh = FileHandle->new;
+    socket($fh, PF_INET, SOCK_DGRAM, getprotobyname('udp'));
+    setsockopt($fh, SOL_SOCKET, SO_REUSEADDR, 1);
+    #
+    my $ipaddr = gethostbyname($pservice->{host_name});
+    defined($ipaddr) or die "gethostbyname: $!";
+    #
+    my $paddr = sockaddr_in($pservice->{port}, $ipaddr);
+    defined($paddr) or die "sockaddr_in: $!";
+    #
+    bind($fh, $paddr) or die "bind: $!";
+    #
+    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    #
+    $pservice->{fh} = \$fh;
+    $pservice->{handler} = \&socket_dgram_handler;
+    #
+    return SUCCESS;
+}
+#
+sub create_unix_stream
+{
+    my ($pservice) = @_;
+    #
+    log_msg "Creating stream unix pipe for %s.\n", $pservice->{name};
+    #
+    my $fh = FileHandle->new;
+    socket($fh, PF_UNIX, SOCK_STREAM, 0);
+    #
+    unlink($pservice->{file_name});
+    #
+    my $paddr = sockaddr_un($pservice->{file_name});
+    defined($paddr) or die "sockaddr_un: $!";
+    #
+    bind($fh, $paddr) or die "bind: $!";
+    #
+    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    #
+    $pservice->{fh} = \$fh;
+    $pservice->{handler} = \&unix_stream_handler;
+    #
+    return SUCCESS;
+}
+#
+sub create_unix_dgram
+{
+    my ($pservice) = @_;
+    #
+    log_msg "Creating dgram unix pipe for %s.\n", $pservice->{name};
+    #
+    my $fh = FileHandle->new;
+    socket($fh, PF_UNIX, SOCK_DGRAM, 0);
+    #
+    unlink($pservice->{file_name});
+    #
+    my $paddr = sockaddr_un($pservice->{file_name});
+    defined($paddr) or die "sockaddr_un: $!";
+    #
+    bind($fh, $paddr) or die "bind: $!";
+    #
+    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    #
+    $pservice->{fh} = \$fh;
+    $pservice->{handler} = \&unix_dgram_handler;
+    #
+    return SUCCESS;
+}
+#
+sub create_server_connections
+{
+    my ($pservices, $pfh_to_service) = @_;
+    #
+    foreach my $service (keys %{$pservices})
+    {
+        log_msg "Creating server conection for %s ...\n", $service;
+        #
+        my $type = $pservices->{$service}->{type};
+        die "ERROR: connection type $type is unknown: $!" 
+            unless (exists($create_connection{$type}));
+        my $status = &{$create_connection{$type}}(\%{$pservices->{$service}});
+        if ($status == SUCCESS)
+        {
+            my $pfh = $pservices->{$service}{fh};
+            log_msg "Successfully create server socket/pipe for %s (%d)\n", 
+                    $service, fileno($$pfh);
+            $pfh_to_service->{fileno($$pfh)} = $pservices->{$service};
+            clear_fh_data(fileno($$pfh));
+        }
+        else
+        {
+            log_err "Failed to create server socket/pipe for %s\n", $service;
+            return FAIL;
+        }
+    }
+    #
+    return SUCCESS;
+}
+#
+################################################################
+#
+# start execution
+#
+disable_stdout_buffering();
+#
+my %opts;
+if (getopts('?hwWv:l:', \%opts) != 1)
+{
+    usage($cmd);
+    exit 2;
+}
+#
+foreach my $opt (%opts)
+{
+    if (($opt eq 'h') or ($opt eq '?'))
+    {
+	usage($cmd);
+	exit 0;
+    }
+    elsif ($opt eq 'w')
+    {
+	$verbose = MINVERBOSE;
+    }
+    elsif ($opt eq 'W')
+    {
+        $verbose = MIDVERBOSE;
+    }
+    elsif ($opt eq 'v')
+    {
+        if ($opts{$opt} =~ m/^[0123]$/)
+        {
+            $verbose = $opts{$opt};
+        }
+        elsif (exists($verbose_levels{$opts{$opt}}))
+        {
+            $verbose = $verbose_levels{$opts{$opt}};
+        }
+        else
+        {
+            log_msg "ERROR: Invalid verbose level: $opts{$opt}\n";
+            usage($cmd);
+            exit 2;
+        }
+    }
+    elsif ($opt eq 'l')
+    {
+        local *FH;
+        $logfile = $opts{$opt};
+        open(FH, '>', $logfile) or die $!;
+        FH->autoflush(0);
+        $log_fh = *FH;
+        log_msg "Log File: %s\n", $logfile;
+    }
+}
+#
+# check if config file was given.
+#
+my %services = ();
+#
+if (scalar(@ARGV) == 0)
+{
+    #
+    # use default config file.
+    #
+    log_msg "Using default config file: %s\n", $default_cfg_file;
+    if (read_cfg_file($default_cfg_file, \%services) != SUCCESS)
+    {
+        log_err_exit "read_cfg_file failed. Done.\n";
+    }
+}
+else
+{
+    #
+    # read in config files and start up services.
+    #
+    foreach my $cfg_file (@ARGV)
+    {
+        log_msg "Reading config file %s ...\n", $cfg_file;
+        if (read_cfg_file($cfg_file, \%services) != SUCCESS)
+        {
+            log_err_exit "read_cfg_file failed. Done.\n";
+        }
+    }
+}
+#
+# create server sockets or pipes as needed.
+#
+my %fh_to_service = ();
+if (create_server_connections(\%services, \%fh_to_service) != SUCCESS)
+{
+    log_err_exit "create_server_connections failed. Done.\n";
+}
+#
+# monitor stdin for i/o with user.
+#
+add_stdin_to_services(\%fh_to_service);
+#
+log_msg "All is well that ends well.\n";
+#
+exit 0;
+
+
+
+
+
+__DATA__
+#!/usr/bin/perl -w
+#
+################################################################
+#
 # generic server for stream/packet and socket/unix.
 #
 ################################################################
@@ -407,7 +1098,6 @@ sub to_uc
     my ($in) = @_;
     return uc($in);
 }
-#
 #
 sub parse_file
 {
@@ -1226,11 +1916,7 @@ log_msg "All is well that ends well.\nDone.\n";
 #
 exit 0;
 
-
-
-
-
-__DATA__
+###################################################################################
 #
 ################################################################
 #
