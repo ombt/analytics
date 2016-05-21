@@ -1,3 +1,4 @@
+#
 # priority queue object implementation using a binary heap.
 #
 package MyPQueue;

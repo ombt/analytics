@@ -1,3 +1,4 @@
+#
 # timer class
 #
 package MyTimer;
