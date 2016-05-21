@@ -39,9 +39,9 @@ use mytaskdata;
 # local constants
 #
 use constant SOCKET_STREAM => 'SOCKET_STREAM';
-use constant SOCKET_DGRAM => 'SOCKET_DGRAM';
+use constant SOCKET_DATAGRAM => 'SOCKET_DATAGRAM';
 use constant UNIX_STREAM => 'UNIX_STREAM';
-use constant UNIX_DGRAM => 'UNIX_DGRAM';
+use constant UNIX_DATAGRAM => 'UNIX_DATAGRAM';
 use constant TTY_STREAM => 'TTY_STREAM';
 #
 ################################################################
@@ -133,9 +133,9 @@ my $eout = '';
 my %create_connection =
 (
     SOCKET_STREAM() => \&create_socket_stream,
-    SOCKET_DGRAM() => \&create_socket_dgram,
+    SOCKET_DATAGRAM() => \&create_socket_dgram,
     UNIX_STREAM() => \&create_unix_stream,
-    UNIX_DGRAM() => \&create_unix_dgram,
+    UNIX_DATAGRAM() => \&create_unix_dgram,
     TTY_STREAM() => undef
 );
 #
@@ -152,6 +152,10 @@ die "Unable to create file-handler-to-services data: $!"
 my $pfh_data = mytaskdata->new();
 die "Unable to create task-specific data: $!" 
     unless (defined($pfh_data));
+#
+# misc
+#
+my $event_loop_done = FALSE;
 #
 ################################################################
 #
@@ -301,7 +305,7 @@ sub parse_file
             }
             if ($found == FALSE)
             {
-                $plog->log_error_exit("Unknown record %d: %s\n", $lnno, $record);
+                $plog->log_err_exit("Unknown record %d: %s\n", $lnno, $record);
             }
         }
     }
@@ -325,6 +329,104 @@ sub read_cfg_file
         $plog->log_err("Processing cfg file %s failed.\n", $cfgfile);
         return FAIL;
     }
+}
+#
+################################################################
+#
+# default io and service handlers
+#
+sub null_timer_handler
+{
+    my ($ptimer, $pservice) = @_;
+    #
+    $plog->log_msg("null timer handler ... %s\n", $ptimer->{label});
+}
+#
+sub stdin_timer_handler
+{
+    my ($ptimer, $pservice) = @_;
+    #
+    $plog->log_msg("sanity timer handler ... %s\n", $ptimer->{label});
+    #
+    start_timer($ptimer->{fileno},
+                $ptimer->{delta},
+                $ptimer->{label});
+}
+#
+sub stdin_handler
+{
+    my ($pservice) = @_;
+    #
+    my $data = <STDIN>;
+    chomp($data);
+    #
+    if (defined($data))
+    {
+        $plog->log_msg("input ... <%s>\n", $data);
+        if ($data =~ m/^q$/i)
+        {
+            $event_loop_done = TRUE;
+        }
+    }
+}
+sub socket_datagram_io_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub socket_datagram_service_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub socket_stream_accept_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub socket_stream_io_accept_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub socket_stream_io_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub socket_stream_service_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub unix_datagram_io_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub unix_datagram_service_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub unix_stream_accept_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub unix_stream_io_accept_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub unix_stream_io_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub unix_stream_service_handler
+{
+    my ($pservice) = @_;
 }
 #
 ################################################################
@@ -453,6 +555,10 @@ sub create_socket_stream
         return FALSE;
     }
     #
+    # assign handler called by event loop
+    #
+    $pservice->{handler} = $pservice->{io_handler};
+    #
     return SUCCESS;
 }
 #
@@ -495,6 +601,10 @@ sub create_socket_dgram
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
     }
+    #
+    # assign handler called by event loop
+    #
+    $pservice->{handler} = $pservice->{io_handler};
     #
     return SUCCESS;
 }
@@ -553,6 +663,10 @@ sub create_unix_stream
         return FALSE;
     }
     #
+    # assign handler called by event loop
+    #
+    $pservice->{handler} = $pservice->{io_handler};
+    #
     return SUCCESS;
 }
 #
@@ -594,6 +708,10 @@ sub create_unix_dgram
         return FALSE;
     }
     #
+    # assign handler called by event loop
+    #
+    $pservice->{handler} = $pservice->{io_handler};
+    #
     return SUCCESS;
 }
 #
@@ -626,6 +744,168 @@ sub create_server_connections
     #
     return SUCCESS;
 }
+#
+################################################################
+#
+# event loop for timers and i/o (via select)
+#
+sub set_io_nonblock
+{
+    my $piter = $pservices->iterator();
+    while (defined(my $service = $piter->()))
+    {
+        my $pfh = $pservices->get($service, 'fh');
+        fcntl($$pfh, F_SETFL, O_NONBLOCK);
+    }
+}
+#
+sub start_timer
+{
+    my ($fileno, $delta, $label) = @_;
+    #
+    my $timerid = int(rand(1000000000));
+    #
+    if ($delta <= 0)
+    {
+        $plog->log_err("Timer length is zero for %s. Skipping it.\n", $fileno);
+        return;
+    }
+    #
+    $plog->log_vmin("starttimer: " .
+                    "fileno=${fileno} " .
+                    "label=${label} " .
+                    "delta=${delta} " .
+                    "id=$timerid ");
+    #
+    my $ptimer = mytimer->new($fileno, $delta, $timerid, $label);
+    #
+    $plog->log_vmin("fileno = $ptimer->{fileno} " .
+                    "delta = $ptimer->{delta} " .
+                    "expire = $ptimer->{expire} " .
+                    "id = $ptimer->{id} " .
+                    "label = $ptimer->{label} ");
+    #
+    $pq->enqueue($ptimer);
+}
+#
+sub run_event_loop
+{
+    #
+    # mark all file handles as non-blocking
+    #
+    set_io_nonblock();
+    #
+    my $psit = $pservices->iterator();
+    while (defined(my $service = $psit->()))
+    {
+        my $pfh = $pservices->get($service, 'fh');
+        vec($rin, fileno($$pfh), 1) = 1;
+    }
+    #
+    # enter event loop
+    #
+    my $sanity_time = 5;
+    #
+    $plog->log_msg("Start event loop ...\n");
+    #
+    my $mydelta = 0;
+    my $start_time = time();
+    my $current_time = $start_time;
+    my $previous_time = 0;
+    #
+    while ($event_loop_done == FALSE)
+    {
+        #
+        # save current time as the last time we did anything.
+        #
+        $previous_time = $current_time;
+        #
+        if ($pq->is_empty())
+        {
+            start_timer(fileno(STDIN),
+                        $sanity_time, 
+                        "sanity-timer");
+        }
+        #
+        my $ptimer = undef;
+        die "Empty timer queue: $!" unless ($pq->front(\$ptimer) == 1);
+        #
+        $mydelta = $ptimer->{expire} - $current_time;
+        $mydelta = 0 if ($mydelta < 0);
+        #
+        my ($nf, $timeleft) = select($rout=$rin, 
+                                     $wout=$win, 
+                                     $eout=$ein, 
+                                     $mydelta);
+        #
+        # update current timers
+        #
+        $current_time = time();
+        #
+        if ($timeleft <= 0)
+        {
+            $plog->log_vmin("Time expired ...\n");
+            #
+            $ptimer = undef;
+            while ($pq->dequeue(\$ptimer) != 0)
+            {
+                if ($ptimer->{expire} > $current_time)
+                {
+                    $pq->enqueue($ptimer);
+                    last;
+                }
+                #
+                my $fileno = $ptimer->{fileno};
+                my $pservice = $pfh_services->get($fileno);
+                #
+                &{$pservice->{timer_handler}}($ptimer, $pservice);
+                $ptimer = undef;
+            }
+        }
+        elsif ($nf > 0)
+        {
+            $plog->log_msg("NF, TIMELEFT ... (%d,%d)\n", $nf, $timeleft);
+            my $pfhit = $pfh_services->iterator();
+            while (defined(my $fileno = $pfhit->()))
+            {
+                my $pfh = $pfh_services->get($fileno, 'fh');
+                my $pservice = $pfh_services->get($fileno);
+                #
+                if (vec($eout, $fileno, 1))
+                {
+                    #
+                    # EOF or some error
+                    #
+                    vec($rin, $fileno, 1) = 0;
+                    vec($ein, $fileno, 1) = 0;
+                    vec($win, $fileno, 1) = 0;
+                    #
+                    close($$pfh);
+                    #
+                    $plog->log_msg("closing socket (%d) for service %s ...\n", 
+                                   $fileno,
+                                   $pservice->{name});
+                    $pfh_services->deallocate($fileno);
+                }
+                elsif (vec($rout, $fileno, 1))
+                {
+                    #
+                    # ready for a read
+                    #
+                    $plog->log_msg("input available for %s ...\n", $pservice->{name});
+                    #
+                    # call handler
+                    #
+                    &{$pservice->{handler}}($pservice);
+                }
+            }             
+        }
+    }
+    #
+    $plog->log_msg("Event-loop done ...\n");
+    return SUCCESS;
+}
+#
 #
 ################################################################
 #
@@ -709,6 +989,13 @@ if (create_server_connections() != SUCCESS)
 # monitor stdin for i/o with user.
 #
 add_stdin_to_services();
+#
+# event loop to handle connections, etc.
+#
+if (run_event_loop() != SUCCESS)
+{
+    $plog->log_err_exit("run_event_loop failed. Done.\n");
+}
 #
 $plog->log_msg("All is well that ends well.\n");
 #
