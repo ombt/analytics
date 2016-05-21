@@ -490,7 +490,8 @@ sub create_socket_stream
     #
     $plog->log_msg("Creating stream socket for %s.\n", $pservice->{name});
     #
-    my $fh = FileHandle->new;
+    # my $fh = FileHandle->new;
+    my $fh = undef;
     socket($fh, PF_INET, SOCK_STREAM, getprotobyname('tcp'));
     setsockopt($fh, SOL_SOCKET, SO_REUSEADDR, 1);
     #
@@ -568,7 +569,8 @@ sub create_socket_dgram
     #
     $plog->log_msg("Creating dgram socket for %s.\n", $pservice->{name});
     #
-    my $fh = FileHandle->new;
+    # my $fh = FileHandle->new;
+    my $fh = undef;
     socket($fh, PF_INET, SOCK_DGRAM, getprotobyname('udp'));
     setsockopt($fh, SOL_SOCKET, SO_REUSEADDR, 1);
     #
@@ -615,7 +617,8 @@ sub create_unix_stream
     #
     $plog->log_msg("Creating stream unix pipe for %s.\n", $pservice->{name});
     #
-    my $fh = FileHandle->new;
+    # my $fh = FileHandle->new;
+    my $fh = undef;
     socket($fh, PF_UNIX, SOCK_STREAM, 0);
     #
     unlink($pservice->{file_name});
@@ -624,6 +627,7 @@ sub create_unix_stream
     defined($paddr) or die "sockaddr_un: $!";
     #
     bind($fh, $paddr) or die "bind: $!";
+    listen($fh, SOMAXCONN) or die "listen: $!";
     #
     $plog->log_vmin("File Handle is ... $fh, %d\n", fileno($fh));
     #
@@ -676,7 +680,8 @@ sub create_unix_dgram
     #
     $plog->log_msg("Creating dgram unix pipe for %s.\n", $pservice->{name});
     #
-    my $fh = FileHandle->new;
+    # my $fh = FileHandle->new;
+    my $fh = undef;
     socket($fh, PF_UNIX, SOCK_DGRAM, 0);
     #
     unlink($pservice->{file_name});
