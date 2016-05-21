@@ -26,6 +26,29 @@ sub new
     return($self);
 }
 #
+sub iterator
+{
+    my $self = shift;
+    #
+    my $pdata = $self->{data};
+    my @keys = keys %{${pdata}};
+    #
+    my $max = scalar(@keys);
+    my $idx = -1;
+    #
+    return sub {
+        return undef if (++$idx >= $max);
+        #
+        return $pdata->{$keys[$idx]};
+    };
+}
+#
+sub clear
+{
+    my $self = shift;
+    $self->{data} = {};
+}
+#
 sub data
 {
     my $self = shift;
@@ -65,7 +88,18 @@ sub exists
     my $id = shift;
     my $key = shift;
     #
-    if (exists($self->{data}->{$id}->{$key}))
+    # trying to avoid autovivification. have to check each 
+    # level before the next level.
+    #
+    if ((defined($id)) && 
+        (defined($key)) &&
+        (exists($self->{data}->{$id})) &&
+        (exists($self->{data}->{$id}->{$key})))
+    {
+        return TRUE;
+    }
+    elsif ((defined($id)) &&
+           (exists($self->{data}->{$id})))
     {
         return TRUE;
     }

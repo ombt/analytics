@@ -84,14 +84,23 @@ $logger2->log_vmin("vmin ... %d\n", $logger2->verbose());
 $logger2->log_vmid("vmid ... %d\n", $logger2->verbose());
 $logger2->log_vmax("vmax ... %d\n", $logger2->verbose());
 #
-$logger->log_msg("exists ... <%s>\n", $tdata->exists(1,"eatme"));
-if ($tdata->exists(1,"eatme") == TRUE)
+$logger->log_msg("1 exists ... <%s>\n", $tdata->exists(1));
+if ($tdata->exists(1) == TRUE)
 {
-    $logger->log_msg("eatme does exist\n");
+    $logger->log_msg("1 does exist\n");
 }
 else
 {
-    $logger->log_msg("eatme does NOT exist\n");
+    $logger->log_msg("1 does NOT exist\n");
+}
+$logger->log_msg("1 eatme exists ... <%s>\n", $tdata->exists(1,"eatme"));
+if ($tdata->exists(1,"eatme") == TRUE)
+{
+    $logger->log_msg("1 eatme does exist\n");
+}
+else
+{
+    $logger->log_msg("1 eatme does NOT exist\n");
 }
 #
 $tdata->set(1,"eatme", "NOPE");
@@ -132,5 +141,47 @@ else
 {
     $logger->log_msg("eatme STILL does NOT exist\n");
 }
+#
+$logger->log_msg("clear data ... \n");
+$tdata->clear();
+#
+my $piter = $tdata->iterator();
+#
+$logger->log_msg("start iterate over empty data object ... \n");
+while (defined(my $pitem = $piter->()))
+{
+    $logger->log_msg("item is ... %s\n", $pitem);
+    foreach my $key (sort keys(%{$pitem}))
+    {
+        $logger->log_msg("item id is ... %s => %s\n", $key, $pitem->{$key});
+    }
+}
+$logger->log_msg("end iterate over empty data object ... \n");
+#
+$tdata->set(1,"eatme", "NOPE");
+$tdata->set(1,"eatme2", "NOPE2");
+$tdata->set(1,"eatme3", "NOPE3");
+$tdata->set(1,"eatme4", "NOPE4");
+$tdata->set(2,"eatme", "NOPE");
+$tdata->set(2,"eatme2", "NOPE2");
+$tdata->set(2,"eatme3", "NOPE3");
+$tdata->set(2,"eatme4", "NOPE4");
+$tdata->set(3,"eatme", "NOPE");
+$tdata->set(3,"eatme2", "NOPE2");
+$tdata->set(3,"eatme3", "NOPE3");
+$tdata->set(3,"eatme4", "NOPE4");
+#
+my $piter = $tdata->iterator();
+#
+$logger->log_msg("start iterate over NON-empty data object ... \n");
+while (defined(my $pitem = $piter->()))
+{
+    $logger->log_msg("item is ... %s\n", $pitem);
+    foreach my $key (sort keys(%{$pitem}))
+    {
+        $logger->log_msg("item id is ... %s => %s\n", $key, $pitem->{$key});
+    }
+}
+$logger->log_msg("end iterate over NON-empty data object ... \n");
 #
 exit 0;
