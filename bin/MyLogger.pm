@@ -1,7 +1,6 @@
-#
 # logging module
 #
-package MyLogger;
+package mylogger;
 #
 use strict;
 use warnings;

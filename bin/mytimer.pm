@@ -1,7 +1,6 @@
-#
 # timer class
 #
-package MyTimer;
+package mytimer;
 #
 sub new {
 	my $self = shift;

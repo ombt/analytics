@@ -1,7 +1,6 @@
-#
 # constants
 #
-package MyConstants;
+package myconstants;
 #
 use strict;
 use warnings;

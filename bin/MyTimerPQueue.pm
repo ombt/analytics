@@ -1,6 +1,6 @@
 # priority queue object implementation using a binary heap.
 #
-package MyTimerPQueue;
+package mytimerpqueue;
 #
 sub new
 {

@@ -1,7 +1,6 @@
-#
 # task-specific data
 #
-package MyTaskData;
+package mytaskdata;
 #
 use MyConstants;
 #
