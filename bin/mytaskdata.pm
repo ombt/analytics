@@ -2,7 +2,7 @@
 #
 package mytaskdata;
 #
-use MyConstants;
+use myconstants;
 #
 # create a data object for given key
 #

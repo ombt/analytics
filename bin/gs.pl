@@ -28,11 +28,11 @@ use POSIX qw(:errno_h);
 #
 use lib $binpath;
 #
-use MyConstants;
-use MyLogger;
-use MyTimer;
-use MyTimerPQueue;
-use MyTaskData;
+use myconstants;
+use mylogger;
+use mytimer;
+use mytimerpqueue;
+use mytaskdata;
 #
 ################################################################
 #
@@ -51,10 +51,10 @@ use constant TTY_STREAM => 'TTY_STREAM';
 my $cmd = $0;
 my $default_cfg_file = "generic-server.cfg";
 #
-my $plog = MyLogger->new();
+my $plog = mylogger->new();
 die "Unable to create logger: $!" unless (defined($plog));
 #
-my $pq = MyTimerPQueue->new();
+my $pq = mytimerpqueue->new();
 die "Unable to create priority queue: $!" unless (defined($pq));
 #
 # default service values
@@ -141,15 +141,15 @@ my %create_connection =
 #
 # private data for each service instance
 #
-my $pservices = MyTaskData->new();
+my $pservices = mytaskdata->new();
 die "Unable to create services data: $!" 
     unless (defined($pservices));
 #
-my $pfh_services = MyTaskData->new();
+my $pfh_services = mytaskdata->new();
 die "Unable to create file-handler-to-services data: $!" 
     unless (defined($pfh_services));
 #
-my $pfh_data = MyTaskData->new();
+my $pfh_data = mytaskdata->new();
 die "Unable to create task-specific data: $!" 
     unless (defined($pfh_data));
 #
@@ -423,7 +423,7 @@ sub create_socket_stream
     #
     my $handler = $pservice->{io_handler};
     $pservice->{io_handler} = get_handler($handler);
-    if ( ! defined($pservice->{io_handler})
+    if ( ! defined($pservice->{io_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
@@ -431,7 +431,7 @@ sub create_socket_stream
     #
     $handler = $pservice->{service_handler};
     $pservice->{service_handler} = get_handler($handler);
-    if ( ! defined($pservice->{service_handler})
+    if ( ! defined($pservice->{service_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
@@ -439,7 +439,7 @@ sub create_socket_stream
     #
     $handler = $pservice->{client_io_handler};
     $pservice->{client_io_handler} = get_handler($handler);
-    if ( ! defined($pservice->{client_io_handler})
+    if ( ! defined($pservice->{client_io_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
@@ -447,7 +447,7 @@ sub create_socket_stream
     #
     $handler = $pservice->{client_service_handler};
     $pservice->{client_service_handler} = get_handler($handler);
-    if ( ! defined($pservice->{client_service_handler})
+    if ( ! defined($pservice->{client_service_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
@@ -482,7 +482,7 @@ sub create_socket_dgram
     #
     my $handler = $pservice->{io_handler};
     $pservice->{io_handler} = get_handler($handler);
-    if ( ! defined($pservice->{io_handler})
+    if ( ! defined($pservice->{io_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
@@ -490,7 +490,7 @@ sub create_socket_dgram
     #
     $handler = $pservice->{service_handler};
     $pservice->{service_handler} = get_handler($handler);
-    if ( ! defined($pservice->{service_handler})
+    if ( ! defined($pservice->{service_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
@@ -523,7 +523,7 @@ sub create_unix_stream
     #
     my $handler = $pservice->{io_handler};
     $pservice->{io_handler} = get_handler($handler);
-    if ( ! defined($pservice->{io_handler})
+    if ( ! defined($pservice->{io_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
@@ -531,7 +531,7 @@ sub create_unix_stream
     #
     $handler = $pservice->{service_handler};
     $pservice->{service_handler} = get_handler($handler);
-    if ( ! defined($pservice->{service_handler})
+    if ( ! defined($pservice->{service_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
@@ -539,7 +539,7 @@ sub create_unix_stream
     #
     $handler = $pservice->{client_io_handler};
     $pservice->{client_io_handler} = get_handler($handler);
-    if ( ! defined($pservice->{client_io_handler})
+    if ( ! defined($pservice->{client_io_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
@@ -547,7 +547,7 @@ sub create_unix_stream
     #
     $handler = $pservice->{client_service_handler};
     $pservice->{client_service_handler} = get_handler($handler);
-    if ( ! defined($pservice->{client_service_handler})
+    if ( ! defined($pservice->{client_service_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
@@ -580,7 +580,7 @@ sub create_unix_dgram
     #
     my $handler = $pservice->{io_handler};
     $pservice->{io_handler} = get_handler($handler);
-    if ( ! defined($pservice->{io_handler})
+    if ( ! defined($pservice->{io_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
@@ -588,7 +588,7 @@ sub create_unix_dgram
     #
     $handler = $pservice->{service_handler};
     $pservice->{service_handler} = get_handler($handler);
-    if ( ! defined($pservice->{service_handler})
+    if ( ! defined($pservice->{service_handler}))
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
