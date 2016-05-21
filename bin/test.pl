@@ -148,12 +148,13 @@ $tdata->clear();
 my $piter = $tdata->iterator();
 #
 $logger->log_msg("start iterate over empty data object ... \n");
-while (defined(my $pitem = $piter->()))
+while (defined(my $key = $piter->()))
 {
-    $logger->log_msg("item is ... %s\n", $pitem);
-    foreach my $key (sort keys(%{$pitem}))
+    $logger->log_msg("item is ... %s\n", $key);
+    foreach my $key2 (sort keys(%{$tdata->get($key)}))
     {
-        $logger->log_msg("item id is ... %s => %s\n", $key, $pitem->{$key});
+        $logger->log_msg("item id is ... %s => %s\n", 
+                         $key2, $tdata->get($key, $key2));
     }
 }
 $logger->log_msg("end iterate over empty data object ... \n");
@@ -171,15 +172,16 @@ $tdata->set(3,"eatme2", "NOPE2");
 $tdata->set(3,"eatme3", "NOPE3");
 $tdata->set(3,"eatme4", "NOPE4");
 #
-my $piter = $tdata->iterator();
+$piter = $tdata->iterator();
 #
 $logger->log_msg("start iterate over NON-empty data object ... \n");
-while (defined(my $pitem = $piter->()))
+while (defined(my $key = $piter->()))
 {
-    $logger->log_msg("item is ... %s\n", $pitem);
-    foreach my $key (sort keys(%{$pitem}))
+    $logger->log_msg("item is ... %s\n", $key);
+    foreach my $key2 (sort keys(%{$tdata->get($key)}))
     {
-        $logger->log_msg("item id is ... %s => %s\n", $key, $pitem->{$key});
+        $logger->log_msg("item id is ... %s => %s\n", 
+                         $key2, $tdata->get($key, $key2));
     }
 }
 $logger->log_msg("end iterate over NON-empty data object ... \n");

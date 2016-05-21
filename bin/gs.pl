@@ -51,8 +51,8 @@ use constant TTY_STREAM => 'TTY_STREAM';
 my $cmd = $0;
 my $default_cfg_file = "generic-server.cfg";
 #
-my $logger = MyLogger->new();
-die "Unable to create logger: $!" unless (defined($logger));
+my $plog = MyLogger->new();
+die "Unable to create logger: $!" unless (defined($plog));
 #
 my $pq = MyTimerPQueue->new();
 die "Unable to create priority queue: $!" unless (defined($pq));
@@ -113,6 +113,16 @@ my %default_service_params =
     },
 );
 #
+# vectors for select()
+#
+my $rin = '';
+my $win = '';
+my $ein = '';
+#
+my $rout = '';
+my $wout = '';
+my $eout = '';
+#
 # map connection type to create connection routine
 #
 my %create_connection =
@@ -126,14 +136,17 @@ my %create_connection =
 #
 # private data for each service instance
 #
-my $services = MyTaskData->new();
-die "Unable to create services data: $!" unless (defined($services));
+my $pservices = MyTaskData->new();
+die "Unable to create services data: $!" 
+    unless (defined($pservices));
 #
-my $fh_services = MyTaskData->new();
-die "Unable to create file-handler-to-services data: $!" unless (defined($services));
+my $pfh_services = MyTaskData->new();
+die "Unable to create file-handler-to-services data: $!" 
+    unless (defined($pfh_services));
 #
-my $fh_data = MyTaskData->new();
-die "Unable to create task-specific data: $!" unless (defined($fh_data));
+my $pfh_data = MyTaskData->new();
+die "Unable to create task-specific data: $!" 
+    unless (defined($pfh_data));
 #
 ################################################################
 #
@@ -142,7 +155,7 @@ die "Unable to create task-specific data: $!" unless (defined($fh_data));
 sub usage
 {
     my ($arg0) = @_;
-    my $log_fh = $logger->log_fh();
+    my $log_fh = $plog->log_fh();
     print $log_fh <<EOF;
 
 usage: $arg0 [-?] [-h]  \\ 
@@ -175,13 +188,13 @@ sub read_file
     #
     if ( ! -r $file_nm )
     {
-        $logger->log_err("File %s is NOT readable\n", $file_nm);
+        $plog->log_err("File %s is NOT readable\n", $file_nm);
         return FAIL;
     }
     #
     unless (open(INFD, $file_nm))
     {
-        $logger->log_err("Unable to open %s.\n", $file_nm);
+        $plog->log_err("Unable to open %s.\n", $file_nm);
         return FAIL;
     }
     @{$praw_data} = <INFD>;
@@ -191,7 +204,7 @@ sub read_file
     chomp(@{$praw_data});
     s/\r//g for @{$praw_data};
     #
-    $logger->log_vmin("Lines read: %d\n", scalar(@{$praw_data}));
+    $plog->log_vmin("Lines read: %d\n", scalar(@{$praw_data}));
     return SUCCESS;
 }
 #
@@ -204,7 +217,7 @@ sub fill_in_missing_data
         if (( ! exists($pservice->{$key})) &&
             ($default_service_params{$key}{use_default} == TRUE))
         {
-            $logger->log_vmin("Defaulting missing %s field.\n", $key);
+            $plog->log_vmin("Defaulting missing %s field.\n", $key);
             $pservice->{$key} = $default_service_params{$key}{default_value};
         }
     }
@@ -218,14 +231,14 @@ sub to_uc
 #
 sub parse_file
 {
-    my ($pdata, $pservices) = @_;
+    my ($pdata) = @_;
     #
     my $lnno = 0;
     my $pservice = { };
     #
     foreach my $record (@{$pdata})
     {
-        $logger->log_vmin("Processing record (%d) : %s\n", ++$lnno, $record);
+        $plog->log_vmin("Processing record (%d) : %s\n", ++$lnno, $record);
         #
         if (($record =~ m/^\s*#/) || ($record =~ m/^\s*$/))
         {
@@ -243,17 +256,17 @@ sub parse_file
             {
                 my $name = $pservice->{name};
                 #
-                $logger->log_msg("Storing service: %s\n", $name);
+                $plog->log_msg("Storing service: %s\n", $name);
                 #
                 die "ERROR: duplicate service $name: $!" 
-                    if (exists($pservices->{$name}));
+                    if ($pservices->exists($name) == TRUE);
                 #
                 fill_in_missing_data($pservice);
-                $pservices->{$name} = $pservice;
+                $pservices->set($name, $pservice);
             }
             else
             {
-                $logger->log_err("Unknown service name (%d).\n", $lnno);
+                $plog->log_err("Unknown service name (%d).\n", $lnno);
                 return FAIL;
             }
             #
@@ -266,7 +279,7 @@ sub parse_file
             {
                 if ($record =~ m/^\s*${key}\s*=\s*(.*)$/i)
                 {
-                    $logger->log_vmin("Setting %s to %s (%d)\n", $key, ${1}, $lnno);
+                    $plog->log_vmin("Setting %s to %s (%d)\n", $key, ${1}, $lnno);
                     if (defined($default_service_params{$key}{translate}))
                     {
                         # massage the data value
@@ -283,7 +296,7 @@ sub parse_file
             }
             if ($found == FALSE)
             {
-                $logger->log_error_exit("Unknown record %d: %s\n", $lnno, $record);
+                $plog->log_error_exit("Unknown record %d: %s\n", $lnno, $record);
             }
         }
     }
@@ -293,18 +306,18 @@ sub parse_file
 #
 sub read_cfg_file
 {
-    my ($cfgfile, $pservices) = @_;
+    my ($cfgfile) = @_;
     #
     my @data = ();
     if ((read_file($cfgfile, \@data) == SUCCESS) &&
-	(parse_file(\@data, $pservices) == SUCCESS))
+	(parse_file(\@data) == SUCCESS))
     {
-        $logger->log_vmin("Successfully processed cfg file %s.\n", $cfgfile);
+        $plog->log_vmin("Successfully processed cfg file %s.\n", $cfgfile);
         return SUCCESS;
     }
     else
     {
-        $logger->log_err("Processing cfg file %s failed.\n", $cfgfile);
+        $plog->log_err("Processing cfg file %s failed.\n", $cfgfile);
         return FAIL;
     }
 }
@@ -315,24 +328,21 @@ sub read_cfg_file
 #
 sub add_stdin_to_services
 {
-    my ($pfh_to_service) = @_;
-    #
     my $fno = fileno(STDIN);
     #
-    $pfh_to_service->{$fno} =
-    {
+    $pfh_services->set($fno, {
         name => "STDIN",
         type => TTY_STREAM(),
         handler => \&stdin_handler,
         timer_handler => \&stdin_timer_handler,
-    };
+    });
     #
-    clear_fh_data($fno);
+    $pfh_data->reallocate($fno);
     #
-    log_msg "Adding STDIN service ...\n";
-    log_msg "name ... %s type ... %s\n", 
-        $pfh_to_service->{$fno}->{name},
-        $pfh_to_service->{$fno}->{type};
+    $plog->log_msg("Adding STDIN service ...\n");
+    $plog->log_msg("name ... %s type ... %s\n", 
+                  $pfh_services->get($fno, 'name'),
+                  $pfh_services->get($fno, 'type'));
     #
     vec($rin, fileno(STDIN), 1) = 1;
 }
@@ -341,7 +351,7 @@ sub create_socket_stream
 {
     my ($pservice) = @_;
     #
-    log_msg "Creating stream socket for %s.\n", $pservice->{name};
+    $plog->log_msg("Creating stream socket for %s.\n", $pservice->{name});
     #
     my $fh = FileHandle->new;
     socket($fh, PF_INET, SOCK_STREAM, getprotobyname('tcp'));
@@ -357,12 +367,12 @@ sub create_socket_stream
         # get port from services file
         $port = getservbyname($pservice->{service}, 'tcp') or
             die "Can't get port for service $pservice->{service}: $!";
-        log_msg "getservbyname($pservice->{service}, 'tcp') port = $port\n";
+        $plog->log_msg("getservbyname($pservice->{service}, 'tcp') port = $port\n");
     }
     else
     {
         $port = $pservice->{port};
-        log_msg "config file port = $port\n";
+        $plog->log_msg("config file port = $port\n");
     }
     my $paddr = sockaddr_in($port, $ipaddr);
     defined($paddr) or die "sockaddr_in: $!";
@@ -370,7 +380,7 @@ sub create_socket_stream
     bind($fh, $paddr) or die "bind error for $pservice->{name}: $!";
     listen($fh, SOMAXCONN) or die "listen: $!";
     #
-    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    $plog->log_vmin("File Handle is ... $fh, %d\n", fileno($fh));
     #
     $pservice->{fh} = \$fh;
     if (defined($pservice->{handler}))
@@ -384,7 +394,7 @@ sub create_socket_stream
         }
         else
         {
-            log_err "Function %s does NOT EXIST.\n", $func_name;
+            $plog->log_err("Function %s does NOT EXIST.\n", $func_name);
             return FALSE;
         }
     }
@@ -400,7 +410,7 @@ sub create_socket_dgram
 {
     my ($pservice) = @_;
     #
-    log_msg "Creating dgram socket for %s.\n", $pservice->{name};
+    $plog->log_msg("Creating dgram socket for %s.\n", $pservice->{name});
     #
     my $fh = FileHandle->new;
     socket($fh, PF_INET, SOCK_DGRAM, getprotobyname('udp'));
@@ -414,7 +424,7 @@ sub create_socket_dgram
     #
     bind($fh, $paddr) or die "bind: $!";
     #
-    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    $plog->log_vmin("File Handle is ... $fh, %d\n", fileno($fh));
     #
     $pservice->{fh} = \$fh;
     $pservice->{handler} = \&socket_dgram_handler;
@@ -426,7 +436,7 @@ sub create_unix_stream
 {
     my ($pservice) = @_;
     #
-    log_msg "Creating stream unix pipe for %s.\n", $pservice->{name};
+    $plog->log_msg("Creating stream unix pipe for %s.\n", $pservice->{name});
     #
     my $fh = FileHandle->new;
     socket($fh, PF_UNIX, SOCK_STREAM, 0);
@@ -438,7 +448,7 @@ sub create_unix_stream
     #
     bind($fh, $paddr) or die "bind: $!";
     #
-    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    $plog->log_vmin("File Handle is ... $fh, %d\n", fileno($fh));
     #
     $pservice->{fh} = \$fh;
     $pservice->{handler} = \&unix_stream_handler;
@@ -450,7 +460,7 @@ sub create_unix_dgram
 {
     my ($pservice) = @_;
     #
-    log_msg "Creating dgram unix pipe for %s.\n", $pservice->{name};
+    $plog->log_msg("Creating dgram unix pipe for %s.\n", $pservice->{name});
     #
     my $fh = FileHandle->new;
     socket($fh, PF_UNIX, SOCK_DGRAM, 0);
@@ -462,7 +472,7 @@ sub create_unix_dgram
     #
     bind($fh, $paddr) or die "bind: $!";
     #
-    log_vmin "File Handle is ... $fh, %d\n", fileno($fh);
+    $plog->log_vmin("File Handle is ... $fh, %d\n", fileno($fh));
     #
     $pservice->{fh} = \$fh;
     $pservice->{handler} = \&unix_dgram_handler;
@@ -472,27 +482,27 @@ sub create_unix_dgram
 #
 sub create_server_connections
 {
-    my ($pservices, $pfh_to_service) = @_;
-    #
-    foreach my $service (keys %{$pservices})
+    my $piter = $pservices->iterator();
+    while (defined(my $service = $piter->()))
     {
-        log_msg "Creating server conection for %s ...\n", $service;
+        $plog->log_msg("Creating server conection for %s ...\n", $service);
         #
-        my $type = $pservices->{$service}->{type};
+        my $type = $pservices->get($service, 'type');
         die "ERROR: connection type $type is unknown: $!" 
             unless (exists($create_connection{$type}));
-        my $status = &{$create_connection{$type}}(\%{$pservices->{$service}});
+        my $status = &{$create_connection{$type}}($pservices->get($service));
         if ($status == SUCCESS)
         {
-            my $pfh = $pservices->{$service}{fh};
-            log_msg "Successfully create server socket/pipe for %s (%d)\n", 
-                    $service, fileno($$pfh);
-            $pfh_to_service->{fileno($$pfh)} = $pservices->{$service};
-            clear_fh_data(fileno($$pfh));
+            my $pfh = $pservices->get($service, 'fh');
+            my $fileno = fileno($$pfh);
+            $plog->log_msg("Successfully create server socket/pipe for %s (%d)\n", 
+                           $service, $fileno);
+            $pfh_services->set($fileno, $pservices->get($service));
+            $pfh_data->reallocate($fileno);
         }
         else
         {
-            log_err "Failed to create server socket/pipe for %s\n", $service;
+            $plog->log_err("Failed to create server socket/pipe for %s\n", $service);
             return FAIL;
         }
     }
@@ -504,7 +514,7 @@ sub create_server_connections
 #
 # start execution
 #
-$logger->disable_stdout_buffering();
+$plog->disable_stdout_buffering();
 #
 my %opts;
 if (getopts('?hwWv:l:', \%opts) != 1)
@@ -522,40 +532,39 @@ foreach my $opt (%opts)
     }
     elsif ($opt eq 'w')
     {
-	$logger->verbose(MINVERBOSE);
+	$plog->verbose(MINVERBOSE);
     }
     elsif ($opt eq 'W')
     {
-        $logger->verbose(MIDVERBOSE);
+        $plog->verbose(MIDVERBOSE);
     }
     elsif ($opt eq 'v')
     {
-        if (!defined($logger->verbose($opts{$opt})))
+        if (!defined($plog->verbose($opts{$opt})))
         {
-            $logger->log_msg("ERROR: Invalid verbose level: $opts{$opt}\n");
+            $plog->log_msg("ERROR: Invalid verbose level: $opts{$opt}\n");
             usage($cmd);
             exit 2;
         }
     }
     elsif ($opt eq 'l')
     {
-        $logger->logfile($opts{$opt});
-        $logger->log_msg("Log File: %s\n", $opts{$opt});
+        $plog->logfile($opts{$opt});
+        $plog->log_msg("Log File: %s\n", $opts{$opt});
     }
 }
 #
 # check if config file was given.
 #
-my %services = ();
 if (scalar(@ARGV) == 0)
 {
     #
     # use default config file.
     #
-    $logger->log_msg("Using default config file: %s\n", $default_cfg_file);
-    if (read_cfg_file($default_cfg_file, \%services) != SUCCESS)
+    $plog->log_msg("Using default config file: %s\n", $default_cfg_file);
+    if (read_cfg_file($default_cfg_file) != SUCCESS)
     {
-        $logger->log_err_exit("read_cfg_file failed. Done.\n");
+        $plog->log_err_exit("read_cfg_file failed. Done.\n");
     }
 }
 else
@@ -565,27 +574,26 @@ else
     #
     foreach my $cfg_file (@ARGV)
     {
-        $logger->log_msg("Reading config file %s ...\n", $cfg_file);
-        if (read_cfg_file($cfg_file, \%services) != SUCCESS)
+        $plog->log_msg("Reading config file %s ...\n", $cfg_file);
+        if (read_cfg_file($cfg_file) != SUCCESS)
         {
-            $logger->log_err_exit("read_cfg_file failed. Done.\n");
+            $plog->log_err_exit("read_cfg_file failed. Done.\n");
         }
     }
 }
 #
 # create server sockets or pipes as needed.
 #
-my %fh_to_service = ();
-if (create_server_connections(\%services, \%fh_to_service) != SUCCESS)
+if (create_server_connections() != SUCCESS)
 {
-    log_err_exit "create_server_connections failed. Done.\n";
+    $plog->log_err_exit("create_server_connections failed. Done.\n");
 }
 #
 # monitor stdin for i/o with user.
 #
-add_stdin_to_services(\%fh_to_service);
+add_stdin_to_services();
 #
-$logger->log_msg("All is well that ends well.\n");
+$plog->log_msg("All is well that ends well.\n");
 #
 exit 0;
 

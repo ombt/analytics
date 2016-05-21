@@ -38,8 +38,7 @@ sub iterator
     #
     return sub {
         return undef if (++$idx >= $max);
-        #
-        return $pdata->{$keys[$idx]};
+        return $keys[$idx];
     };
 }
 #
@@ -58,11 +57,46 @@ sub data
 sub get
 {
     my $self = shift;
-    my $id = shift;
-    my $key = shift;
     #
-    if (exists($self->{data}->{$id}->{$key}))
+    # trying to avoid autovivification. have to check each 
+    # level before the next level.
+    #
+    if (scalar(@_) == 1)
     {
+        my $id = shift;
+        return $self->{data}->{$id}
+            if (exists($self->{data}->{$id}));
+    }
+    elsif (scalar(@_) == 2)
+    {
+        my $id = shift;
+        my $key = shift;
+        return $self->{data}->{$id}->{$key}
+            if ((exists($self->{data}->{$id})) &&
+                (exists($self->{data}->{$id}->{$key})));
+    }
+    #
+    return undef;
+}
+#
+sub set
+{
+    my $self = shift;
+    if (scalar(@_) == 2)
+    {
+        my $id = shift;
+        my $data = shift;
+        #
+        $self->{data}->{$id} = $data;
+        return $self->{data}->{$id};
+    }
+    elsif (scalar(@_) == 3)
+    {
+        my $id = shift;
+        my $key = shift;
+        my $value = shift;
+        #
+        $self->{data}->{$id}->{$key} = $value;
         return $self->{data}->{$id}->{$key};
     }
     else
@@ -71,42 +105,27 @@ sub get
     }
 }
 #
-sub set
-{
-    my $self = shift;
-    my $id = shift;
-    my $key = shift;
-    my $value = shift;
-    #
-    $self->{data}->{$id}->{$key} = $value;
-    return $self->{$id}->{$key};
-}
-#
 sub exists
 {
     my $self = shift;
-    my $id = shift;
-    my $key = shift;
     #
     # trying to avoid autovivification. have to check each 
     # level before the next level.
     #
-    if ((defined($id)) && 
-        (defined($key)) &&
-        (exists($self->{data}->{$id})) &&
-        (exists($self->{data}->{$id}->{$key})))
+    if (scalar(@_) == 1)
     {
-        return TRUE;
+        my $id = shift;
+        return TRUE if (exists($self->{data}->{$id}));
     }
-    elsif ((defined($id)) &&
-           (exists($self->{data}->{$id})))
+    elsif (scalar(@_) == 2)
     {
-        return TRUE;
+        my $id = shift;
+        my $key = shift;
+        return TRUE if ((exists($self->{data}->{$id})) &&
+                        (exists($self->{data}->{$id}->{$key})));
     }
-    else
-    {
-        return FALSE;
-    }
+    #
+    return FALSE;
 }
 #
 sub allocate
