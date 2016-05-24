@@ -369,6 +369,7 @@ sub stdin_handler
         }
     }
 }
+#
 sub socket_datagram_io_handler
 {
     my ($pservice) = @_;
@@ -379,12 +380,53 @@ sub socket_datagram_service_handler
     my ($pservice) = @_;
 }
 #
-sub socket_stream_accept_handler
+sub socket_stream_accept_io_handler
 {
     my ($pservice) = @_;
+    #
+    # do the accept
+    #
+    my $pfh = $pservice->{fh};
+    # my $new_fh = FileHandle->new();
+    my $new_fh = undef;
+    if (my $client_paddr = accept($new_fh, $$pfh))
+    {
+        $plog->log_msg("accept() succeeded for service %s\n", $pservice->{name});
+        #
+        fcntl($new_fh, F_SETFL, O_NONBLOCK);
+        #
+        my ($client_port, $client_packed_ip) = sockaddr_in($client_paddr);
+        my $client_ascii_ip = inet_ntoa($client_packed_ip);
+        #
+        vec($rin, fileno($new_fh), 1) = 1;
+        vec($ein, fileno($new_fh), 1) = 1;
+        #
+        my $handler = undef;
+        die "unknown client handler: $!" 
+            unless (exists($pservice->{client_io_handler}));
+        my $handler = $pservice->{client_io_handler};
+        #
+        my $pnew_service = 
+        {
+            name => "client_of_" . $pservice->{name},
+            client_port => $client_port,
+            client_host_name => $client_ascii_ip,
+            client_paddr => $client_paddr,
+            fh => \$new_fh,
+            io_handler => $handler,
+        };
+        #
+        my $fileno = fileno($new_fh);
+        $pfh_services->set($fileno, $pnew_service);
+        $pfh_data->reallocate($fileno);
+    }
+    else
+    {
+        $plog->log_err("accept() failed for service %s\n", $pservice->{name});
+    }
 }
 #
-sub socket_stream_io_accept_handler
+sub socket_stream_accept_service_handler
 {
     my ($pservice) = @_;
 }
@@ -409,12 +451,54 @@ sub unix_datagram_service_handler
     my ($pservice) = @_;
 }
 #
-sub unix_stream_accept_handler
+sub unix_stream_accept_io_handler
 {
     my ($pservice) = @_;
 }
 #
-sub unix_stream_io_accept_handler
+sub unix_stream_accept_service_handler
+{
+    my ($pservice) = @_;
+    #
+    # do the accept
+    #
+    my $pfh = $pservice->{fh};
+    # my $new_fh = FileHandle->new();
+    my $new_fh = undef;
+    if (my $client_paddr = accept($new_fh, $$pfh))
+    {
+        $plog->log_msg("accept() succeeded for service %s\n", $pservice->{name});
+        #
+        fcntl($new_fh, F_SETFL, O_NONBLOCK);
+        #
+        my ($client_filename) = sockaddr_un($client_paddr);
+        #
+        vec($rin, fileno($new_fh), 1) = 1;
+        vec($ein, fileno($new_fh), 1) = 1;
+        #
+        my $handler = undef;
+        die "unknown client handler: $!" 
+            unless (exists($pservice->{client_io_handler}));
+        my $handler = $pservice->{client_io_handler};
+        #
+        my $pnew_service = 
+        {
+            name => "client_of_" . $pservice->{name},
+            client_filename => $client_filename,
+            client_paddr => $client_paddr,
+            fh => \$new_fh,
+            io_handler => $handler,
+        };
+        #
+        my $fileno = fileno($new_fh);
+        $pfh_services->set($fileno, $pnew_service);
+        $pfh_data->reallocate($fileno);
+    }
+    else
+    {
+        $plog->log_err("accept() failed for service %s\n", $pservice->{name});
+    }
+}
 {
     my ($pservice) = @_;
 }
@@ -453,7 +537,7 @@ sub add_stdin_to_services
     $pfh_services->set($fno, {
         name => "STDIN",
         type => TTY_STREAM(),
-        handler => \&stdin_handler,
+        io_handler => \&stdin_handler,
         timer_handler => \&stdin_timer_handler,
     });
     #
@@ -556,10 +640,6 @@ sub create_socket_stream
         return FALSE;
     }
     #
-    # assign handler called by event loop
-    #
-    $pservice->{handler} = $pservice->{io_handler};
-    #
     return SUCCESS;
 }
 #
@@ -603,10 +683,6 @@ sub create_socket_dgram
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
     }
-    #
-    # assign handler called by event loop
-    #
-    $pservice->{handler} = $pservice->{io_handler};
     #
     return SUCCESS;
 }
@@ -667,10 +743,6 @@ sub create_unix_stream
         return FALSE;
     }
     #
-    # assign handler called by event loop
-    #
-    $pservice->{handler} = $pservice->{io_handler};
-    #
     return SUCCESS;
 }
 #
@@ -712,10 +784,6 @@ sub create_unix_dgram
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
     }
-    #
-    # assign handler called by event loop
-    #
-    $pservice->{handler} = $pservice->{io_handler};
     #
     return SUCCESS;
 }
@@ -901,7 +969,7 @@ sub run_event_loop
                     #
                     # call handler
                     #
-                    &{$pservice->{handler}}($pservice);
+                    &{$pservice->{io_handler}}($pservice);
                 }
             }             
         }
