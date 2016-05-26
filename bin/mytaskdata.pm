@@ -27,9 +27,26 @@ sub new
 sub iterator
 {
     my $self = shift;
+    my $sort_by = shift;
     #
     my $pdata = $self->{data};
-    my @keys = keys %{${pdata}};
+    my @keys = ();
+    #
+    if (defined($sort_by))
+    {
+        if ($sort_by eq 'n')
+        {
+            @keys = sort { $a <=> $b } keys %{${pdata}};
+        }
+        else
+        {
+            @keys = sort keys %{${pdata}};
+        }
+    }
+    else
+    {
+        @keys = keys %{${pdata}};
+    }
     #
     my $max = scalar(@keys);
     my $idx = -1;

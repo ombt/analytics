@@ -367,17 +367,135 @@ sub stdin_handler
         {
             $event_loop_done = TRUE;
         }
+        elsif ($data =~ m/^[h?]$/i)
+        {
+            my $log_fh = $plog->log_fh();
+            print $log_fh <<EOF;
+Available commnds:
+    q - quit
+    h | ? - help
+    s - print services
+EOF
+        }
+        elsif ($data =~ m/^s$/i)
+        {
+            my $pfhit = $pfh_services->iterator('n');
+            while (defined(my $fileno = $pfhit->()))
+            {
+                my $pservice = $pfh_services->get($fileno);
+                $plog->log_msg("FileNo: %d, Service: %s\n", 
+                               $fileno,
+                               $pservice->{name});
+            }             
+        }
     }
 }
+#
+sub generic_stream_io_handler
+{
+    my ($pservice) = @_;
+    #
+    $plog->log_msg("entering generic_stream_handler() for %s\n", 
+                   $pservice->{name});
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $nr = 0;
+    my $buffer = undef;
+    while (defined($nr = sysread($$pfh, $buffer, 1024*4)) && ($nr > 0))
+    {
+        my $local_buffer = unpack("H*", $buffer);
+        $plog->log_msg("buffer ... <%s>\n", $buffer);
+        $plog->log_msg("unpacked buffer ... <%s>\n", $local_buffer);
+        #
+        $pfh_data->set($fileno, 'input', $buffer);
+        $pfh_data->set($fileno, 'input_length', $nr);
+        &{$pservice->{service_handler}}($pservice);
+    }
+    #
+    if ((( ! defined($nr)) && ($! != EAGAIN)) ||
+        (defined($nr) && ($nr == 0)))
+    {
+        #
+        # EOF or some error
+        #
+        vec($rin, $fileno, 1) = 0;
+        vec($ein, $fileno, 1) = 0;
+        vec($win, $fileno, 1) = 0;
+        #
+        close($$pfh);
+        #
+        $plog->log_msg("closing socket (%d) for service %s ...\n", 
+                       $fileno,
+                       $pservice->{name});
+        $pfh_services->deallocate($fileno);
+        $pfh_data->deallocate($fileno);
+    }
+}
+#
+sub generic_datagram_io_handler
+{
+    my ($pservice) = @_;
+    #
+    $plog->log_msg("entering generic_datagram_io_handler() for %s\n", 
+                   $pservice->{name});
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $recvpaddr = undef;
+    my $buffer = undef;
+    while (defined($recvpaddr = recv($$pfh, $buffer, 1024*4, 0)))
+    {
+        my $local_buffer = unpack("H*", $buffer);
+        $plog->log_msg("buffer ... <%s>\n", $buffer);
+        $plog->log_msg("unpacked buffer ... <%s>\n", $local_buffer);
+        #
+        $pfh_data->set($fileno, 'input', $buffer);
+        $pfh_data->set($fileno, 'input_length', length($buffer));
+        $pfh_data->set($fileno, 'recvpaddr', $recvpaddr);
+        &{$pservice->{service_handler}}($pservice);
+    }
+    #
+    if (( ! defined($recvpaddr)) && ($! != EAGAIN))
+    {
+        #
+        # EOF or some error
+        #
+        vec($rin, $fileno, 1) = 0;
+        vec($ein, $fileno, 1) = 0;
+        vec($win, $fileno, 1) = 0;
+        #
+        close($$pfh);
+        #
+        $plog->log_msg("closing socket (%d) for service %s ...\n", 
+                       $fileno,
+                       $pservice->{name});
+        $pfh_services->deallocate($fileno);
+        $pfh_data->deallocate($fileno);
+    }
+}
+#
 #
 sub socket_datagram_io_handler
 {
     my ($pservice) = @_;
+    generic_datagram_io_handler($pservice);
 }
 #
 sub socket_datagram_service_handler
 {
     my ($pservice) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $nr = $pfh_data->get($fileno, 'input_length');
+    my $buffer = $pfh_data->get($fileno, 'input');
+    my $recvpaddr = $pfh_data->get($fileno, 'recvpaddr');
+    #
+    die $! if ( ! defined(send($$pfh, $buffer, 0, $recvpaddr)));
 }
 #
 sub socket_stream_accept_io_handler
@@ -435,49 +553,6 @@ sub socket_stream_accept_io_handler
 sub socket_stream_accept_service_handler
 {
     my ($pservice) = @_;
-}
-#
-sub generic_stream_io_handler
-{
-    my ($pservice) = @_;
-    #
-    $plog->log_msg("entering generic_stream_handler() for %s\n", 
-                   $pservice->{name});
-    #
-    my $pfh = $pservice->{fh};
-    my $fileno = fileno($$pfh);
-    #
-    my $nr = 0;
-    my $buffer = undef;
-    while (defined($nr = sysread($$pfh, $buffer, 1024*4)) && ($nr > 0))
-    {
-        my $local_buffer = unpack("H*", $buffer);
-        $plog->log_msg("buffer ... <%s>\n", $buffer);
-        $plog->log_msg("unpacked buffer ... <%s>\n", $local_buffer);
-        #
-        $pfh_data->set($fileno, 'input', $buffer);
-        $pfh_data->set($fileno, 'input_length', $nr);
-        &{$pservice->{service_handler}}($pservice);
-    }
-    #
-    if ((( ! defined($nr)) && ($! != EAGAIN)) ||
-        (defined($nr) && ($nr == 0)))
-    {
-        #
-        # EOF or some error
-        #
-        vec($rin, $fileno, 1) = 0;
-        vec($ein, $fileno, 1) = 0;
-        vec($win, $fileno, 1) = 0;
-        #
-        close($$pfh);
-        #
-        $plog->log_msg("closing socket (%d) for service %s ...\n", 
-                       $fileno,
-                       $pservice->{name});
-        $pfh_services->deallocate($fileno);
-        $pfh_data->deallocate($fileno);
-    }
 }
 #
 sub socket_stream_io_handler
@@ -715,7 +790,21 @@ sub create_socket_dgram
     my $ipaddr = gethostbyname($pservice->{host_name});
     defined($ipaddr) or die "gethostbyname: $!";
     #
-    my $paddr = sockaddr_in($pservice->{port}, $ipaddr);
+    my $port = undef;
+    if (exists($pservice->{service}) && 
+        defined($pservice->{service}))
+    {
+        # get port from services file
+        $port = getservbyname($pservice->{service}, 'udp') or
+            die "Can't get port for service $pservice->{service}: $!";
+        $plog->log_msg("getservbyname($pservice->{service}, 'udp') port = $port\n");
+    }
+    else
+    {
+        $port = $pservice->{port};
+        $plog->log_msg("config file port = $port\n");
+    }
+    my $paddr = sockaddr_in($port, $ipaddr);
     defined($paddr) or die "sockaddr_in: $!";
     #
     bind($fh, $paddr) or die "bind: $!";
