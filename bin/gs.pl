@@ -406,6 +406,7 @@ sub generic_stream_io_handler
     while (defined($nr = sysread($$pfh, $buffer, 1024*4)) && ($nr > 0))
     {
         my $local_buffer = unpack("H*", $buffer);
+        $plog->log_msg("nr ... <%d>\n", $nr);
         $plog->log_msg("buffer ... <%s>\n", $buffer);
         $plog->log_msg("unpacked buffer ... <%s>\n", $local_buffer);
         #
@@ -612,7 +613,7 @@ sub unix_stream_accept_service_handler
         my $handler = undef;
         die "unknown client handler: $!" 
             unless (exists($pservice->{client_io_handler}));
-        my $handler = $pservice->{client_io_handler};
+        $handler = $pservice->{client_io_handler};
         #
         my $pnew_service = 
         {
