@@ -8,10 +8,9 @@ use myconstants;
 #
 sub new
 {
-    my $self = shift;
-    my $class = ref($self) || $self;
+    my $class = shift;
     #
-    $self = {};
+    my $self = {};
     $self->{data} = {};
     #
     if (scalar(@_) > 0)

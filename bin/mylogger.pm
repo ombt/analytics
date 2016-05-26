@@ -34,10 +34,8 @@ our %verbose_levels =
 #
 sub new
 {
-    my $self = shift;
-    my $class = ref($self) || $self;
-    #
-    $self = {};
+    my $class = shift;
+    my $self = {};
     #
     if (scalar(@_) > 0)
     {

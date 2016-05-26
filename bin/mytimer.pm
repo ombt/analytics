@@ -3,12 +3,10 @@
 package mytimer;
 #
 sub new {
-    my $self = shift;
-    my $class = ref($self) || $self;
-    #
+    my $class = shift;
     my ($fileno, $delta, $id, $label) = @_;
     #
-    $self = {};
+    my $self = {};
     $self->{fileno} = $fileno;
     $self->{delta} = $delta;
     $self->{expire} = time() + $delta;

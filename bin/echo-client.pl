@@ -4,7 +4,7 @@ use strict;
 use IO::Socket;
 
 my $server = IO::Socket::INET->new(Proto => "tcp",
-                                   PeerPort => 20000,
+                                   PeerPort => 59001,
                                    PeerAddr => "localhost",
                                    Timeout => 2000)
              || die "failed to connect\n";
