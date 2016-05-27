@@ -478,13 +478,7 @@ sub generic_datagram_io_handler
     }
 }
 #
-sub socket_datagram_io_handler
-{
-    my ($pservice) = @_;
-    generic_datagram_io_handler($pservice);
-}
-#
-sub socket_datagram_service_handler
+sub generic_datagram_service_handler
 {
     my ($pservice) = @_;
     #
@@ -496,6 +490,19 @@ sub socket_datagram_service_handler
     my $recvpaddr = $pfh_data->get($fileno, 'recvpaddr');
     #
     die $! if ( ! defined(send($$pfh, $buffer, 0, $recvpaddr)));
+}
+#
+#
+sub socket_datagram_io_handler
+{
+    my ($pservice) = @_;
+    generic_datagram_io_handler($pservice);
+}
+#
+sub socket_datagram_service_handler
+{
+    my ($pservice) = @_;
+    generic_datagram_service_handler($pservice);
 }
 #
 sub socket_stream_accept_io_handler
@@ -583,15 +590,7 @@ sub unix_datagram_io_handler
 sub unix_datagram_service_handler
 {
     my ($pservice) = @_;
-    #
-    my $pfh = $pservice->{fh};
-    my $fileno = fileno($$pfh);
-    #
-    my $nr = $pfh_data->get($fileno, 'input_length');
-    my $buffer = $pfh_data->get($fileno, 'input');
-    my $recvpaddr = $pfh_data->get($fileno, 'recvpaddr');
-    #
-    die $! if ( ! defined(send($$pfh, $buffer, 0, $recvpaddr)));
+    generic_datagram_service_handler($pservice);
 }
 #
 sub unix_stream_accept_io_handler
