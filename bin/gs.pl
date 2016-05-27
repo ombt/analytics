@@ -478,7 +478,6 @@ sub generic_datagram_io_handler
     }
 }
 #
-#
 sub socket_datagram_io_handler
 {
     my ($pservice) = @_;
@@ -578,19 +577,24 @@ sub socket_stream_service_handler
 sub unix_datagram_io_handler
 {
     my ($pservice) = @_;
+    generic_datagram_io_handler($pservice);
 }
 #
 sub unix_datagram_service_handler
 {
     my ($pservice) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $nr = $pfh_data->get($fileno, 'input_length');
+    my $buffer = $pfh_data->get($fileno, 'input');
+    my $recvpaddr = $pfh_data->get($fileno, 'recvpaddr');
+    #
+    die $! if ( ! defined(send($$pfh, $buffer, 0, $recvpaddr)));
 }
 #
 sub unix_stream_accept_io_handler
-{
-    my ($pservice) = @_;
-}
-#
-sub unix_stream_accept_service_handler
 {
     my ($pservice) = @_;
     #
@@ -610,10 +614,15 @@ sub unix_stream_accept_service_handler
         vec($rin, fileno($new_fh), 1) = 1;
         vec($ein, fileno($new_fh), 1) = 1;
         #
-        my $handler = undef;
+        my $io_handler = undef;
         die "unknown client handler: $!" 
             unless (exists($pservice->{client_io_handler}));
-        $handler = $pservice->{client_io_handler};
+        $io_handler = $pservice->{client_io_handler};
+        #
+        my $service_handler = undef;
+        die "unknown client handler: $!" 
+            unless (exists($pservice->{client_service_handler}));
+        $service_handler = $pservice->{client_service_handler};
         #
         my $pnew_service = 
         {
@@ -621,7 +630,8 @@ sub unix_stream_accept_service_handler
             client_filename => $client_filename,
             client_paddr => $client_paddr,
             fh => \$new_fh,
-            io_handler => $handler,
+            io_handler => $io_handler,
+            service_handler => $service_handler,
         };
         #
         my $fileno = fileno($new_fh);
@@ -633,6 +643,8 @@ sub unix_stream_accept_service_handler
         $plog->log_err("accept() failed for service %s\n", $pservice->{name});
     }
 }
+#
+sub unix_stream_accept_service_handler
 {
     my ($pservice) = @_;
 }
@@ -640,11 +652,20 @@ sub unix_stream_accept_service_handler
 sub unix_stream_io_handler
 {
     my ($pservice) = @_;
+    generic_stream_io_handler($pservice);
 }
 #
 sub unix_stream_service_handler
 {
     my ($pservice) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $nr = $pfh_data->get($fileno, 'input_length');
+    my $buffer = $pfh_data->get($fileno, 'input');
+    #
+    die $! if ( ! defined(send($$pfh, $buffer, $nr)));
 }
 #
 ################################################################
@@ -847,6 +868,7 @@ sub create_unix_stream
     #
     unlink($pservice->{file_name});
     #
+    $plog->log_msg("unix stream file = %s\n", $pservice->{file_name});
     my $paddr = sockaddr_un($pservice->{file_name});
     defined($paddr) or die "sockaddr_un: $!";
     #
@@ -906,6 +928,7 @@ sub create_unix_dgram
     #
     unlink($pservice->{file_name});
     #
+    $plog->log_msg("unix datagram file = %s\n", $pservice->{file_name});
     my $paddr = sockaddr_un($pservice->{file_name});
     defined($paddr) or die "sockaddr_un: $!";
     #
