@@ -339,14 +339,14 @@ sub null_timer_handler
 {
     my ($ptimer, $pservice) = @_;
     #
-    $plog->log_msg("null timer handler ... %s\n", $ptimer->{label});
+    $plog->log_vmin("null timer handler ... %s\n", $ptimer->{label});
 }
 #
 sub stdin_timer_handler
 {
     my ($ptimer, $pservice) = @_;
     #
-    $plog->log_msg("sanity timer handler ... %s\n", $ptimer->{label});
+    $plog->log_vmin("sanity timer handler ... %s\n", $ptimer->{label});
     #
     start_timer($ptimer->{fileno},
                 $ptimer->{delta},
@@ -373,8 +373,10 @@ sub stdin_handler
             print $log_fh <<EOF;
 Available commnds:
     q - quit
-    h | ? - help
+    ? - help
+    h - help
     s - print services
+    t - print timers
 EOF
         }
         elsif ($data =~ m/^s$/i)
@@ -387,6 +389,10 @@ EOF
                                $fileno,
                                $pservice->{name});
             }             
+        }
+        elsif ($data =~ m/^t$/i)
+        {
+            $pq->dump();
         }
     }
 }

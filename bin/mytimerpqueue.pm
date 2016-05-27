@@ -207,11 +207,24 @@ sub getNth
 sub dump
 {
     my $self = shift;
-    for (my $i=0; $i<$self->{count}; ${i}++)
+    my $log_fh = shift;
+    #
+    if (defined($log_fh))
     {
-        print "array[$i] = \n";
-        $self->{data}[$i]->dump();
-    
+        for (my $i=0; $i<$self->{count}; ${i}++)
+        {
+            print $log_fh "array[$i] = \n";
+            $self->{data}[$i]->dump($log_fh);
+        }
+    }
+    else
+    {
+        for (my $i=0; $i<$self->{count}; ${i}++)
+        {
+            print "array[$i] = \n";
+            $self->{data}[$i]->dump();
+        
+        }
     }
 }
 #

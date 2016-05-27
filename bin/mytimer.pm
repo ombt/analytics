@@ -58,16 +58,31 @@ sub rw_label {
 #
 sub dump {
     my $self = shift;
+    my $log_fh = shift;
     my $class = ref($self);
     #
-    print STDERR "\n";
-    print STDERR "ref class = $class\n";
-    print STDERR "fileno = ".$self->{fileno}."\n";
-    print STDERR "delta = ".$self->{delta}."\n";
-    print STDERR "expire = ".$self->{expire}."\n";
-    print STDERR "id = ".$self->{id}."\n";
-    print STDERR "label = ".$self->{label}."\n";
-    print STDERR "heap = ".$self->{heap}."\n";
+    if (defined($log_fh))
+    {
+        print $log_fh "\n";
+        print $log_fh "ref class = $class\n";
+        print $log_fh "fileno = ".$self->{fileno}."\n";
+        print $log_fh "delta = ".$self->{delta}."\n";
+        print $log_fh "expire = ".$self->{expire}."\n";
+        print $log_fh "id = ".$self->{id}."\n";
+        print $log_fh "label = ".$self->{label}."\n";
+        print $log_fh "heap = ".$self->{heap}."\n";
+    }
+    else
+    {
+        print "\n";
+        print "ref class = $class\n";
+        print "fileno = ".$self->{fileno}."\n";
+        print "delta = ".$self->{delta}."\n";
+        print "expire = ".$self->{expire}."\n";
+        print "id = ".$self->{id}."\n";
+        print "label = ".$self->{label}."\n";
+        print "heap = ".$self->{heap}."\n";
+    }
 }
 # exit with success
 1;
