@@ -333,7 +333,7 @@ sub read_cfg_file
 #
 ################################################################
 #
-# default io and service handlers
+# default timer, io and service handlers
 #
 sub null_timer_handler
 {
@@ -441,6 +441,19 @@ sub generic_stream_io_handler
     }
 }
 #
+sub generic_stream_service_handler
+{
+    my ($pservice) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $nr = $pfh_data->get($fileno, 'input_length');
+    my $buffer = $pfh_data->get($fileno, 'input');
+    #
+    die $! if ( ! defined(send($$pfh, $buffer, $nr)));
+}
+#
 sub generic_datagram_io_handler
 {
     my ($pservice) = @_;
@@ -497,7 +510,6 @@ sub generic_datagram_service_handler
     #
     die $! if ( ! defined(send($$pfh, $buffer, 0, $recvpaddr)));
 }
-#
 #
 sub socket_datagram_io_handler
 {
@@ -577,14 +589,7 @@ sub socket_stream_io_handler
 sub socket_stream_service_handler
 {
     my ($pservice) = @_;
-    #
-    my $pfh = $pservice->{fh};
-    my $fileno = fileno($$pfh);
-    #
-    my $nr = $pfh_data->get($fileno, 'input_length');
-    my $buffer = $pfh_data->get($fileno, 'input');
-    #
-    die $! if ( ! defined(send($$pfh, $buffer, $nr)));
+    generic_stream_service_handler($pservice);
 }
 #
 sub unix_datagram_io_handler
@@ -663,14 +668,7 @@ sub unix_stream_io_handler
 sub unix_stream_service_handler
 {
     my ($pservice) = @_;
-    #
-    my $pfh = $pservice->{fh};
-    my $fileno = fileno($$pfh);
-    #
-    my $nr = $pfh_data->get($fileno, 'input_length');
-    my $buffer = $pfh_data->get($fileno, 'input');
-    #
-    die $! if ( ! defined(send($$pfh, $buffer, $nr)));
+    generic_stream_service_handler($pservice);
 }
 #
 ################################################################
