@@ -511,18 +511,6 @@ sub generic_datagram_service_handler
     die $! if ( ! defined(send($$pfh, $buffer, 0, $recvpaddr)));
 }
 #
-sub socket_datagram_io_handler
-{
-    my ($pservice) = @_;
-    generic_datagram_io_handler($pservice);
-}
-#
-sub socket_datagram_service_handler
-{
-    my ($pservice) = @_;
-    generic_datagram_service_handler($pservice);
-}
-#
 sub socket_stream_accept_io_handler
 {
     my ($pservice) = @_;
@@ -575,35 +563,6 @@ sub socket_stream_accept_io_handler
     }
 }
 #
-sub socket_stream_accept_service_handler
-{
-    my ($pservice) = @_;
-}
-#
-sub socket_stream_io_handler
-{
-    my ($pservice) = @_;
-    generic_stream_io_handler($pservice);
-}
-#
-sub socket_stream_service_handler
-{
-    my ($pservice) = @_;
-    generic_stream_service_handler($pservice);
-}
-#
-sub unix_datagram_io_handler
-{
-    my ($pservice) = @_;
-    generic_datagram_io_handler($pservice);
-}
-#
-sub unix_datagram_service_handler
-{
-    my ($pservice) = @_;
-    generic_datagram_service_handler($pservice);
-}
-#
 sub unix_stream_accept_io_handler
 {
     my ($pservice) = @_;
@@ -654,9 +613,38 @@ sub unix_stream_accept_io_handler
     }
 }
 #
+sub socket_stream_accept_service_handler
+{
+    my ($pservice) = @_;
+}
+#
 sub unix_stream_accept_service_handler
 {
     my ($pservice) = @_;
+}
+#
+sub socket_stream_io_handler
+{
+    my ($pservice) = @_;
+    generic_stream_io_handler($pservice);
+}
+#
+sub socket_stream_service_handler
+{
+    my ($pservice) = @_;
+    generic_stream_service_handler($pservice);
+}
+#
+sub socket_datagram_io_handler
+{
+    my ($pservice) = @_;
+    generic_datagram_io_handler($pservice);
+}
+#
+sub socket_datagram_service_handler
+{
+    my ($pservice) = @_;
+    generic_datagram_service_handler($pservice);
 }
 #
 sub unix_stream_io_handler
@@ -669,6 +657,77 @@ sub unix_stream_service_handler
 {
     my ($pservice) = @_;
     generic_stream_service_handler($pservice);
+}
+#
+sub unix_datagram_io_handler
+{
+    my ($pservice) = @_;
+    generic_datagram_io_handler($pservice);
+}
+#
+sub unix_datagram_service_handler
+{
+    my ($pservice) = @_;
+    generic_datagram_service_handler($pservice);
+}
+#
+################################################################
+#
+# LNB-specific io, timer, and servers
+#
+sub lnb_io_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub lnbcvthost_service_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub lnblmhost_service_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub lnbmihost_service_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub lnbspcvthost_service_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub lnbspmihost_service_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub lnbcvthost_timer_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub lnblmhost_timer_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub lnbmihost_timer_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub lnbspcvthost_timer_handler
+{
+    my ($pservice) = @_;
+}
+#
+sub lnbspmihost_timer_handler
+{
+    my ($pservice) = @_;
 }
 #
 ################################################################
