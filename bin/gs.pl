@@ -547,12 +547,6 @@ sub socket_stream_accept_io_handler
             unless (exists($pservice->{client_service_handler}));
         $service_handler = $pservice->{client_service_handler};
         #
-        my $timer_handler = undef;
-        if (exists($pservice->{timer_service_handler}))
-        {
-            $timer_handler = $pservice->{timer_service_handler};
-        }
-        #
         my $pnew_service = 
         {
             name => "client_of_" . $pservice->{name},
@@ -562,7 +556,6 @@ sub socket_stream_accept_io_handler
             fh => \$new_fh,
             io_handler => $io_handler,
             service_handler => $service_handler,
-            timer_handler => $timer_handler,
         };
         #
         my $fileno = fileno($new_fh);
@@ -605,12 +598,6 @@ sub unix_stream_accept_io_handler
             unless (exists($pservice->{client_service_handler}));
         $service_handler = $pservice->{client_service_handler};
         #
-        my $timer_handler = undef;
-        if (exists($pservice->{timer_service_handler}))
-        {
-            $timer_handler = $pservice->{timer_service_handler};
-        }
-        #
         my $pnew_service = 
         {
             name => "client_of_" . $pservice->{name},
@@ -619,7 +606,6 @@ sub unix_stream_accept_io_handler
             fh => \$new_fh,
             io_handler => $io_handler,
             service_handler => $service_handler,
-            timer_handler => $timer_handler,
         };
         #
         my $fileno = fileno($new_fh);
