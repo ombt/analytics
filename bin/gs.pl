@@ -121,6 +121,11 @@ my %default_service_params =
         default_value => undef,
         translate => undef,
     },
+    client_ctor => {
+        use_default => TRUE(),
+        default_value => undef,
+        translate => undef,
+    },
 );
 #
 # vectors for select()
