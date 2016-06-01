@@ -10,7 +10,8 @@ use strict;
 #
 my $binpath;
 #
-BEGIN {
+BEGIN
+{
     use File::Basename;
     #
     $binpath = dirname($0);
@@ -102,6 +103,11 @@ my %default_service_params =
         translate => undef,
     },
     timer_handler => {
+        use_default => TRUE(),
+        default_value => undef,
+        translate => undef,
+    },
+    ctor => {
         use_default => TRUE(),
         default_value => undef,
         translate => undef,
@@ -552,6 +558,8 @@ sub socket_stream_accept_io_handler
             unless (exists($pservice->{client_service_handler}));
         $service_handler = $pservice->{client_service_handler};
         #
+        my $timer_handler = $pservice->{client_timer_handler};
+        #
         my $pnew_service = 
         {
             name => "client_of_" . $pservice->{name},
@@ -561,11 +569,20 @@ sub socket_stream_accept_io_handler
             fh => \$new_fh,
             io_handler => $io_handler,
             service_handler => $service_handler,
+            timer_handler => $timer_handler,
         };
         #
         my $fileno = fileno($new_fh);
         $pfh_services->set($fileno, $pnew_service);
         $pfh_data->reallocate($fileno);
+        #
+        # call ctor if it exists.
+        #
+        my $ctor = $pservice->{'ctor'};
+        if (defined($ctor))
+        {
+            my $status = &{$ctor}($pnew_service);
+        }
     }
     else
     {
@@ -603,6 +620,8 @@ sub unix_stream_accept_io_handler
             unless (exists($pservice->{client_service_handler}));
         $service_handler = $pservice->{client_service_handler};
         #
+        my $timer_handler = $pservice->{client_timer_handler};
+        #
         my $pnew_service = 
         {
             name => "client_of_" . $pservice->{name},
@@ -611,11 +630,20 @@ sub unix_stream_accept_io_handler
             fh => \$new_fh,
             io_handler => $io_handler,
             service_handler => $service_handler,
+            timer_handler => $timer_handler,
         };
         #
         my $fileno = fileno($new_fh);
         $pfh_services->set($fileno, $pnew_service);
         $pfh_data->reallocate($fileno);
+        #
+        # call ctor if it exists.
+        #
+        my $ctor = $pservice->{'ctor'};
+        if (defined($ctor))
+        {
+            my $status = &{$ctor}($pnew_service);
+        }
     }
     else
     {
@@ -867,6 +895,52 @@ sub create_socket_stream
         return FALSE;
     }
     #
+    # check for optional handlers
+    #
+    $handler = $pservice->{timer_handler};
+    if (defined($handler))
+    {
+        $pservice->{timer_handler} = get_handler($handler);
+        if ( ! defined($pservice->{timer_handler}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
+    }
+    #
+    $handler = $pservice->{ctor};
+    if (defined($handler))
+    {
+        $pservice->{ctor} = get_handler($handler);
+        if ( ! defined($pservice->{ctor}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
+    }
+    #
+    $handler = $pservice->{client_timer_handler};
+    if (defined($handler))
+    {
+        $pservice->{client_timer_handler} = get_handler($handler);
+        if ( ! defined($pservice->{client_timer_handler}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
+    }
+    #
+    $handler = $pservice->{client_ctor};
+    if (defined($handler))
+    {
+        $pservice->{client_ctor} = get_handler($handler);
+        if ( ! defined($pservice->{client_ctor}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
+    }
+    #
     return SUCCESS;
 }
 #
@@ -923,6 +997,30 @@ sub create_socket_dgram
     {
         $plog->log_err("Function %s does NOT EXIST.\n", $handler);
         return FALSE;
+    }
+    #
+    # check for optional handlers
+    #
+    $handler = $pservice->{timer_handler};
+    if (defined($handler))
+    {
+        $pservice->{timer_handler} = get_handler($handler);
+        if ( ! defined($pservice->{timer_handler}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
+    }
+    #
+    $handler = $pservice->{ctor};
+    if (defined($handler))
+    {
+        $pservice->{ctor} = get_handler($handler);
+        if ( ! defined($pservice->{ctor}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
     }
     #
     return SUCCESS;
@@ -985,6 +1083,52 @@ sub create_unix_stream
         return FALSE;
     }
     #
+    # check for optional handlers
+    #
+    $handler = $pservice->{timer_handler};
+    if (defined($handler))
+    {
+        $pservice->{timer_handler} = get_handler($handler);
+        if ( ! defined($pservice->{timer_handler}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
+    }
+    #
+    $handler = $pservice->{ctor};
+    if (defined($handler))
+    {
+        $pservice->{ctor} = get_handler($handler);
+        if ( ! defined($pservice->{ctor}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
+    }
+    #
+    $handler = $pservice->{client_timer_handler};
+    if (defined($handler))
+    {
+        $pservice->{client_timer_handler} = get_handler($handler);
+        if ( ! defined($pservice->{client_timer_handler}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
+    }
+    #
+    $handler = $pservice->{client_ctor};
+    if (defined($handler))
+    {
+        $pservice->{client_ctor} = get_handler($handler);
+        if ( ! defined($pservice->{client_ctor}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
+    }
+    #
     return SUCCESS;
 }
 #
@@ -1028,6 +1172,30 @@ sub create_unix_dgram
         return FALSE;
     }
     #
+    # check for optional handlers
+    #
+    $handler = $pservice->{timer_handler};
+    if (defined($handler))
+    {
+        $pservice->{timer_handler} = get_handler($handler);
+        if ( ! defined($pservice->{timer_handler}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
+    }
+    #
+    $handler = $pservice->{ctor};
+    if (defined($handler))
+    {
+        $pservice->{ctor} = get_handler($handler);
+        if ( ! defined($pservice->{ctor}))
+        {
+            $plog->log_err("Function %s does NOT EXIST.\n", $handler);
+            return FALSE;
+        }
+    }
+    #
     return SUCCESS;
 }
 #
@@ -1050,6 +1218,14 @@ sub create_server_connections
                            $service, $fileno);
             $pfh_services->set($fileno, $pservices->get($service));
             $pfh_data->reallocate($fileno);
+            #
+            # call ctor if it exists.
+            #
+            my $ctor = $pservices->get($service, 'ctor');
+            if (defined($ctor))
+            {
+                $status = &{$ctor}($pservices->get($service));
+            }
         }
         else
         {
