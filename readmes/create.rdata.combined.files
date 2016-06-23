@@ -1,0 +1,696 @@
+
+The procedure below assumes the following shell variables are defined.
+These variables contain default values for the location of data and 
+repositories.
+
+export DB_BASE_PATH=/home/MRumore/analytics/db/
+export RAW_BASE_PATH=/home/MRumore/analytics/raw/
+export CSV_BASE_PATH=/home/MRumore/analytics/csv/
+export RDATA_BASE_PATH=/home/MRumore/analytics/rdata/
+
+The perl scripts which are used to process raw CRB files
+are these:
+
+/usr/bin/csv2db.pl
+/usr/bin/auditcsv.pl
+/usr/bin/maih2csv.pl
+/usr/bin/u0xdata.pl
+
+The help texts for each script are shown below:
+
+usage: /usr/bin/csv2db.pl [-?] [-h] 
+        [-l logfile]
+        [-B base path]
+        [-R relative path]
+        [-P path]
+        [-d delimiter]
+        [-f] [-r] 
+        CSV-file ...
+
+where:
+    -? or -h - print this usage.
+    -l logfile - log file path
+    -B path - base db path, defaults to '/home/MRumore/analytics/db/'
+              or use environment variable DB_BASE_PATH.
+    -R path - relative db path, defaults to 'CSV2DB'
+              or use environment variable DB_REL_PATH.
+    -P path - db path, defaults to '/home/MRumore/analytics/db//CSV2DB'
+    -d delimiter - CSV delimiter characer. default is a tab.
+    -f - create filename ID index if table has FID field.
+    -r - remove old DB
+
+
+usage: /usr/bin/auditcsv.pl [-?] [-h] 
+        [-l logfile]
+        [-d delimiter]
+        CSV-file ...
+
+where:
+    -? or -h - print this usage.
+    -l logfile - log file path
+    -d delimiter - CSV delimiter characer. default is a tab.
+
+
+usage: /usr/bin/maih2csv.pl [-?] [-h]  \ 
+        [-w | -W |-v level] \ 
+        [-l logfile] \ 
+        [-B base path] \
+        [-R relative path] \
+        [-P path] \
+        [-S section[,section...] \
+        [-s section[,section...] \
+        [-d delimiter] \
+        [-r] [-C|-c] \
+        maihime-file ...
+
+where:
+    -? or -h - print this usage.
+    -w - enable warning (level=min=1)
+    -W - enable warning and trace (level=mid=2)
+    -v - verbose level: 0=off,1=min,2=mid,3=max
+    -l logfile - log file path
+    -B path - base csv path, defaults to '/home/MRumore/analytics/csv/'
+              or use environment variable CSV_BASE_PATH.
+    -R path - relative csv path, defaults to 'CSV'
+              or use environment variable CSV_REL_PATH.
+    -P path - csv path, defaults to '/home/MRumore/analytics/csv//CSV'
+    -S section[,section...] - list of sections to process. the
+                              default is to process all sections.
+    -s section[,section...] - list of sections to process in addition
+                              to [Index] and [Information]. the
+                              default is to process all sections.
+    -d delimiter - CSV delimiter character. default is a tab.
+    -r - remove old CSV directory (off by default).
+    -C - combine data from separate files into one file per section
+         using the file name as a product to correlate related
+         data. the default is to create a directory with the file name
+         and write each section in a separate file.
+    -c - combine data from separate files into one file per section
+         using the file name to generate a unique id as a product 
+         to correlate related data. the mapping of filename to id is
+         stored in a separate file. the default is to create a 
+         directory with the file name and write each section in 
+         a separate file.
+
+
+
+usage: /usr/bin/u0xdata.pl [-?] [-h]  \ 
+        [-w | -W |-v level] \ 
+        [-l logfile] \ 
+        [-d delimiter] \
+        [-r|-a] 
+
+where:
+    -? or -h - print this usage.
+    -w - enable warning (level=min=1)
+    -W - enable warning and trace (level=mid=2)
+    -v - verbose level: 0=off,1=min,2=mid,3=max
+    -l logfile - log file path
+    -d delimiter - CSV delimiter character. default is a tab.
+    -r - remove old FID_DATA CSV file (default).
+    -a - append to old FID_DATA CSV file.
+
+
+I will use a set of CRB files for angelo and cicor_20151013.
+
+1) Convert the CRB files to CSV files. See below for cicor.
+
+	cicor_20151013> pwd
+	/home/ombt/sandbox/raw/cicor_20151013
+
+	cicor_20151013> env | grep BASE_PATH
+	DB_BASE_PATH=/home/ombt/analytics/db/
+	RAW_BASE_PATH=/home/ombt/analytics/raw/
+	OMBT_HW_BASE_PATH=/home/ombt/sandbox/analytics/hw
+	OMBT_CSV_BASE_PATH=/home/ombt/sandbox/analytics/../csv
+	OMBT_RAW_BASE_PATH=/home/ombt/sandbox/analytics/../raw
+	OMBT_RDATA_BASE_PATH=/home/ombt/sandbox/analytics/rdata
+	CSV_BASE_PATH=/home/ombt/analytics/csv/
+		RDATA_BASE_PATH=/home/ombt/analytics/rdata/
+	OMBT_DB_BASE_PATH=/home/ombt/sandbox/analytics/../db
+	HW_BASE_PATH=/home/ombt/analytics/hw/
+
+	cicor_20151013> ls
+	CRB		       create.crb.csv	    npm1  npm3
+	create.all.in.one.csv  create.separate.csv  npm2
+
+	cicor_20151013> cat create.crb.csv 
+	cd CRB
+	#
+	# all machines
+	#
+	maih2csv.pl -R cicor_20151013 -L GEN_4052184.CRB
+	#
+	# only machine 1
+	#
+	maih2csv.pl -R cicor_20151013 -L MINI_4072524_15.CRB
+	#
+	exit 0
+
+	cicor_20151013> create.crb.csv 
+
+and for angelo:
+
+	angelo> pwd
+	/home/ombt/sandbox/raw/angelo
+
+	angelo> env | grep BASE_PATH
+	DB_BASE_PATH=/home/ombt/analytics/db/
+	RAW_BASE_PATH=/home/ombt/analytics/raw/
+	OMBT_HW_BASE_PATH=/home/ombt/sandbox/analytics/hw
+	OMBT_CSV_BASE_PATH=/home/ombt/sandbox/analytics/../csv
+	OMBT_RAW_BASE_PATH=/home/ombt/sandbox/analytics/../raw
+	OMBT_RDATA_BASE_PATH=/home/ombt/sandbox/analytics/rdata
+	CSV_BASE_PATH=/home/ombt/analytics/csv/
+	RDATA_BASE_PATH=/home/ombt/analytics/rdata/
+	OMBT_DB_BASE_PATH=/home/ombt/sandbox/analytics/../db
+	HW_BASE_PATH=/home/ombt/analytics/hw/
+
+	angelo> lf
+	CRB/		       create.crb.csv*	    NPM-W1-3-Machine-1/
+	create_0829_0830.csv*  create.csv*	    NPM-W1-4-Machine-1/
+	create_0830.csv*       NPM-W1-1-Machine-1/  NPM-W1-5-Machine-1/
+	create_1_0830.csv*     NPM-W1-2-Machine-1/  test.csv*
+
+	angelo> cat create.crb.csv 
+	cd CRB
+	#
+	# all machines
+	#
+	maih2csv.pl -R angelo_npm_w1_0830 -L PTA635AA001_BA001_CA001.CRB
+	#
+	# only machine 1
+	#
+	maih2csv.pl -R angelo_npm_w1_1_0830 -L PTA635AA001_BA001_CA001.CRB
+	#
+	exit 0
+
+	angelo> create.crb.csv 
+
+2) Convert CRV csv files to CRB dbs. Do this:
+
+	$ csv2db.pl -r -f -R PTA635AA001_BA001_CA001 CSV_PTA635AA001_BA001_CA001.CRB/*csv
+	$ csv2db.pl -r -f -R GEN_4052184 CSV_GEN_4052184.CRB/*csv
+  	$ csv2db.pl -r -f -R MINI_4072524_15/ CSV_MINI_4072524_15.CRB/*.csv
+
+
+
+
+
+======================================================================
+
+
+
+2) Create secondary table with file data and indexed by file ids, FID.
+
+	$ pwd
+	/home/MRumore/analytics/csv/npm-w-rm/COMBINED
+	$ ls
+	BRecg.csv            Index.csv            MountNormalTrace.csv   Time.csv
+	Count.csv            Information.csv      MountPickupFeeder.csv
+	CycleTime.csv        InspectionData.csv   MountPickupNozzle.csv
+	FILENAME_TO_IDS.csv  MountLatestReel.csv  MountQualityTrace.csv
+	$ u0xdata.pl
+	100: Reading file: Index.csv
+	100: Reading file: Information.csv
+	100: Reading file: FILENAME_TO_IDS.csv
+	587: FNAME Key Count: 4786
+	$ ls
+	BRecg.csv            Index.csv             MountPickupFeeder.csv
+	Count.csv            Information.csv       MountPickupNozzle.csv
+	CycleTime.csv        InspectionData.csv    MountQualityTrace.csv
+	FID_DATA.csv         MountLatestReel.csv   Time.csv
+	FILENAME_TO_IDS.csv  MountNormalTrace.csv
+
+The new table FID_DATA.csv identifies the file data associated with each file id, FID.
+
+3) Next step is to store the CSV file data in a SQLite database. 
+
+	$ pwd
+	/home/MRumore/analytics/csv/npm-w-rm/COMBINED
+	$ csv2db.pl -r -f -R npm-w-rm *csv
+GG
+	218: DB relative path: npm-w-rm
+
+	257: Using new DB: /home/MRumore/analytics/db//npm-w-rm.
+
+	123: Processing CSV File: BRecg.csv
+	142: Table: BRecg
+	148: Creating table BRecg
+	157: Creating table BRecg index
+
+	123: Processing CSV File: Count.csv
+	142: Table: Count
+	148: Creating table Count
+	157: Creating table Count index
+
+	...
+
+	123: Processing CSV File: MountQualityTrace.csv
+	142: Table: MountQualityTrace
+	148: Creating table MountQualityTrace
+	157: Creating table MountQualityTrace index
+
+	123: Processing CSV File: Time.csv
+	142: Table: Time
+	148: Creating table Time
+	157: Creating table Time index
+
+	319: Closing DB: /home/MRumore/analytics/db//npm-w-rm.
+
+	$ cddb
+	$ ls
+	angelo_npm_w1_1*  angelo_npm_w1_4*  cicor_20151013_npm_1*  npm-w-rm*
+	angelo_npm_w1_2*  angelo_npm_w1_5*  cicor_20151013_npm_2*
+	angelo_npm_w1_3*  cicor_20151013*   cicor_20151013_npm_3*
+
+4) Now to read in the data in the the SQLite db, npm-w-rm, into R and save as an R workspace. First,
+we will construct an R environment with some minimal R functions.
+
+	$ cdrdata
+	$ ls
+	angelo_npm_w1  cicor_20151013
+	$ mkdir npm-w-rm
+	$ cd cicor_20151013/
+	$ lf
+	convert_to_tables.R*          package_utils.R*  sqlite_utils.R*
+	load_cicor_20151013_w_nv.R*   save/             utils.R*
+	load_cicor_20151013_wo_nv.R*  source_all.R*
+	$ lf -a
+	./          .Rprofile*                    package_utils.R*  utils.R*
+	../         convert_to_tables.R*          save/
+	.RData*     load_cicor_20151013_w_nv.R*   source_all.R*
+	.Rhistory*  load_cicor_20151013_wo_nv.R*  sqlite_utils.R*
+	$ cp .Rprofile *.R ../npm-w-rm/
+	$ cd ../npm-w-rm/
+	$ ls
+	convert_to_tables.R          package_utils.R  utils.R
+	load_cicor_20151013_w_nv.R   source_all.R
+	load_cicor_20151013_wo_nv.R  sqlite_utils.R
+
+Now we update some of the scripts so they will access the NPM-W-RM data. Rename some of the files also.
+
+	$ ls
+	load_npm_w_rm_20151013_w_nv.R   package_utils.R  sqlite_utils.R
+	load_npm_w_rm_20151013_wo_nv.R  source_all.R
+
+The two load R-scripts have the db_name changed to "npm-w-rm".
+
+The source script which is used to initialize R when it comes up looks like this:
+
+	$ pwd
+	/home/MRumore/analytics/rdata/npm-w-rm
+	$ ls
+	load_npm_w_rm_20151013_w_nv.R   package_utils.R  sqlite_utils.R
+	load_npm_w_rm_20151013_wo_nv.R  source_all.R
+	$ cat source_all.R 
+	#
+	# package utils
+	#
+	source("package_utils.R")
+	#
+	# generic sqlite utils
+	#
+	source("sqlite_utils.R")
+	#
+	# load specific data from a sqlite db
+	#
+	source("load_npm_w_rm_20151013_w_nv.R")
+	source("load_npm_w_rm_20151013_wo_nv.R")
+	#
+
+Now bringup R. The R environment will be initialized with the above source script.
+
+	$ R
+R version 3.1.3 (2015-03-09) -- "Smooth Sidewalk"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-cygwin (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+Loading required package: DBI
+> ls()
+ [1] "ifrm"                         "install_and_load"            
+ [3] "lapply_install_and_load"      "sqlite_close_db"             
+ [5] "sqlite_exec_query_db"         "sqlite_load_npm_w_rm_w_nv"   
+ [7] "sqlite_load_npm_w_rm_wo_nv"   "sqlite_load_nv_table_from_db"
+ [9] "sqlite_load_table_from_db"    "sqlite_open_db"              
+> data_wo_nv=sqlite_load_npm_w_rm_wo_nv()
+[1] "Start ... 2015-12-05 21:47:22"
+ [1] "BRecg"             "Count"             "CycleTime"        
+ [4] "FID_DATA"          "FILENAME_TO_IDS"   "Index"            
+ [7] "Information"       "InspectionData"    "MountLatestReel"  
+[10] "MountNormalTrace"  "MountPickupFeeder" "MountPickupNozzle"
+[13] "MountQualityTrace" "Time"             
+[1] "read Count ... 2015-12-05 21:47:23"
+[1] "read CycleTime ... 2015-12-05 21:48:20"
+[1] "read FID_DATA ... 2015-12-05 21:48:20"
+[1] "read FILENAME_TO_IDS ... 2015-12-05 21:48:20"
+[1] "read Index ... 2015-12-05 21:48:20"
+[1] "read Information ... 2015-12-05 21:48:32"
+[1] "read InspectionData ... 2015-12-05 21:48:47"
+[1] "read MountPickupFeeder ... 2015-12-05 21:48:47"
+[1] "read MountPickupNozzle ... 2015-12-05 21:48:47"
+[1] "read Time ... 2015-12-05 21:48:47"
+[1] "End ... 2015-12-05 21:49:43"
+> ls()
+ [1] "data_wo_nv"                   "ifrm"                        
+ [3] "install_and_load"             "lapply_install_and_load"     
+ [5] "sqlite_close_db"              "sqlite_exec_query_db"        
+ [7] "sqlite_load_npm_w_rm_w_nv"    "sqlite_load_npm_w_rm_wo_nv"  
+ [9] "sqlite_load_nv_table_from_db" "sqlite_load_table_from_db"   
+[11] "sqlite_open_db"              
+> names(data_wo_nv)
+ [1] "Count"             "CycleTime"         "FID_DATA"         
+ [4] "FILENAME_TO_IDS"   "Index"             "Information"      
+ [7] "InspectionData"    "MountPickupFeeder" "MountPickupNozzle"
+[10] "Time"             
+> q()
+
+This example only created R objects for U01 files. 
+
+
+
+The procedure below assumes the following shell variables are defined.
+These variables contain default values for the location of data and 
+repositories.
+
+export DB_BASE_PATH=/home/MRumore/analytics/db/
+export RAW_BASE_PATH=/home/MRumore/analytics/raw/
+export CSV_BASE_PATH=/home/MRumore/analytics/csv/
+export RDATA_BASE_PATH=/home/MRumore/analytics/rdata/
+
+The perl scripts which are used to process raw U0x and MPR files
+are these:
+
+/usr/bin/csv2db.pl
+/usr/bin/auditcsv.pl
+/usr/bin/maih2csv.pl
+/usr/bin/u0xdata.pl
+
+The help texts for each script are shown below:
+
+usage: /usr/bin/csv2db.pl [-?] [-h] 
+        [-l logfile]
+        [-B base path]
+        [-R relative path]
+        [-P path]
+        [-d delimiter]
+        [-f] [-r] 
+        CSV-file ...
+
+where:
+    -? or -h - print this usage.
+    -l logfile - log file path
+    -B path - base db path, defaults to '/home/MRumore/analytics/db/'
+              or use environment variable DB_BASE_PATH.
+    -R path - relative db path, defaults to 'CSV2DB'
+              or use environment variable DB_REL_PATH.
+    -P path - db path, defaults to '/home/MRumore/analytics/db//CSV2DB'
+    -d delimiter - CSV delimiter characer. default is a tab.
+    -f - create filename ID index if table has FID field.
+    -r - remove old DB
+
+
+usage: /usr/bin/auditcsv.pl [-?] [-h] 
+        [-l logfile]
+        [-d delimiter]
+        CSV-file ...
+
+where:
+    -? or -h - print this usage.
+    -l logfile - log file path
+    -d delimiter - CSV delimiter characer. default is a tab.
+
+
+usage: /usr/bin/maih2csv.pl [-?] [-h]  \ 
+        [-w | -W |-v level] \ 
+        [-l logfile] \ 
+        [-B base path] \
+        [-R relative path] \
+        [-P path] \
+        [-S section[,section...] \
+        [-s section[,section...] \
+        [-d delimiter] \
+        [-r] [-C|-c] \
+        maihime-file ...
+
+where:
+    -? or -h - print this usage.
+    -w - enable warning (level=min=1)
+    -W - enable warning and trace (level=mid=2)
+    -v - verbose level: 0=off,1=min,2=mid,3=max
+    -l logfile - log file path
+    -B path - base csv path, defaults to '/home/MRumore/analytics/csv/'
+              or use environment variable CSV_BASE_PATH.
+    -R path - relative csv path, defaults to 'CSV'
+              or use environment variable CSV_REL_PATH.
+    -P path - csv path, defaults to '/home/MRumore/analytics/csv//CSV'
+    -S section[,section...] - list of sections to process. the
+                              default is to process all sections.
+    -s section[,section...] - list of sections to process in addition
+                              to [Index] and [Information]. the
+                              default is to process all sections.
+    -d delimiter - CSV delimiter character. default is a tab.
+    -r - remove old CSV directory (off by default).
+    -C - combine data from separate files into one file per section
+         using the file name as a product to correlate related
+         data. the default is to create a directory with the file name
+         and write each section in a separate file.
+    -c - combine data from separate files into one file per section
+         using the file name to generate a unique id as a product 
+         to correlate related data. the mapping of filename to id is
+         stored in a separate file. the default is to create a 
+         directory with the file name and write each section in 
+         a separate file.
+
+
+
+usage: /usr/bin/u0xdata.pl [-?] [-h]  \ 
+        [-w | -W |-v level] \ 
+        [-l logfile] \ 
+        [-d delimiter] \
+        [-r|-a] 
+
+where:
+    -? or -h - print this usage.
+    -w - enable warning (level=min=1)
+    -W - enable warning and trace (level=mid=2)
+    -v - verbose level: 0=off,1=min,2=mid,3=max
+    -l logfile - log file path
+    -d delimiter - CSV delimiter character. default is a tab.
+    -r - remove old FID_DATA CSV file (default).
+    -a - append to old FID_DATA CSV file.
+
+
+I will use a set of U03 and U01 files from BG for this example. See steps below.
+
+1) Convert the U0X files to CSV files. See below:
+
+	$ env | grep BASE_PATH
+	DB_BASE_PATH=/home/MRumore/analytics/db/
+	RAW_BASE_PATH=/home/MRumore/analytics/raw/
+	CSV_BASE_PATH=/home/MRumore/analytics/csv/
+	RDATA_BASE_PATH=/home/MRumore/analytics/rdata/
+	$ pwd
+	/home/MRumore/analytics/raw/trace-files
+	$ ls
+	angelo  cicor_20151013  NPM-W-RM
+	$ find NPM-W-RM -type f -print |
+	> maih2csv.pl -l /tmp/out -c -R npm-w-rm
+
+	923: CSV relative path: npm-w-rm/
+
+2) Create secondary table with file data and indexed by file ids, FID.
+
+	$ pwd
+	/home/MRumore/analytics/csv/npm-w-rm/COMBINED
+	$ ls
+	BRecg.csv            Index.csv            MountNormalTrace.csv   Time.csv
+	Count.csv            Information.csv      MountPickupFeeder.csv
+	CycleTime.csv        InspectionData.csv   MountPickupNozzle.csv
+	FILENAME_TO_IDS.csv  MountLatestReel.csv  MountQualityTrace.csv
+	$ u0xdata.pl
+	100: Reading file: Index.csv
+	100: Reading file: Information.csv
+	100: Reading file: FILENAME_TO_IDS.csv
+	587: FNAME Key Count: 4786
+	$ ls
+	BRecg.csv            Index.csv             MountPickupFeeder.csv
+	Count.csv            Information.csv       MountPickupNozzle.csv
+	CycleTime.csv        InspectionData.csv    MountQualityTrace.csv
+	FID_DATA.csv         MountLatestReel.csv   Time.csv
+	FILENAME_TO_IDS.csv  MountNormalTrace.csv
+
+The new table FID_DATA.csv identifies the file data associated with each file id, FID.
+
+3) Next step is to store the CSV file data in a SQLite database. 
+
+	$ pwd
+	/home/MRumore/analytics/csv/npm-w-rm/COMBINED
+	$ csv2db.pl -r -f -R npm-w-rm *csv
+GG
+	218: DB relative path: npm-w-rm
+
+	257: Using new DB: /home/MRumore/analytics/db//npm-w-rm.
+
+	123: Processing CSV File: BRecg.csv
+	142: Table: BRecg
+	148: Creating table BRecg
+	157: Creating table BRecg index
+
+	123: Processing CSV File: Count.csv
+	142: Table: Count
+	148: Creating table Count
+	157: Creating table Count index
+
+	...
+
+	123: Processing CSV File: MountQualityTrace.csv
+	142: Table: MountQualityTrace
+	148: Creating table MountQualityTrace
+	157: Creating table MountQualityTrace index
+
+	123: Processing CSV File: Time.csv
+	142: Table: Time
+	148: Creating table Time
+	157: Creating table Time index
+
+	319: Closing DB: /home/MRumore/analytics/db//npm-w-rm.
+
+	$ cddb
+	$ ls
+	angelo_npm_w1_1*  angelo_npm_w1_4*  cicor_20151013_npm_1*  npm-w-rm*
+	angelo_npm_w1_2*  angelo_npm_w1_5*  cicor_20151013_npm_2*
+	angelo_npm_w1_3*  cicor_20151013*   cicor_20151013_npm_3*
+
+4) Now to read in the data in the the SQLite db, npm-w-rm, into R and save as an R workspace. First,
+we will construct an R environment with some minimal R functions.
+
+	$ cdrdata
+	$ ls
+	angelo_npm_w1  cicor_20151013
+	$ mkdir npm-w-rm
+	$ cd cicor_20151013/
+	$ lf
+	convert_to_tables.R*          package_utils.R*  sqlite_utils.R*
+	load_cicor_20151013_w_nv.R*   save/             utils.R*
+	load_cicor_20151013_wo_nv.R*  source_all.R*
+	$ lf -a
+	./          .Rprofile*                    package_utils.R*  utils.R*
+	../         convert_to_tables.R*          save/
+	.RData*     load_cicor_20151013_w_nv.R*   source_all.R*
+	.Rhistory*  load_cicor_20151013_wo_nv.R*  sqlite_utils.R*
+	$ cp .Rprofile *.R ../npm-w-rm/
+	$ cd ../npm-w-rm/
+	$ ls
+	convert_to_tables.R          package_utils.R  utils.R
+	load_cicor_20151013_w_nv.R   source_all.R
+	load_cicor_20151013_wo_nv.R  sqlite_utils.R
+
+Now we update some of the scripts so they will access the NPM-W-RM data. Rename some of the files also.
+
+	$ ls
+	load_npm_w_rm_20151013_w_nv.R   package_utils.R  sqlite_utils.R
+	load_npm_w_rm_20151013_wo_nv.R  source_all.R
+
+The two load R-scripts have the db_name changed to "npm-w-rm".
+
+The source script which is used to initialize R when it comes up looks like this:
+
+	$ pwd
+	/home/MRumore/analytics/rdata/npm-w-rm
+	$ ls
+	load_npm_w_rm_20151013_w_nv.R   package_utils.R  sqlite_utils.R
+	load_npm_w_rm_20151013_wo_nv.R  source_all.R
+	$ cat source_all.R 
+	#
+	# package utils
+	#
+	source("package_utils.R")
+	#
+	# generic sqlite utils
+	#
+	source("sqlite_utils.R")
+	#
+	# load specific data from a sqlite db
+	#
+	source("load_npm_w_rm_20151013_w_nv.R")
+	source("load_npm_w_rm_20151013_wo_nv.R")
+	#
+
+Now bringup R. The R environment will be initialized with the above source script.
+
+	$ R
+R version 3.1.3 (2015-03-09) -- "Smooth Sidewalk"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-cygwin (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+Loading required package: DBI
+> ls()
+ [1] "ifrm"                         "install_and_load"            
+ [3] "lapply_install_and_load"      "sqlite_close_db"             
+ [5] "sqlite_exec_query_db"         "sqlite_load_npm_w_rm_w_nv"   
+ [7] "sqlite_load_npm_w_rm_wo_nv"   "sqlite_load_nv_table_from_db"
+ [9] "sqlite_load_table_from_db"    "sqlite_open_db"              
+> data_wo_nv=sqlite_load_npm_w_rm_wo_nv()
+[1] "Start ... 2015-12-05 21:47:22"
+ [1] "BRecg"             "Count"             "CycleTime"        
+ [4] "FID_DATA"          "FILENAME_TO_IDS"   "Index"            
+ [7] "Information"       "InspectionData"    "MountLatestReel"  
+[10] "MountNormalTrace"  "MountPickupFeeder" "MountPickupNozzle"
+[13] "MountQualityTrace" "Time"             
+[1] "read Count ... 2015-12-05 21:47:23"
+[1] "read CycleTime ... 2015-12-05 21:48:20"
+[1] "read FID_DATA ... 2015-12-05 21:48:20"
+[1] "read FILENAME_TO_IDS ... 2015-12-05 21:48:20"
+[1] "read Index ... 2015-12-05 21:48:20"
+[1] "read Information ... 2015-12-05 21:48:32"
+[1] "read InspectionData ... 2015-12-05 21:48:47"
+[1] "read MountPickupFeeder ... 2015-12-05 21:48:47"
+[1] "read MountPickupNozzle ... 2015-12-05 21:48:47"
+[1] "read Time ... 2015-12-05 21:48:47"
+[1] "End ... 2015-12-05 21:49:43"
+> ls()
+ [1] "data_wo_nv"                   "ifrm"                        
+ [3] "install_and_load"             "lapply_install_and_load"     
+ [5] "sqlite_close_db"              "sqlite_exec_query_db"        
+ [7] "sqlite_load_npm_w_rm_w_nv"    "sqlite_load_npm_w_rm_wo_nv"  
+ [9] "sqlite_load_nv_table_from_db" "sqlite_load_table_from_db"   
+[11] "sqlite_open_db"              
+> names(data_wo_nv)
+ [1] "Count"             "CycleTime"         "FID_DATA"         
+ [4] "FILENAME_TO_IDS"   "Index"             "Information"      
+ [7] "InspectionData"    "MountPickupFeeder" "MountPickupNozzle"
+[10] "Time"             
+> q()
+
+This example only created R objects for U01 files. 
+
+
