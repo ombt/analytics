@@ -172,7 +172,6 @@ sqlite_load_nv_u03 <- function(db_name, nrows=0)
     {
         stop("OMBT_DB_BASE_PATH not set or zero-length")
     }
-    db_name = "NPM-W-RM"
     #
     db = sqlite_open_db(db_path, db_name)
     #
@@ -272,7 +271,6 @@ sqlite_load_nv_u0x <- function(db_name, nrows=0)
     {
         stop("OMBT_DB_BASE_PATH not set or zero-length")
     }
-    db_name = "NPM-W-RM"
     #
     db = sqlite_open_db(db_path, db_name)
     #
