@@ -34,6 +34,7 @@ use mylogger;
 use mytimer;
 use mytimerpqueue;
 use mytaskdata;
+use mylnbxml;
 #
 ################################################################
 #
@@ -44,6 +45,10 @@ use constant SOCKET_DATAGRAM => 'SOCKET_DATAGRAM';
 use constant UNIX_STREAM => 'UNIX_STREAM';
 use constant UNIX_DATAGRAM => 'UNIX_DATAGRAM';
 use constant TTY_STREAM => 'TTY_STREAM';
+#
+use constant SOH => 1;
+use constant STX => 2;
+use constant ETX => 3;
 #
 ################################################################
 #
@@ -90,6 +95,11 @@ my %default_service_params =
     service => {
         use_default => TRUE(),
         default_value => undef,
+        translate => undef,
+    },
+    client => {
+        use_default => TRUE(),
+        default_value => FALSE(),
         translate => undef,
     },
     io_handler => {
@@ -383,7 +393,8 @@ sub stdin_handler
         {
             $event_loop_done = TRUE;
         }
-        elsif ($data =~ m/^[h?]$/i)
+        elsif (($data =~ m/^[h?]$/i) ||
+               ($data eq ""))
         {
             my $log_fh = $plog->log_fh();
             print $log_fh <<EOF;
@@ -391,7 +402,10 @@ Available commnds:
     q - quit
     ? - help
     h - help
+    l - list services
     s - print services
+    lc - list clients
+    cc <fileno> - close client
     t - print timers
 EOF
         }
@@ -404,7 +418,84 @@ EOF
                 $plog->log_msg("FileNo: %d, Service: %s\n", 
                                $fileno,
                                $pservice->{name});
+                if ((defined($pservice->{port})) &&
+                    ($pservice->{port} > 0))
+                    
+                {
+                    $plog->log_msg("FileNo: %d, Port: %s\n", 
+                               $fileno,
+                               $pservice->{port});
+                }
+                if ((defined($pservice->{file_name})) &&
+                    ($pservice->{file_name} ne ""))
+                {
+                    $plog->log_msg("FileNo: %d, File Name: %s\n", 
+                               $fileno,
+                               $pservice->{file_name});
+                }
             }             
+        }
+        elsif ($data =~ m/^l$/i)
+        {
+            my $pfhit = $pfh_services->iterator('n');
+            while (defined(my $fileno = $pfhit->()))
+            {
+                my $pservice = $pfh_services->get($fileno);
+                $plog->log_msg("FileNo: %d, Service: %s\n", 
+                               $fileno,
+                               $pservice->{name});
+            }             
+        }
+        elsif ($data =~ m/^lc$/i)
+        {
+            my $pfhit = $pfh_services->iterator('n');
+            while (defined(my $fileno = $pfhit->()))
+            {
+                my $pservice = $pfh_services->get($fileno);
+                if ((defined($pservice->{client})) &&
+                    ($pservice->{client} == TRUE))
+                {
+                    $plog->log_msg("Client: FileNo: %d, Service: %s\n", 
+                                   $fileno,
+                                   $pservice->{name});
+                }
+            }             
+        }
+        elsif ($data =~ m/^cc\s*(\d+)\s*$/i)
+        {
+            my $fileno_to_close = $1;
+            if (defined($fileno_to_close) && ($fileno_to_close >= 0))
+            {
+                my $pfhit = $pfh_services->iterator('n');
+                while (defined(my $fileno = $pfhit->()))
+                {
+                    my $pservice = $pfh_services->get($fileno);
+                    if ((defined($pservice->{client})) &&
+                        ($pservice->{client} == TRUE) &&
+                        ($fileno == $fileno_to_close))
+                    {
+                        $plog->log_msg("Closing Client: FileNo: %d, Service: %s\n", 
+                                       $fileno,
+                                       $pservice->{name});
+                        vec($rin, $fileno, 1) = 0;
+                        vec($ein, $fileno, 1) = 0;
+                        vec($win, $fileno, 1) = 0;
+                        #
+                        my $pfh = $pservice->{fh};
+                        close($$pfh);
+                        #
+                        $plog->log_msg("closing socket (%d) for service %s ...\n", 
+                                       $fileno,
+                                       $pservice->{name});
+                        $pfh_services->deallocate($fileno);
+                        $pfh_data->deallocate($fileno);
+                    }
+                }             
+            }
+            else
+            {
+                $plog->log_msg("Invalid client file no.\n");
+            }
         }
         elsif ($data =~ m/^t$/i)
         {
@@ -562,6 +653,7 @@ sub socket_stream_accept_io_handler
         #
         my $pnew_service = 
         {
+            client => TRUE(),
             name => "client_of_" . $pservice->{name},
             client_port => $client_port,
             client_host_name => $client_ascii_ip,
@@ -570,6 +662,7 @@ sub socket_stream_accept_io_handler
             io_handler => $io_handler,
             service_handler => $service_handler,
             timer_handler => $timer_handler,
+            total_buffer => "",
         };
         #
         my $fileno = fileno($new_fh);
@@ -624,6 +717,7 @@ sub unix_stream_accept_io_handler
         #
         my $pnew_service = 
         {
+            client => TRUE(),
             name => "client_of_" . $pservice->{name},
             client_filename => $client_filename,
             client_paddr => $client_paddr,
@@ -631,6 +725,7 @@ sub unix_stream_accept_io_handler
             io_handler => $io_handler,
             service_handler => $service_handler,
             timer_handler => $timer_handler,
+            total_buffer => "",
         };
         #
         my $fileno = fileno($new_fh);
@@ -716,31 +811,314 @@ sub unix_datagram_service_handler
 sub lnb_io_handler
 {
     my ($pservice) = @_;
+    #
+    $plog->log_msg("entering lnb_io_handler() for %s\n", 
+                   $pservice->{name});
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $nr = 0;
+    my $buffer = undef;
+    
+    while (defined($nr = sysread($$pfh, $buffer, 1024*4)) && ($nr > 0))
+    {
+        $plog->log_msg("nr ... <%d>\n", $nr);
+        $plog->log_msg("buffer ... <%s>\n", $buffer);
+        #
+        my $local_buffer = unpack("H*", $buffer);
+        $plog->log_msg("unpacked buffer ... <%s>\n", $local_buffer);
+        #
+        if ($nr > 0)
+        {
+             my $total_buffer = $pfh_data->get($fileno, 'total_buffer');
+             $total_buffer = $total_buffer . $buffer;
+             my $tblen = length($total_buffer);
+             my $sohi = -1;
+             my $stxi = -1;
+             my $etxi = -1;
+             for (my $tbi = 0; $tbi < $tblen; $tbi += 1)
+             {
+                 my $ch = substr($total_buffer, $tbi, 1);
+                 if ($ch =~ m/^\x01/)
+                 {
+                     $sohi = $tbi;
+                     $stxi = -1;
+                     $etxi = -1;
+                 }
+                 elsif ($ch =~ m/^\x02/)
+                 {
+                     $stxi = $tbi;
+                 }
+                 elsif ($ch =~ m/^\x03/)
+                 {
+                     $etxi = $tbi;
+                 }
+                 #
+                 if (($stxi != -1) && ($etxi != -1))
+                 {
+                     my $xml_start = $stxi + 1;
+                     my $xml_end = $etxi - 1;
+                     my $xml_length = $xml_end - $xml_start + 1;
+                     my $xml_buffer = substr($total_buffer, 
+                                             $xml_start, 
+                                             $xml_length);
+                     #
+                     $pfh_data->set($fileno, 'input', $xml_buffer);
+                     $pfh_data->set($fileno, 'input_length', $xml_length);
+                     #
+                     &{$pservice->{service_handler}}($pservice);
+                     #
+                     $sohi = -1;
+                     $stxi = -1;
+                     $etxi = -1;
+                 }
+             }
+             #
+             # reset for partially read messages.
+             #
+             if ($sohi != -1)
+             {
+                 $total_buffer = substr($total_buffer, $sohi);
+                 $pfh_data->set($fileno, 'total_buffer', $total_buffer);
+             }
+        }
+    }
+    #
+    if ((( ! defined($nr)) && ($! != EAGAIN)) ||
+        (defined($nr) && ($nr == 0)))
+    {
+        #
+        # EOF or some error
+        #
+        vec($rin, $fileno, 1) = 0;
+        vec($ein, $fileno, 1) = 0;
+        vec($win, $fileno, 1) = 0;
+        #
+        close($$pfh);
+        #
+        $plog->log_msg("closing socket (%d) for service %s ...\n", 
+                       $fileno,
+                       $pservice->{name});
+        $pfh_services->deallocate($fileno);
+        $pfh_data->deallocate($fileno);
+    }
+}
+#
+sub send_msg_to_lnb
+{
+    my ($pservice, $xml) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    #
+    my $buflen = sprintf("%06d", length($xml));
+    #
+    # c  ==>> SOH
+    # A* ==>> XML length
+    # c  ==>> STX
+    # A* ==>> XML
+    # c  ==>> ETX
+    #
+    my $buf = pack("cA*cA*c", SOH, $buflen, STX, $xml, ETX);
+    #
+    # len(SOH) + len(xml_length) + len(STX) + len(xml) + len(ETX)
+    #
+    my $nw = 1 + 6 + 1 + length($xml) + 1;
+    #
+    my $local_buf = unpack("H*", $buf);
+    $plog->log_msg("unpacked buffer ... <%s>\n", $local_buf);
+    #
+    die $! if ( ! defined(send($$pfh, $buf, $nw)));
 }
 #
 sub lnbcvthost_service_handler
 {
     my ($pservice) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $xml = $pfh_data->get($fileno, 'input');
+    my $xml_len = $pfh_data->set($fileno, 'input_length');
+    #
+    $plog->log_msg("%s: xml <%s>\n", $pservice->{name}, $xml);
+    #
+    my $pxml = mylnbxml->new($xml, $plog);
+    die "Unable to create xml parser: $!" unless (defined($pxml));
+    #
+    if (defined($pxml->parse()))
+    {
+        $plog->log_msg("Parsing succeeded.\n");
+        #
+        $xml = $pxml->deparse();
+        if (defined($xml))
+        {
+            $plog->log_msg("Deparsing succeeded.\n");
+            send_msg_to_lnb($pservice, $xml);
+        }
+        else
+        {
+            $plog->log_err("ERROR: Deparsing failed.\n");
+        }
+    }
+    else
+    {
+        $plog->log_err("ERROR: Parsing failed.\n");
+    }
+    #
+    $pxml = undef;
 }
 #
 sub lnblmhost_service_handler
 {
     my ($pservice) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $xml = $pfh_data->get($fileno, 'input');
+    my $xml_len = $pfh_data->set($fileno, 'input_length');
+    #
+    $plog->log_msg("%s: xml <%s>\n", $pservice->{name}, $xml);
+    #
+    my $pxml = mylnbxml->new($xml, $plog);
+    die "Unable to create xml parser: $!" unless (defined($pxml));
+    #
+    if (defined($pxml->parse()))
+    {
+        $plog->log_msg("Parsing succeeded.\n");
+        #
+        $xml = $pxml->deparse();
+        if (defined($xml))
+        {
+            $plog->log_msg("Deparsing succeeded.\n");
+            send_msg_to_lnb($pservice, $xml);
+        }
+        else
+        {
+            $plog->log_err("ERROR: Deparsing failed.\n");
+        }
+    }
+    else
+    {
+        $plog->log_err("ERROR: Parsing failed.\n");
+    }
+    #
+    $pxml = undef;
 }
 #
 sub lnbmihost_service_handler
 {
     my ($pservice) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $xml = $pfh_data->get($fileno, 'input');
+    my $xml_len = $pfh_data->set($fileno, 'input_length');
+    #
+    $plog->log_msg("%s: xml <%s>\n", $pservice->{name}, $xml);
+    #
+    my $pxml = mylnbxml->new($xml, $plog);
+    die "Unable to create xml parser: $!" unless (defined($pxml));
+    #
+    if (defined($pxml->parse()))
+    {
+        $plog->log_msg("Parsing succeeded.\n");
+        #
+        $xml = $pxml->deparse();
+        if (defined($xml))
+        {
+            $plog->log_msg("Deparsing succeeded.\n");
+            send_msg_to_lnb($pservice, $xml);
+        }
+        else
+        {
+            $plog->log_err("ERROR: Deparsing failed.\n");
+        }
+    }
+    else
+    {
+        $plog->log_err("ERROR: Parsing failed.\n");
+    }
+    #
+    $pxml = undef;
 }
 #
 sub lnbspcvthost_service_handler
 {
     my ($pservice) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $xml = $pfh_data->get($fileno, 'input');
+    my $xml_len = $pfh_data->set($fileno, 'input_length');
+    #
+    $plog->log_msg("%s: xml <%s>\n", $pservice->{name}, $xml);
+    #
+    my $pxml = mylnbxml->new($xml, $plog);
+    die "Unable to create xml parser: $!" unless (defined($pxml));
+    #
+    if (defined($pxml->parse()))
+    {
+        $plog->log_msg("Parsing succeeded.\n");
+        #
+        $xml = $pxml->deparse();
+        if (defined($xml))
+        {
+            $plog->log_msg("Deparsing succeeded.\n");
+            send_msg_to_lnb($pservice, $xml);
+        }
+        else
+        {
+            $plog->log_err("ERROR: Deparsing failed.\n");
+        }
+    }
+    else
+    {
+        $plog->log_err("ERROR: Parsing failed.\n");
+    }
+    #
+    $pxml = undef;
 }
 #
 sub lnbspmihost_service_handler
 {
     my ($pservice) = @_;
+    #
+    my $pfh = $pservice->{fh};
+    my $fileno = fileno($$pfh);
+    #
+    my $xml = $pfh_data->get($fileno, 'input');
+    my $xml_len = $pfh_data->set($fileno, 'input_length');
+    #
+    $plog->log_msg("%s: xml <%s>\n", $pservice->{name}, $xml);
+    #
+    my $pxml = mylnbxml->new($xml, $plog);
+    die "Unable to create xml parser: $!" unless (defined($pxml));
+    #
+    if (defined($pxml->parse()))
+    {
+        $plog->log_msg("Parsing succeeded.\n");
+        #
+        $xml = $pxml->deparse();
+        if (defined($xml))
+        {
+            $plog->log_msg("Deparsing succeeded.\n");
+            send_msg_to_lnb($pservice, $xml);
+        }
+        else
+        {
+            $plog->log_err("ERROR: Deparsing failed.\n");
+        }
+    }
+    else
+    {
+        $plog->log_err("ERROR: Parsing failed.\n");
+    }
+    #
+    $pxml = undef;
 }
 #
 sub lnbcvthost_timer_handler
@@ -845,6 +1223,7 @@ sub create_socket_stream
         $port = getservbyname($pservice->{service}, 'tcp') or
             die "Can't get port for service $pservice->{service}: $!";
         $plog->log_msg("getservbyname($pservice->{service}, 'tcp') port = $port\n");
+        $pservice->{port} = $port;
     }
     else
     {
