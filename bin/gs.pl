@@ -928,7 +928,8 @@ sub send_xml_msg
     my $local_buf = unpack("H*", $buf);
     $plog->log_msg("unpacked buffer ... <%s>\n", $local_buf);
     #
-    # die $! if ( ! defined(send($$pfh, $buf, $nw)));
+    # handle partial writes.
+    #
     # die $! if ( ! defined(send($$pfh, $buf, $nw)));
     for (my $ntow=$nw; 
          ($ntow > 0) &&
