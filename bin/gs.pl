@@ -905,7 +905,7 @@ sub lnb_io_handler
     }
 }
 #
-sub send_msg_to_lnb
+sub send_xml_msg
 {
     my ($pservice, $xml) = @_;
     #
@@ -928,7 +928,13 @@ sub send_msg_to_lnb
     my $local_buf = unpack("H*", $buf);
     $plog->log_msg("unpacked buffer ... <%s>\n", $local_buf);
     #
-    die $! if ( ! defined(send($$pfh, $buf, $nw)));
+    # die $! if ( ! defined(send($$pfh, $buf, $nw)));
+    # die $! if ( ! defined(send($$pfh, $buf, $nw)));
+    for (my $ntow=$nw; 
+         ($ntow > 0) &&
+         defined($nw = send($$pfh, $buf, $ntow));
+         $ntow -= $nw) { }
+    die $! if ( ! defined($nw) );
 }
 #
 sub lnbcvthost_service_handler
@@ -954,7 +960,7 @@ sub lnbcvthost_service_handler
         if (defined($xml))
         {
             $plog->log_msg("Deparsing succeeded.\n");
-            send_msg_to_lnb($pservice, $xml);
+            send_xml_msg($pservice, $xml);
         }
         else
         {
@@ -992,7 +998,7 @@ sub lnblmhost_service_handler
         if (defined($xml))
         {
             $plog->log_msg("Deparsing succeeded.\n");
-            send_msg_to_lnb($pservice, $xml);
+            send_xml_msg($pservice, $xml);
         }
         else
         {
@@ -1030,7 +1036,7 @@ sub lnbmihost_service_handler
         if (defined($xml))
         {
             $plog->log_msg("Deparsing succeeded.\n");
-            send_msg_to_lnb($pservice, $xml);
+            send_xml_msg($pservice, $xml);
         }
         else
         {
@@ -1068,7 +1074,7 @@ sub lnbspcvthost_service_handler
         if (defined($xml))
         {
             $plog->log_msg("Deparsing succeeded.\n");
-            send_msg_to_lnb($pservice, $xml);
+            send_xml_msg($pservice, $xml);
         }
         else
         {
@@ -1106,7 +1112,7 @@ sub lnbspmihost_service_handler
         if (defined($xml))
         {
             $plog->log_msg("Deparsing succeeded.\n");
-            send_msg_to_lnb($pservice, $xml);
+            send_xml_msg($pservice, $xml);
         }
         else
         {
