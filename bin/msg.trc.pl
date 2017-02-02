@@ -58,6 +58,7 @@ my $log_fh = *STDOUT;
 my $xml = new XML::Simple();
 my $full_trace = TRUE;
 my $print_raw = FALSE;
+my $print_raw_record = FALSE;
 my $trace_msg_type = XML_MSGS;
 my $use_private_parser = FALSE;
 my $do_deparse_xml = FALSE;
@@ -104,7 +105,7 @@ sub usage
 usage: $arg0 [-?] [-h]  \\ 
         [-w | -W |-v level] \\ 
         [-l logfile] \\ 
-        [-t | -T] [-R] \\ 
+        [-t | -T] [-R] [-r] \\ 
         [-P xml|pm|all] [-p] [-d] \\
         [-S yyyymmddhhmmss] [-E yyyymmddhhmmss] [-x] \\
         [-X yyyymmddhhmmss] \\
@@ -119,6 +120,7 @@ where:
     -t - simple trace, only message command name is listed.
     -T - full trace and translation of messages (default).
     -R - list raw message also. 
+    -r - print raw record as read from file.
     -P xml|pm|all - type of message to trace (XML=default).
     -p - use private parser, if available (only XML for now).
     -d - deparse, that is, generate XML from XML parse tree 
@@ -191,14 +193,17 @@ sub init_tally
     %xml_tally = ( );
 }
 #
-sub print_tally
+sub print_file_tally
 {
     printf $log_fh "\n%d: XML MSG TALLY:\n", __LINE__;
     printf $log_fh "$_ = $xml_tally{$_}\n" for sort keys %xml_tally;
     #
     printf $log_fh "\n%d: PM MSG TALLY:\n", __LINE__;
     printf $log_fh "$_ = $pm_tally{$_}\n" for sort keys %pm_tally;
-    #
+}
+#
+sub print_total_tally
+{
     printf $log_fh "\n%d: TOTAL XML MSG TALLY:\n", __LINE__;
     printf $log_fh "$_ = $total_xml_tally{$_}\n" for sort keys %total_xml_tally;
     #
@@ -222,14 +227,14 @@ sub print_pm
         $rec) = @_;
     ftrace(__LINE__);
     #
-    pm_tally_ho($msg_class . $msg_type);
+    pm_tally_ho($msg_class . '::' .  $msg_type);
     #
     if ($full_trace == TRUE)
     {
         $rec =~ m/^.*(MessageSource\s*=\s[^\s]+\s*,\s*MessageDestination\s*=\s*[^\s]+.*)$/;
         my $pm_rec = $1;
         #
-        printf $log_fh "\n%d: %s %s - (src,dst,cls,type) = (%s,%s,%s,%s)\n\t%s\n", 
+        printf $log_fh "%d: %s %s - (src,dst,cls,type) = (%s,%s,%s,%s)\n\t%s\n", 
                __LINE__, 
                $tstamp,
                $label,
@@ -241,7 +246,7 @@ sub print_pm
     }
     else
     {
-        printf $log_fh "\n%d: %s %s - (src,dst,cls,type) = (%s,%s,%s,%s)\n", 
+        printf $log_fh "%d: %s %s - (src,dst,cls,type) = (%s,%s,%s,%s)\n", 
                __LINE__, 
                $tstamp,
                $label,
@@ -345,19 +350,22 @@ sub print_xml
     #
     if ($full_trace == TRUE)
     {
+        my $cmdnm = '';
         if ($use_private_parser == TRUE)
         {
-            my $cmdnm = get_value($pbooklist, "<CommandName>");
+            $cmdnm = get_value($pbooklist, "<CommandName>");
             xml_tally_ho($cmdnm);
         }
         else
         {
+            $cmdnm = $pbooklist->{'Header'}->{'CommandName'};
             xml_tally_ho($pbooklist->{'Header'}->{'CommandName'});
         }
-        printf $log_fh "\n%d: %s %s - %s\n", 
+        printf $log_fh "%d: %s %s - %s - %s\n", 
                __LINE__, 
                $tstamp,
                $label,
+               $cmdnm,
                Dumper($pbooklist);
     }
     elsif ($use_private_parser == TRUE)
@@ -691,7 +699,7 @@ sub process_other
     if ($rec =~ m/(STARTING INFO LOGGING)/)
     {
         my $start_rec = $1;
-        printf $log_fh "\n%d: %s PROCESS STARTUP - %s\n", 
+        printf $log_fh "%d: %s PROCESS STARTUP - %s\n", 
                __LINE__, $tstamp, $start_rec;
     }
     #
@@ -831,7 +839,7 @@ sub process_file
     my ($log_file) = @_;
     ftrace(__LINE__);
     #
-    printf $log_fh "\n%d: Processing PanaCIM Log File: %s\n", 
+    printf $log_fh "\n%d: START PROCESSING PanaCIM LOG FILE: %s\n\n", 
                    __LINE__, $log_file;
     #
     init_tally();
@@ -843,6 +851,9 @@ sub process_file
     while (my $rec = <$infh>)
     {
         $rec =~ s/\r*\n$//;
+        #
+        printf $log_fh "%d: Raw File Record: %s\n", 
+                   __LINE__, $rec if ($print_raw_record == TRUE);
         #
         my $tstamp = "";
         my $result = date_filter($rec, \$tstamp);
@@ -872,7 +883,7 @@ sub process_file
     #
     close($infh);
     #
-    print_tally();
+    print_file_tally();
     #
     return;
 }
@@ -886,7 +897,7 @@ sub process_file
 #         [-P xml|pm|all] [-p] [-d] \\
 #
 my %opts;
-if (getopts('?hwWv:l:tTRP:pdS:E:X:x', \%opts) != 1)
+if (getopts('?hwWv:l:tTRrP:pdS:E:X:x', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -920,6 +931,10 @@ foreach my $opt (keys %opts)
     elsif ($opt eq 'T')
     {
         $full_trace = TRUE;
+    }
+    elsif ($opt eq 'r')
+    {
+        $print_raw_record = TRUE;
     }
     elsif ($opt eq 'R')
     {
@@ -1047,6 +1062,7 @@ if ( -t STDIN )
     {
         process_file($panacim_log_file);
     }
+    print_total_tally();
     #
 }
 else
@@ -1058,6 +1074,7 @@ else
         chomp($panacim_log_file);
         process_file($panacim_log_file);
     }
+    print_total_tally();
 }
 #
 exit 0;
