@@ -171,27 +171,40 @@ sub load_name_value
     $pprod_db->{found_data}->{$section} = FALSE;
     $pprod_db->{section_type}->{$section} = SECTION_NAME_VALUE;
     #
-    my $re_section = '\\' . $section;
-    my @section_data = 
-        grep /^${re_section}\s*$/ .. /^\s*$/, @{$praw_data};
+    $$pirec += 1; # skip section name
+    #
+    my @section_data = ();
+    for ( ; $$pirec < $max_rec; )
+    {
+        my $record = $praw_data->[$$pirec];
+        #
+        if ($record =~ m/^\s*$/)
+        {
+            $$pirec += 1;
+            last;
+        }
+        elsif ($record =~ m/^\[[^\]]*\]/)
+        {
+            # section is corrupted. it lacks the required empty
+            # line to indicate the end of the section.
+            last;
+        }
+        push @section_data, $record;
+        $$pirec += 1;
+    }
     #
     printf $log_fh "%d: <%s>\n", 
         __LINE__, 
         join("\n", @section_data) 
         if ($verbose >= MAXVERBOSE);
     #
-    $$pirec += scalar(@section_data);
-    #
-    if (scalar(@section_data) <= 2)
+    if (scalar(@section_data) <= 0)
     {
         $pprod_db->{$section} = {};
         printf $log_fh "\t\t%d: NO NAME-VALUE DATA FOUND IN SECTION %s. Lines read: %d\n", 
             __LINE__, $section, scalar(@section_data);
         return FAIL;
     }
-    #
-    shift @section_data; # remove section name
-    pop @section_data;   # remove end-of-section null-length line
     #
     %{$pprod_db->{$section}->{data}} = 
         map { split /\s*=\s*/, $_, 2 } @section_data;
@@ -286,15 +299,32 @@ sub load_list
     $pprod_db->{found_data}->{$section} = FALSE;
     $pprod_db->{section_type}->{$section} = SECTION_LIST;
     #
-    my $re_section = '\\' . $section;
-    my @section_data = 
-        grep /^${re_section}\s*$/ .. /^\s*$/, @{$praw_data};
+    $$pirec += 1; # skip section name
     #
-    printf $log_fh "%d: <%s>\n", __LINE__, join("\n", @section_data) if ($verbose >= MAXVERBOSE);
+    my @section_data = ();
+    for ( ; $$pirec < $max_rec; )
+    {
+        my $record = $praw_data->[$$pirec];
+        #
+        if ($record =~ m/^\s*$/)
+        {
+            $$pirec += 1;
+            last;
+        }
+        elsif ($record =~ m/^\[[^\]]*\]/)
+        {
+            # section is corrupted. it lacks the required empty
+            # line to indicate the end of the section.
+            last;
+        }
+        push @section_data, $record;
+        $$pirec += 1;
+    }
     #
-    $$pirec += scalar(@section_data);
+    printf $log_fh "%d: <%s>\n", __LINE__, join("\n", @section_data) 
+        if ($verbose >= MAXVERBOSE);
     #
-    if (scalar(@section_data) <= 3)
+    if (scalar(@section_data) <= 0)
     {
         $pprod_db->{$section} = {};
         printf $log_fh "\t\t\t%d: NO LIST DATA FOUND IN SECTION %s. Lines read: %d\n", 
@@ -303,9 +333,6 @@ sub load_list
             if ($verbose >= MINVERBOSE);
         return SUCCESS;
     }
-    #
-    shift @section_data; # remove section name
-    pop @section_data;   # remove end-of-section null-length line
     #
     $pprod_db->{$section}->{header} = shift @section_data;
     @{$pprod_db->{$section}->{column_names}} = 
@@ -529,6 +556,10 @@ sub process_data
     for (my $irec=0; $irec<$max_rec; )
     {
         my $rec = $praw_data->[$irec];
+        #
+        printf $log_fh "\t\t%d: Record %04d: <%s>\n", 
+            __LINE__, $irec, $rec
+               if ($verbose >= MINVERBOSE);
         #
         if ($rec =~ m/^(\[[^\]]*\])/)
         {
