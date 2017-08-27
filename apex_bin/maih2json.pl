@@ -55,7 +55,9 @@ my $logfile = '';
 my $verbose = NOVERBOSE;
 my $rmv_json_dir = FALSE;
 my $delimiter = " ";
+my $row_delimiter = "\n";
 my $debug_mode = FALSE;
+my $row_separator = "\n";
 #
 my $json_base_path = undef;
 $json_base_path = $ENV{'OMBT_JSON_BASE_PATH'} 
@@ -94,7 +96,8 @@ usage: $arg0 [-?] [-h]  \\
         [-B base path] \\
         [-R relative path] \\
         [-P path] \\
-        [-r]  \\
+        [-r] \\
+        [-d row delimiter] \\
         [maihime-file ...] or reads STDIN
 
 where:
@@ -109,6 +112,7 @@ where:
               or use environment variable OMBT_JSON_REL_PATH.
     -P path - json path, defaults to '${json_path}'
     -r - remove old JSON directory (off by default).
+    -d delimiter - row delimiter (new line by default)
 
 EOF
 }
@@ -516,7 +520,7 @@ sub export_section_to_json
             for (my $i=0; $i<$num_col_names; ++$i)
             {
                 my $col_name = $pcol_names->[$i];
-                $out .= "$o_comma\"$col_name\" : \"$prow->{$col_name}\"\n";
+                $out .= "$o_comma\"$col_name\" : \"$prow->{$col_name}\"${row_delimiter}";
                 $o_comma = ",";
             }
             printf $outfh "$a_comma\{\n$out\}\n";
@@ -633,10 +637,11 @@ sub process_file
 #         [-R relative path] \\
 #         [-P path] \\
 #         [-r]  \\
+#         [-d row delimiter] \\
 #         [maihime-file ...] or reads STDIN
 #
 my %opts;
-if (getopts('?hwWv:B:R:P:l:r', \%opts) != 1)
+if (getopts('?hwWv:B:R:P:l:rd:', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -702,6 +707,10 @@ foreach my $opt (%opts)
         $json_base_path = $opts{$opt} . '/';
         $json_path = $json_base_path . '/' . $json_rel_path;
         printf $log_fh "\n%d: JSON base path: %s\n", __LINE__, $json_base_path;
+    }
+    elsif ($opt eq 'd')
+    {
+        $row_delimiter = $opts{$opt};
     }
 }
 #
