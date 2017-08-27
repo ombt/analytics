@@ -54,6 +54,8 @@ my $log_fh = *STDOUT;
 my $logfile = '';
 my $verbose = NOVERBOSE;
 my $rmv_json_dir = FALSE;
+my $delimiter = " ";
+my $debug_mode = FALSE;
 #
 my $json_base_path = undef;
 $json_base_path = $ENV{'OMBT_JSON_BASE_PATH'} 
@@ -150,7 +152,7 @@ sub load_name_value
             #
             my $value = $2;
             $value =~ s/^\s*"([^"]*)"\s*$/$1/;
-            push @{$pprod_db->{DATA}->{$section}}, "$name,$value";
+            push @{$pprod_db->{DATA}->{$section}}, "$name${delimiter}$value";
             #
             $$pirec += 1;
         }
@@ -168,9 +170,9 @@ sub load_name_value
         return SUCCESS;
     }
     #
-    $pprod_db->{HEADER}->{$section} = "NAME,VALUE";
+    $pprod_db->{HEADER}->{$section} = "NAME${delimiter}VALUE";
     @{$pprod_db->{COLUMN_NAMES}->{$section}} = 
-        split / /, $pprod_db->{HEADER}->{$section};
+        split /${delimiter}/, $pprod_db->{HEADER}->{$section};
     #
     my $number_columns = scalar(@{$pprod_db->{COLUMN_NAMES}->{$section}});
     #
@@ -190,7 +192,7 @@ sub load_name_value
         last if (($record =~ m/^\[[^\]]*\]/) ||
                  ($record =~ m/^\s*$/));
         #
-        my @tokens = split_quoted_string($record, ' ');
+        my @tokens = split_quoted_string($record, "${delimiter}");
         my $number_tokens = scalar(@tokens);
         #
         printf $log_fh "\t\t\t%d: Number of tokens in record: %d\n", 
@@ -471,88 +473,59 @@ sub process_data
     return SUCCESS;
 }
 #
-# sub export_section_to_json
-# {
-#     my ($outfh, $pdata, $section) = @_;
-#     #
-#     printf $log_fh "\n%d: Processing Section: %s\n", __LINE__, $section;
-#     #
-#     my $irec = 0;
-#     my $max_irec = scalar(@{$pdata});
-#     #
-#     unless ($max_irec > 0)
-#     {
-#         printf $log_fh "\n%d: Skipping empty section: %s\n", 
-#                         __LINE__, $section;
-#         return;
-#     }
-#     #
-#     my $header = $pdata->[$irec];
-#     chomp($header);
-#     $header =~ s/\r//g;
-#     $header =~ s/\./_/g;
-#     $header =~ s/ /_/g;
-#     my @col_names = split /,/, $header;
-#     my $num_col_names = scalar(@col_names);
-#     #
-#     unless ($num_col_names > 0)
-#     {
-#         printf $log_fh "\n%d: Skipping empty section: %s\n", 
-#                         __LINE__, $section;
-#         return;
-#     }
-#     #
-#     my $a_comma = "";
-#     printf $outfh "[\n";
-#     while (++$irec; $irec < $max_irec; ++$irec)
-#     {
-#         my $row = $pdata->[$irec];
-#         chomp($row);
-#         $row =~ s/\r//g;
-#         #
-#         my @data = split /,/, $row, -1;
-#         next unless (scalar(@data) == $num_col_names);
-#         #
-#         my $out = "";
-#         my $o_comma = "";
-#         for (my $i=0; $i<$num_col_names; ++$i)
-#         {
-#             $out .= "$o_comma\"$col_names[$i]\" : \"$data[$i]\"\n";
-#             $o_comma = ",";
-#         }
-#         printf $outfh "$a_comma\{\n$out\}\n";
-#         $a_comma = ",";
-#     }
-#     printf $outfh "]\n";
-#     #
-#     return;
-# }
-#
 sub export_list_to_json
 {
-    my ($prod_file, $pprod_db, $section) = @_;
+    my ($prod_file, $pprod_db, $section, $print_comma) = @_;
     #
     open(my $outfh, "+>>" , $prod_file) || die "file is $prod_file: $!";
     #
-    printf $outfh "\n%s\n", $section;
-    #
-    my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
-    my $comma = "";
-    foreach my $col (@{$pcols})
+    if ($debug_mode == TRUE)
     {
-        printf $outfh "%s%s", $comma, $col;
-        $comma = ',';
-    }
-    printf $outfh "\n";
-    #
-    foreach my $prow (@{$pprod_db->{DATA}->{$section}})
-    {
+        printf $outfh "\n%s\n", $section;
+        #
+        my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
         my $comma = "";
         foreach my $col (@{$pcols})
         {
-            printf $outfh "%s%s", $comma, $prow->{$col};
+            printf $outfh "%s%s", $comma, $col;
             $comma = ',';
         }
+        printf $outfh "\n";
+        #
+        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
+        {
+            my $comma = "";
+            foreach my $col (@{$pcols})
+            {
+                printf $outfh "%s%s", $comma, $prow->{$col};
+                $comma = ',';
+            }
+            printf $outfh "\n";
+        }
+    }
+    else
+    {
+        my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
+        my $num_col_names = scalar(@{$pcol_names});
+        #
+        printf $outfh "\n{ \"%s\" : ", $section;
+        my $a_comma = "";
+        printf $outfh "[\n";
+        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
+        {
+            my $out = "";
+            my $o_comma = "";
+            for (my $i=0; $i<$num_col_names; ++$i)
+            {
+                my $col_name = $pcol_names->[$i];
+                $out .= "$o_comma\"$col_name\" : \"$prow->{$col_name}\"\n";
+                $o_comma = ",";
+            }
+            printf $outfh "$a_comma\{\n$out\}\n";
+            $a_comma = ",";
+        }
+        printf $outfh "] }";
+        printf $outfh "," if ($print_comma == TRUE);
         printf $outfh "\n";
     }
     #
@@ -561,30 +534,59 @@ sub export_list_to_json
 #
 sub export_name_value_to_json
 {
-    my ($prod_file, $pprod_db, $section) = @_;
+    my ($prod_file, $pprod_db, $section, $print_comma) = @_;
     #
     open(my $outfh, "+>>" , $prod_file) || die "file is $prod_file: $!";
     #
-    printf $outfh "\n%s\n", $section;
-    #
-    my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
-    my $comma = "";
-    foreach my $col (@{$pcols})
+    if ($debug_mode == TRUE)
     {
-        printf $outfh "%s%s", $comma, $col;
-        $comma = ',';
-    }
-    printf $outfh "\n";
-    #
-    foreach my $prow (@{$pprod_db->{DATA}->{$section}})
-    {
+        printf $outfh "\n%s\n", $section;
+        #
+        my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
         my $comma = "";
         foreach my $col (@{$pcols})
         {
-            printf $outfh "%s%s", $comma, $prow->{$col};
+            printf $outfh "%s%s", $comma, $col;
             $comma = ',';
         }
         printf $outfh "\n";
+        #
+        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
+        {
+            my $comma = "";
+            foreach my $col (@{$pcols})
+            {
+                printf $outfh "%s%s", $comma, $prow->{$col};
+                $comma = ',';
+            }
+            printf $outfh "\n";
+        }
+    }
+    else
+    {
+        my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
+        my $num_col_names = scalar(@{$pcol_names});
+        #
+        printf $outfh "\n{ \"%s\" : ", $section;
+        my $a_comma = "";
+        printf $outfh "[\n";
+        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
+        {
+            my $out = "";
+            my $o_comma = "";
+            for (my $i=0; $i<$num_col_names; ++$i)
+            {
+                my $col_name = $pcol_names->[$i];
+                $out .= "$o_comma\"$col_name\" : \"$prow->{$col_name}\"\n";
+                $o_comma = ",";
+            }
+            printf $outfh "$a_comma\{\n$out\}\n";
+            $a_comma = ",";
+        }
+        printf $outfh "] }";
+        printf $outfh "," if ($print_comma == TRUE);
+        printf $outfh "\n";
+        
     }
     #
     close($outfh);
@@ -604,11 +606,14 @@ sub export_to_json
     printf $log_fh "\t\t%d: product %s, JSON path: %s\n", 
                    __LINE__, $prod_name, $prod_json_path;
     #
-    # $pprod_db->{TYPE}->{$section} = SECTION_LIST;
-    # $pprod_db->{DATA}->{$section} = [];
-    #
-    foreach my $section (@{$pprod_db->{ORDER}})
+    # foreach my $section (@{$pprod_db->{ORDER}})
+    my $print_comma = TRUE;
+    my $max_isec = scalar(@{$pprod_db->{ORDER}});
+    for (my $isec = 0; $isec<$max_isec; ++$isec)
     {
+        my $section = $pprod_db->{ORDER}->[$isec];
+        $print_comma = FALSE if ($isec >= ($max_isec-1));
+        #
         printf $log_fh "\t\t%d: writing section: %s\n", 
                    __LINE__, $section if ($verbose >= MINVERBOSE);
         #
@@ -618,7 +623,8 @@ sub export_to_json
                    __LINE__, $section if ($verbose >= MINVERBOSE);
             export_name_value_to_json($prod_json_path,
                                       $pprod_db,
-                                      $section);
+                                      $section,
+                                      $print_comma);
         }
         elsif ($pprod_db->{TYPE}->{$section} == SECTION_LIST)
         {
@@ -626,7 +632,8 @@ sub export_to_json
                    __LINE__, $section if ($verbose >= MINVERBOSE);
             export_list_to_json($prod_json_path,
                                 $pprod_db,
-                                $section);
+                                $section,
+                                $print_comma);
         }
         else
         {
