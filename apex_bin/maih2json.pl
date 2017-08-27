@@ -473,11 +473,9 @@ sub process_data
     return SUCCESS;
 }
 #
-sub export_list_to_json
+sub export_section_to_json
 {
-    my ($prod_file, $pprod_db, $section, $print_comma) = @_;
-    #
-    open(my $outfh, "+>>" , $prod_file) || die "file is $prod_file: $!";
+    my ($outfh, $pprod_db, $section, $print_comma) = @_;
     #
     if ($debug_mode == TRUE)
     {
@@ -528,68 +526,6 @@ sub export_list_to_json
         printf $outfh "," if ($print_comma == TRUE);
         printf $outfh "\n";
     }
-    #
-    close($outfh);
-}
-#
-sub export_name_value_to_json
-{
-    my ($prod_file, $pprod_db, $section, $print_comma) = @_;
-    #
-    open(my $outfh, "+>>" , $prod_file) || die "file is $prod_file: $!";
-    #
-    if ($debug_mode == TRUE)
-    {
-        printf $outfh "\n%s\n", $section;
-        #
-        my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
-        my $comma = "";
-        foreach my $col (@{$pcols})
-        {
-            printf $outfh "%s%s", $comma, $col;
-            $comma = ',';
-        }
-        printf $outfh "\n";
-        #
-        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
-        {
-            my $comma = "";
-            foreach my $col (@{$pcols})
-            {
-                printf $outfh "%s%s", $comma, $prow->{$col};
-                $comma = ',';
-            }
-            printf $outfh "\n";
-        }
-    }
-    else
-    {
-        my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
-        my $num_col_names = scalar(@{$pcol_names});
-        #
-        printf $outfh "\n{ \"%s\" : ", $section;
-        my $a_comma = "";
-        printf $outfh "[\n";
-        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
-        {
-            my $out = "";
-            my $o_comma = "";
-            for (my $i=0; $i<$num_col_names; ++$i)
-            {
-                my $col_name = $pcol_names->[$i];
-                $out .= "$o_comma\"$col_name\" : \"$prow->{$col_name}\"\n";
-                $o_comma = ",";
-            }
-            printf $outfh "$a_comma\{\n$out\}\n";
-            $a_comma = ",";
-        }
-        printf $outfh "] }";
-        printf $outfh "," if ($print_comma == TRUE);
-        printf $outfh "\n";
-        
-    }
-    #
-    close($outfh);
 }
 #
 sub export_to_json
@@ -606,7 +542,11 @@ sub export_to_json
     printf $log_fh "\t\t%d: product %s, JSON path: %s\n", 
                    __LINE__, $prod_name, $prod_json_path;
     #
-    # foreach my $section (@{$pprod_db->{ORDER}})
+    open(my $outfh, "+>>" , $prod_json_path) || 
+        die "file is $prod_json_path: $!";
+    #
+    printf $outfh "{ \"RECIPE\" : \"%s\"\n\"DATA\" : [ ", $prod_name;
+    #
     my $print_comma = TRUE;
     my $max_isec = scalar(@{$pprod_db->{ORDER}});
     for (my $isec = 0; $isec<$max_isec; ++$isec)
@@ -621,19 +561,19 @@ sub export_to_json
         {
             printf $log_fh "\t\t%d: Name-Value Section: %s\n", 
                    __LINE__, $section if ($verbose >= MINVERBOSE);
-            export_name_value_to_json($prod_json_path,
-                                      $pprod_db,
-                                      $section,
-                                      $print_comma);
+            export_section_to_json($outfh,
+                                   $pprod_db,
+                                   $section,
+                                   $print_comma);
         }
         elsif ($pprod_db->{TYPE}->{$section} == SECTION_LIST)
         {
             printf $log_fh "\t\t%d: List Section: %s\n", 
                    __LINE__, $section if ($verbose >= MINVERBOSE);
-            export_list_to_json($prod_json_path,
-                                $pprod_db,
-                                $section,
-                                $print_comma);
+            export_section_to_json($outfh,
+                                   $pprod_db,
+                                   $section,
+                                   $print_comma);
         }
         else
         {
@@ -641,6 +581,9 @@ sub export_to_json
                 __LINE__, $section;
         }
     }
+    printf $outfh "\n] }\n";
+    #
+    close($outfh);
     #
     return SUCCESS;
 }
