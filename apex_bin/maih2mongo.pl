@@ -476,7 +476,7 @@ sub export_section_to_json
     $$pjson .= sprintf "\n";
 }
 #
-sub export_to_json
+sub export_to_mongodb
 {
     my ($prod_file, $pprod_db) = @_;
     #
@@ -552,7 +552,7 @@ sub process_file
         printf $log_fh "\t%d: ERROR: Processing product file: %s\n", 
                        __LINE__, $prod_file;
     }
-    elsif (export_to_json($prod_file, \%prod_db) != SUCCESS)
+    elsif (export_to_mongodb($prod_file, \%prod_db) != SUCCESS)
     {
         printf $log_fh "\t%d: ERROR: Exporting product file to MongoDB: %s\n", 
                        __LINE__, $prod_file;
