@@ -51,7 +51,6 @@ my $logfile = '';
 my $verbose = NOVERBOSE;
 my $delimiter = "\t";
 my $row_delimiter = "\n";
-my $row_separator = "\n";
 #
 my %verbose_levels =
 (
@@ -573,15 +572,11 @@ sub process_file
 # usage: $arg0 [-?] [-h]  \\ 
 #         [-w | -W |-v level] \\ 
 #         [-l logfile] \\ 
-#         [-B base path] \\
-#         [-R relative path] \\
-#         [-P path] \\
-#         [-r]  \\
 #         [-d row delimiter] \\
 #         [maihime-file ...] or reads STDIN
 #
 my %opts;
-if (getopts('?hwWv:B:R:P:l:d:', \%opts) != 1)
+if (getopts('?hwWv:l:d:', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
