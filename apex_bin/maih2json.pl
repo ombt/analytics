@@ -13,6 +13,7 @@ use File::Find;
 use File::Path qw(mkpath);
 use File::Basename;
 use File::Path 'rmtree';
+use Data::Dumper;
 #
 ######################################################################
 #
@@ -54,7 +55,7 @@ my $log_fh = *STDOUT;
 my $logfile = '';
 my $verbose = NOVERBOSE;
 my $rmv_json_dir = FALSE;
-my $delimiter = " ";
+my $delimiter = "\t";
 my $row_delimiter = "\n";
 my $debug_mode = FALSE;
 my $row_separator = "\n";
@@ -156,7 +157,7 @@ sub load_name_value
             #
             my $value = $2;
             $value =~ s/^\s*"([^"]*)"\s*$/$1/;
-            push @{$pprod_db->{DATA}->{$section}}, "$name${delimiter}$value";
+            push @{$pprod_db->{DATA}->{$section}}, "${name}${delimiter}${value}";
             #
             $$pirec += 1;
         }
@@ -221,7 +222,7 @@ sub load_name_value
         if ($verbose >= MINVERBOSE);
     printf $log_fh "\t\t%d: Lines read: %d\n", 
         __LINE__, 
-        ($start_irec - $$pirec)
+        ($$pirec - $start_irec)
         if ($verbose >= MINVERBOSE);
     #
     return SUCCESS;
@@ -508,6 +509,7 @@ sub export_section_to_json
     else
     {
         my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
+        # printf $log_fh "%d: pcol_names: %s\n", __LINE__, Dumper($pcol_names);
         my $num_col_names = scalar(@{$pcol_names});
         #
         printf $outfh "\n{ \"%s\" : ", $section;
@@ -517,6 +519,7 @@ sub export_section_to_json
         {
             my $out = "";
             my $o_comma = "";
+            # printf $log_fh "%d: prow: %s\n", __LINE__, Dumper($prow);
             for (my $i=0; $i<$num_col_names; ++$i)
             {
                 my $col_name = $pcol_names->[$i];
