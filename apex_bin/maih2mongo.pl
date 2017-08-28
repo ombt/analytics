@@ -49,25 +49,10 @@ my $log_fh = *STDOUT;
 #
 my $logfile = '';
 my $verbose = NOVERBOSE;
-my $rmv_json_dir = FALSE;
 my $delimiter = "\t";
 my $row_delimiter = "\n";
 my $debug_mode = FALSE;
 my $row_separator = "\n";
-#
-my $json_base_path = undef;
-$json_base_path = $ENV{'OMBT_JSON_BASE_PATH'} 
-    if (exists($ENV{'OMBT_JSON_BASE_PATH'}));
-$json_base_path = "." 
-    unless (defined($json_base_path) and ($json_base_path ne ""));
-#
-my $json_rel_path = undef;
-$json_rel_path = $ENV{'OMBT_JSON_REL_PATH'} 
-    if (exists($ENV{'OMBT_JSON_REL_PATH'}));
-$json_rel_path = "JSON_COMBINED" 
-    unless (defined($json_rel_path) and ($json_rel_path ne ""));
-#
-my $json_path = $json_base_path . '/' . $json_rel_path;
 #
 my %verbose_levels =
 (
@@ -89,10 +74,6 @@ sub usage
 usage: $arg0 [-?] [-h]  \\ 
         [-w | -W |-v level] \\ 
         [-l logfile] \\ 
-        [-B base path] \\
-        [-R relative path] \\
-        [-P path] \\
-        [-r] \\
         [-d row delimiter] \\
         [maihime-file ...] or reads STDIN
 
@@ -102,12 +83,6 @@ where:
     -W - enable warning and trace (level=mid=2)
     -v - verbose level: 0=off,1=min,2=mid,3=max
     -l logfile - log file path
-    -B path - base json path, defaults to '${json_base_path}'
-              or use environment variable OMBT_JSON_BASE_PATH.
-    -R path - relative json path, defaults to '${json_rel_path}'
-              or use environment variable OMBT_JSON_REL_PATH.
-    -P path - json path, defaults to '${json_path}'
-    -r - remove old JSON directory (off by default).
     -d delimiter - row delimiter (new line by default)
 
 EOF
@@ -534,15 +509,11 @@ sub export_to_json
 {
     my ($prod_file, $pprod_db) = @_;
     #
-    printf $log_fh "\t%d: Writing product data to JSON: %s\n", 
+    printf $log_fh "\t%d: Writing product data to MongoDB: %s\n", 
                    __LINE__, $prod_file;
     #
     my $prod_name = basename($prod_file);
     $prod_name =~ tr/a-z/A-Z/;
-    #
-    my $prod_json_path = $json_path . '/' . $prod_name . '.JSON';
-    printf $log_fh "\t\t%d: product %s, JSON path: %s\n", 
-                   __LINE__, $prod_name, $prod_json_path;
     #
     my $json = "";
     #
@@ -612,7 +583,7 @@ sub process_file
     }
     elsif (export_to_json($prod_file, \%prod_db) != SUCCESS)
     {
-        printf $log_fh "\t%d: ERROR: Exporting product file to JSON: %s\n", 
+        printf $log_fh "\t%d: ERROR: Exporting product file to MongoDB: %s\n", 
                        __LINE__, $prod_file;
     }
     else
@@ -638,7 +609,7 @@ sub process_file
 #         [maihime-file ...] or reads STDIN
 #
 my %opts;
-if (getopts('?hwWv:B:R:P:l:rd:', \%opts) != 1)
+if (getopts('?hwWv:B:R:P:l:d:', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -650,10 +621,6 @@ foreach my $opt (%opts)
     {
         usage($cmd);
         exit 0;
-    }
-    elsif ($opt eq 'r')
-    {
-        $rmv_json_dir = TRUE;
     }
     elsif ($opt eq 'w')
     {
@@ -688,23 +655,6 @@ foreach my $opt (%opts)
         $log_fh = *FH;
         printf $log_fh "\n%d: Log File: %s\n", __LINE__, $logfile;
     }
-    elsif ($opt eq 'P')
-    {
-        $json_path = $opts{$opt} . '/';
-        printf $log_fh "\n%d: JSON path: %s\n", __LINE__, $json_path;
-    }
-    elsif ($opt eq 'R')
-    {
-        $json_rel_path = $opts{$opt} . '/';
-        $json_path = $json_base_path . '/' . $json_rel_path;
-        printf $log_fh "\n%d: JSON relative path: %s\n", __LINE__, $json_rel_path;
-    }
-    elsif ($opt eq 'B')
-    {
-        $json_base_path = $opts{$opt} . '/';
-        $json_path = $json_base_path . '/' . $json_rel_path;
-        printf $log_fh "\n%d: JSON base path: %s\n", __LINE__, $json_base_path;
-    }
     elsif ($opt eq 'd')
     {
         $row_delimiter = $opts{$opt};
@@ -723,9 +673,6 @@ if ( -t STDIN )
         exit 2;
     }
     #
-    rmtree($json_path) if ($rmv_json_dir == TRUE);
-    ( mkpath($json_path) || die $! ) unless ( -d $json_path );
-    #
     foreach my $prod_file (@ARGV)
     {
         process_file($prod_file);
@@ -735,9 +682,6 @@ if ( -t STDIN )
 else
 {
     printf $log_fh "%d: Reading STDIN for list of files ...\n", __LINE__;
-    #
-    rmtree($json_path) if ($rmv_json_dir == TRUE);
-    ( mkpath($json_path) || die $! ) unless ( -d $json_path );
     #
     while( defined(my $prod_file = <STDIN>) )
     {
