@@ -51,7 +51,6 @@ my $logfile = '';
 my $verbose = NOVERBOSE;
 my $delimiter = "\t";
 my $row_delimiter = "\n";
-my $debug_mode = FALSE;
 my $row_separator = "\n";
 #
 my %verbose_levels =
@@ -452,57 +451,30 @@ sub export_section_to_json
 {
     my ($pjson, $pprod_db, $section, $print_comma) = @_;
     #
-    if ($debug_mode == TRUE)
+    my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
+    # printf $log_fh "%d: pcol_names: %s\n", __LINE__, Dumper($pcol_names);
+    my $num_col_names = scalar(@{$pcol_names});
+    #
+    $$pjson .= sprintf "\n{ \"%s\" : ", $section;
+    my $a_comma = "";
+    $$pjson .= sprintf "[\n";
+    foreach my $prow (@{$pprod_db->{DATA}->{$section}})
     {
-        $$pjson .= sprintf "\n%s\n", $section;
-        #
-        my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
-        my $comma = "";
-        foreach my $col (@{$pcols})
+        my $out = "";
+        my $o_comma = "";
+        # printf $log_fh "%d: prow: %s\n", __LINE__, Dumper($prow);
+        for (my $i=0; $i<$num_col_names; ++$i)
         {
-            $$pjson .= sprintf "%s%s", $comma, $col;
-            $comma = ',';
+            my $col_name = $pcol_names->[$i];
+            $out .= "$o_comma\"$col_name\" : \"$prow->{$col_name}\"${row_delimiter}";
+            $o_comma = ",";
         }
-        $$pjson .= sprintf "\n";
-        #
-        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
-        {
-            my $comma = "";
-            foreach my $col (@{$pcols})
-            {
-                $$pjson .= sprintf "%s%s", $comma, $prow->{$col};
-                $comma = ',';
-            }
-            $$pjson .= sprintf "\n";
-        }
+        $$pjson .= sprintf "$a_comma\{\n$out\}\n";
+        $a_comma = ",";
     }
-    else
-    {
-        my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
-        # printf $log_fh "%d: pcol_names: %s\n", __LINE__, Dumper($pcol_names);
-        my $num_col_names = scalar(@{$pcol_names});
-        #
-        $$pjson .= sprintf "\n{ \"%s\" : ", $section;
-        my $a_comma = "";
-        $$pjson .= sprintf "[\n";
-        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
-        {
-            my $out = "";
-            my $o_comma = "";
-            # printf $log_fh "%d: prow: %s\n", __LINE__, Dumper($prow);
-            for (my $i=0; $i<$num_col_names; ++$i)
-            {
-                my $col_name = $pcol_names->[$i];
-                $out .= "$o_comma\"$col_name\" : \"$prow->{$col_name}\"${row_delimiter}";
-                $o_comma = ",";
-            }
-            $$pjson .= sprintf "$a_comma\{\n$out\}\n";
-            $a_comma = ",";
-        }
-        $$pjson .= sprintf "] }";
-        $$pjson .= sprintf "," if ($print_comma == TRUE);
-        $$pjson .= sprintf "\n";
-    }
+    $$pjson .= sprintf "] }";
+    $$pjson .= sprintf "," if ($print_comma == TRUE);
+    $$pjson .= sprintf "\n";
 }
 #
 sub export_to_json
