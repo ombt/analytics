@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 ######################################################################
 #
-# read a list of csv files and create a sqlite3 database.
+# read a list of csv files and create JSON files.
 #
 ######################################################################
 #
