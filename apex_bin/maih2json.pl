@@ -552,7 +552,7 @@ sub export_to_json
     open(my $outfh, "+>>" , $prod_json_path) || 
         die "file is $prod_json_path: $!";
     #
-    printf $outfh "{ \"RECIPE\" : \"%s\"\n\"DATA\" : [ ", $prod_name;
+    printf $outfh "{ \"RECIPE\" : \"%s\",\n\"DATA\" : [ ", $prod_name;
     #
     my $print_comma = TRUE;
     my $max_isec = scalar(@{$pprod_db->{ORDER}});
