@@ -523,7 +523,9 @@ sub export_section_to_json
             for (my $i=0; $i<$num_col_names; ++$i)
             {
                 my $col_name = $pcol_names->[$i];
-                $out .= "$o_comma\"$col_name\" : \"$prow->{$col_name}\"${row_delimiter}";
+                my $value = $prow->{$col_name};
+                $value =~ s/\\/\\\\/g;
+                $out .= "$o_comma\"$col_name\" : \"$value\"${row_delimiter}";
                 $o_comma = ",";
             }
             printf $outfh "$a_comma\{\n$out\}\n";
