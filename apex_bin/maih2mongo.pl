@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 ######################################################################
 #
-# process a maihime file and store the data in Mongo DB.
+# process a maihime file, create a temp JSON file, and 
+# import into MongoDB.
 #
 ######################################################################
 #
@@ -52,6 +53,11 @@ my $verbose = NOVERBOSE;
 my $delimiter = "\t";
 my $row_delimiter = "\n";
 #
+my $database_name = undef;
+my $collection_name = undef;
+#
+my $json_path = "ALL.JSON.$$";
+#
 my %verbose_levels =
 (
     off => NOVERBOSE(),
@@ -72,7 +78,9 @@ sub usage
 usage: $arg0 [-?] [-h]  \\ 
         [-w | -W |-v level] \\ 
         [-l logfile] \\ 
+        [-P JSON file path] \\
         [-d row delimiter] \\
+        -D mongo_db_name -C collection_name
         [maihime-file ...] or reads STDIN
 
 where:
@@ -81,7 +89,13 @@ where:
     -W - enable warning and trace (level=mid=2)
     -v - verbose level: 0=off,1=min,2=mid,3=max
     -l logfile - log file path
+    -P path - JSON file json path, defaults to '${json_path}'
     -d delimiter - row delimiter (new line by default)
+    -D mongo_db_name - name of MongoDB database name
+    -C collection_name - name of collection in the above database
+
+Mongo database and collection names must be given. There are no
+default values.
 
 EOF
 }
@@ -361,7 +375,8 @@ sub read_file
     my ($prod_file, $praw_data) = @_;
     #
     printf $log_fh "\t%d: Reading Product file: %s\n", 
-                   __LINE__, $prod_file;
+        __LINE__, $prod_file
+        if ($verbose >= MINVERBOSE);
     #
     if ( ! -r $prod_file )
     {
@@ -391,7 +406,8 @@ sub process_data
     my ($prod_file, $praw_data, $pprod_db) = @_;
     #
     printf $log_fh "\t%d: Processing product data: %s\n", 
-                   __LINE__, $prod_file;
+        __LINE__, $prod_file 
+        if ($verbose >= MINVERBOSE);
     #
     my $max_rec = scalar(@{$praw_data});
     my $sec_no = 0;
@@ -448,47 +464,58 @@ sub process_data
 #
 sub export_section_to_json
 {
-    my ($pjson, $pprod_db, $section, $print_comma) = @_;
+    my ($outfh, $pprod_db, $section, $print_comma) = @_;
     #
-    my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
-    # printf $log_fh "%d: pcol_names: %s\n", __LINE__, Dumper($pcol_names);
-    my $num_col_names = scalar(@{$pcol_names});
-    #
-    $$pjson .= sprintf "\n{ \"%s\" : ", $section;
-    my $a_comma = "";
-    $$pjson .= sprintf "[\n";
-    foreach my $prow (@{$pprod_db->{DATA}->{$section}})
     {
-        my $out = "";
-        my $o_comma = "";
-        # printf $log_fh "%d: prow: %s\n", __LINE__, Dumper($prow);
-        for (my $i=0; $i<$num_col_names; ++$i)
+        my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
+        # printf $log_fh "%d: pcol_names: %s\n", __LINE__, Dumper($pcol_names);
+        my $num_col_names = scalar(@{$pcol_names});
+        #
+        printf $outfh "\n{ \"%s\" : ", $section;
+        my $a_comma = "";
+        printf $outfh "[\n";
+        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
         {
-            my $col_name = $pcol_names->[$i];
-            $out .= "$o_comma\"$col_name\" : \"$prow->{$col_name}\"${row_delimiter}";
-            $o_comma = ",";
+            my $out = "";
+            my $o_comma = "";
+            # printf $log_fh "%d: prow: %s\n", __LINE__, Dumper($prow);
+            for (my $i=0; $i<$num_col_names; ++$i)
+            {
+                my $col_name = $pcol_names->[$i];
+                my $value = $prow->{$col_name};
+                $value =~ s/\\/\\\\/g;
+                $out .= "$o_comma\"$col_name\" : \"$value\"${row_delimiter}";
+                $o_comma = ",";
+            }
+            #
+            # translate any '%' to '%%' because of the printf ...
+            #
+            $out =~ s/%/%%/g;
+            printf $outfh "$a_comma\{\n$out\}\n";
+            $a_comma = ",";
         }
-        $$pjson .= sprintf "$a_comma\{\n$out\}\n";
-        $a_comma = ",";
+        printf $outfh "] }";
+        printf $outfh "," if ($print_comma == TRUE);
+        printf $outfh "\n";
     }
-    $$pjson .= sprintf "] }";
-    $$pjson .= sprintf "," if ($print_comma == TRUE);
-    $$pjson .= sprintf "\n";
 }
 #
-sub export_to_mongodb
+sub export_to_json
 {
-    my ($prod_file, $pprod_db) = @_;
+    my ($outfh, $prod_file, $pprod_db) = @_;
     #
-    printf $log_fh "\t%d: Writing product data to MongoDB: %s\n", 
-                   __LINE__, $prod_file;
+    printf $log_fh "\t%d: Writing product data to JSON: %s\n", 
+        __LINE__, $prod_file
+        if ($verbose >= MINVERBOSE);
     #
     my $prod_name = basename($prod_file);
     $prod_name =~ tr/a-z/A-Z/;
     #
-    my $json = "";
+    printf $log_fh "\t\t%d: product: %s\n", 
+        __LINE__, $prod_name
+        if ($verbose >= MINVERBOSE);
     #
-    $json = sprintf "{ \"RECIPE\" : \"%s\"\n\"DATA\" : [ ", $prod_name;
+    printf $outfh "{ \"RECIPE\" : \"%s\",\n\"DATA\" : [ ", $prod_name;
     #
     my $print_comma = TRUE;
     my $max_isec = scalar(@{$pprod_db->{ORDER}});
@@ -504,7 +531,7 @@ sub export_to_mongodb
         {
             printf $log_fh "\t\t%d: Name-Value Section: %s\n", 
                    __LINE__, $section if ($verbose >= MINVERBOSE);
-            export_section_to_json(\$json,
+            export_section_to_json($outfh,
                                    $pprod_db,
                                    $section,
                                    $print_comma);
@@ -513,7 +540,7 @@ sub export_to_mongodb
         {
             printf $log_fh "\t\t%d: List Section: %s\n", 
                    __LINE__, $section if ($verbose >= MINVERBOSE);
-            export_section_to_json(\$json,
+            export_section_to_json($outfh,
                                    $pprod_db,
                                    $section,
                                    $print_comma);
@@ -524,16 +551,14 @@ sub export_to_mongodb
                 __LINE__, $section;
         }
     }
-    $json .= sprintf "\n] }\n";
-    #
-    printf $log_fh "JSON:\n%s\n", $json;
+    printf $outfh "\n] }\n";
     #
     return SUCCESS;
 }
 #
 sub process_file
 {
-    my ($prod_file) = @_;
+    my ($outfh, $prod_file) = @_;
     #
     printf $log_fh "\n%d: Processing product File: %s\n", 
                    __LINE__, $prod_file;
@@ -552,31 +577,39 @@ sub process_file
         printf $log_fh "\t%d: ERROR: Processing product file: %s\n", 
                        __LINE__, $prod_file;
     }
-    elsif (export_to_mongodb($prod_file, \%prod_db) != SUCCESS)
+    elsif (export_to_json($outfh, $prod_file, \%prod_db) != SUCCESS)
     {
-        printf $log_fh "\t%d: ERROR: Exporting product file to MongoDB: %s\n", 
+        printf $log_fh "\t%d: ERROR: Exporting product file to JSON: %s\n", 
                        __LINE__, $prod_file;
     }
     else
     {
         printf $log_fh "\t%d: Success processing product file: %s\n", 
-                       __LINE__, $prod_file;
+            __LINE__, $prod_file
+            if ($verbose >= MINVERBOSE);
         $status = SUCCESS;
     }
     #
     return $status;
 }
 #
+sub export_to_mongo
+{
+    my ($db, $col) = @_;
+    #
+    printf $log_fh "\n%d: Exporting JSON to DB %s, Collection %s\n", 
+        __LINE__, $db, $col;
+    #
+    my $cmd = sprintf "mongoimport -v --db %s --collection %s --file \"%s\"", $db, $col, $json_path;
+    printf $log_fh "\n%d: : Mongo import CMD: %s\n", __LINE__, $cmd;
+    #
+    system $cmd;
+}
+#
 ######################################################################
 #
-# usage: $arg0 [-?] [-h]  \\ 
-#         [-w | -W |-v level] \\ 
-#         [-l logfile] \\ 
-#         [-d row delimiter] \\
-#         [maihime-file ...] or reads STDIN
-#
 my %opts;
-if (getopts('?hwWv:l:d:', \%opts) != 1)
+if (getopts('?hwWv:B:R:P:l:rd:D:C:', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -622,10 +655,33 @@ foreach my $opt (%opts)
         $log_fh = *FH;
         printf $log_fh "\n%d: Log File: %s\n", __LINE__, $logfile;
     }
+    elsif ($opt eq 'P')
+    {
+        $json_path = $opts{$opt} . '/';
+        printf $log_fh "\n%d: JSON path: %s\n", __LINE__, $json_path;
+    }
     elsif ($opt eq 'd')
     {
         $row_delimiter = $opts{$opt};
     }
+    elsif ($opt eq 'D')
+    {
+        $database_name = $opts{$opt};
+    }
+    elsif ($opt eq 'C')
+    {
+        $collection_name = $opts{$opt};
+    }
+}
+#
+if (( ! defined($database_name)) ||
+    ( ! defined($collection_name)) ||
+    ( $collection_name eq "") ||
+    ( $database_name eq ""))
+{
+    printf $log_fh "%d: ERROR: Database or Collection names are undefined.\n", __LINE__;
+    usage($cmd);
+    exit 2;
 }
 #
 if ( -t STDIN )
@@ -640,21 +696,46 @@ if ( -t STDIN )
         exit 2;
     }
     #
+    open(my $outfh, ">" , $json_path) || 
+        die "file is $json_path: $!";
+    #
     foreach my $prod_file (@ARGV)
     {
-        process_file($prod_file);
+        my $status = process_file($outfh, $prod_file);
+        if ($status != SUCCESS)
+        {
+            printf $log_fh "%d: ERROR: Failed to process %s.\n", 
+                            __LINE__, $prod_file;
+            exit 2;
+        }
     }
     #
+    close($outfh);
 }
 else
 {
     printf $log_fh "%d: Reading STDIN for list of files ...\n", __LINE__;
     #
+    open(my $outfh, ">" , $json_path) || 
+        die "file is $json_path: $!";
+    #
     while( defined(my $prod_file = <STDIN>) )
     {
         chomp($prod_file);
-        process_file($prod_file);
+        my $status = process_file($outfh, $prod_file);
+        if ($status != SUCCESS)
+        {
+            printf $log_fh "%d: ERROR: Failed to process %s.\n", 
+                            __LINE__, $prod_file;
+            exit 2;
+        }
     }
+    #
+    close($outfh);
 }
+#
+export_to_mongo($database_name, $collection_name);
+#
+unlink $json_path unless ($verbose >= MINVERBOSE);
 #
 exit 0;

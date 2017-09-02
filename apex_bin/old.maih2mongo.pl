@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 ######################################################################
 #
-# process a maihime file and store the data in JSON files.
+# process a maihime file and store the data in Mongo DB.
 #
 ######################################################################
 #
@@ -24,11 +24,6 @@ use constant FALSE => 0;
 #
 use constant SUCCESS => 1;
 use constant FAIL => 0;
-#
-# required section names
-#
-use constant INDEX => '[Index]';
-use constant INFORMATION => '[Information]';
 #
 # verbose levels
 #
@@ -54,25 +49,8 @@ my $log_fh = *STDOUT;
 #
 my $logfile = '';
 my $verbose = NOVERBOSE;
-my $rmv_json_dir = FALSE;
 my $delimiter = "\t";
 my $row_delimiter = "\n";
-my $debug_mode = FALSE;
-my $row_separator = "\n";
-#
-my $json_base_path = undef;
-$json_base_path = $ENV{'OMBT_JSON_BASE_PATH'} 
-    if (exists($ENV{'OMBT_JSON_BASE_PATH'}));
-$json_base_path = "." 
-    unless (defined($json_base_path) and ($json_base_path ne ""));
-#
-my $json_rel_path = undef;
-$json_rel_path = $ENV{'OMBT_JSON_REL_PATH'} 
-    if (exists($ENV{'OMBT_JSON_REL_PATH'}));
-$json_rel_path = "JSON_COMBINED" 
-    unless (defined($json_rel_path) and ($json_rel_path ne ""));
-#
-my $json_path = $json_base_path . '/' . $json_rel_path;
 #
 my %verbose_levels =
 (
@@ -94,10 +72,6 @@ sub usage
 usage: $arg0 [-?] [-h]  \\ 
         [-w | -W |-v level] \\ 
         [-l logfile] \\ 
-        [-B base path] \\
-        [-R relative path] \\
-        [-P path] \\
-        [-r] \\
         [-d row delimiter] \\
         [maihime-file ...] or reads STDIN
 
@@ -107,12 +81,6 @@ where:
     -W - enable warning and trace (level=mid=2)
     -v - verbose level: 0=off,1=min,2=mid,3=max
     -l logfile - log file path
-    -B path - base json path, defaults to '${json_base_path}'
-              or use environment variable OMBT_JSON_BASE_PATH.
-    -R path - relative json path, defaults to '${json_rel_path}'
-              or use environment variable OMBT_JSON_REL_PATH.
-    -P path - json path, defaults to '${json_path}'
-    -r - remove old JSON directory (off by default).
     -d delimiter - row delimiter (new line by default)
 
 EOF
@@ -480,85 +448,47 @@ sub process_data
 #
 sub export_section_to_json
 {
-    my ($outfh, $pprod_db, $section, $print_comma) = @_;
+    my ($pjson, $pprod_db, $section, $print_comma) = @_;
     #
-    if ($debug_mode == TRUE)
+    my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
+    # printf $log_fh "%d: pcol_names: %s\n", __LINE__, Dumper($pcol_names);
+    my $num_col_names = scalar(@{$pcol_names});
+    #
+    $$pjson .= sprintf "\n{ \"%s\" : ", $section;
+    my $a_comma = "";
+    $$pjson .= sprintf "[\n";
+    foreach my $prow (@{$pprod_db->{DATA}->{$section}})
     {
-        printf $outfh "\n%s\n", $section;
-        #
-        my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
-        my $comma = "";
-        foreach my $col (@{$pcols})
+        my $out = "";
+        my $o_comma = "";
+        # printf $log_fh "%d: prow: %s\n", __LINE__, Dumper($prow);
+        for (my $i=0; $i<$num_col_names; ++$i)
         {
-            printf $outfh "%s%s", $comma, $col;
-            $comma = ',';
+            my $col_name = $pcol_names->[$i];
+            $out .= "$o_comma\"$col_name\" : \"$prow->{$col_name}\"${row_delimiter}";
+            $o_comma = ",";
         }
-        printf $outfh "\n";
-        #
-        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
-        {
-            my $comma = "";
-            foreach my $col (@{$pcols})
-            {
-                printf $outfh "%s%s", $comma, $prow->{$col};
-                $comma = ',';
-            }
-            printf $outfh "\n";
-        }
+        $$pjson .= sprintf "$a_comma\{\n$out\}\n";
+        $a_comma = ",";
     }
-    else
-    {
-        my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
-        # printf $log_fh "%d: pcol_names: %s\n", __LINE__, Dumper($pcol_names);
-        my $num_col_names = scalar(@{$pcol_names});
-        #
-        printf $outfh "\n{ \"%s\" : ", $section;
-        my $a_comma = "";
-        printf $outfh "[\n";
-        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
-        {
-            my $out = "";
-            my $o_comma = "";
-            # printf $log_fh "%d: prow: %s\n", __LINE__, Dumper($prow);
-            for (my $i=0; $i<$num_col_names; ++$i)
-            {
-                my $col_name = $pcol_names->[$i];
-                my $value = $prow->{$col_name};
-                $value =~ s/\\/\\\\/g;
-                $out .= "$o_comma\"$col_name\" : \"$value\"${row_delimiter}";
-                $o_comma = ",";
-            }
-            #
-            # translate any '%' to '%%' because of the printf ...
-            #
-            $out =~ s/%/%%/g;
-            printf $outfh "$a_comma\{\n$out\}\n";
-            $a_comma = ",";
-        }
-        printf $outfh "] }";
-        printf $outfh "," if ($print_comma == TRUE);
-        printf $outfh "\n";
-    }
+    $$pjson .= sprintf "] }";
+    $$pjson .= sprintf "," if ($print_comma == TRUE);
+    $$pjson .= sprintf "\n";
 }
 #
-sub export_to_json
+sub export_to_mongodb
 {
     my ($prod_file, $pprod_db) = @_;
     #
-    printf $log_fh "\t%d: Writing product data to JSON: %s\n", 
+    printf $log_fh "\t%d: Writing product data to MongoDB: %s\n", 
                    __LINE__, $prod_file;
     #
     my $prod_name = basename($prod_file);
     $prod_name =~ tr/a-z/A-Z/;
     #
-    my $prod_json_path = $json_path . '/' . $prod_name . '.JSON';
-    printf $log_fh "\t\t%d: product %s, JSON path: %s\n", 
-                   __LINE__, $prod_name, $prod_json_path;
+    my $json = "";
     #
-    open(my $outfh, "+>>" , $prod_json_path) || 
-        die "file is $prod_json_path: $!";
-    #
-    printf $outfh "{ \"RECIPE\" : \"%s\",\n\"DATA\" : [ ", $prod_name;
+    $json = sprintf "{ \"RECIPE\" : \"%s\"\n\"DATA\" : [ ", $prod_name;
     #
     my $print_comma = TRUE;
     my $max_isec = scalar(@{$pprod_db->{ORDER}});
@@ -574,7 +504,7 @@ sub export_to_json
         {
             printf $log_fh "\t\t%d: Name-Value Section: %s\n", 
                    __LINE__, $section if ($verbose >= MINVERBOSE);
-            export_section_to_json($outfh,
+            export_section_to_json(\$json,
                                    $pprod_db,
                                    $section,
                                    $print_comma);
@@ -583,7 +513,7 @@ sub export_to_json
         {
             printf $log_fh "\t\t%d: List Section: %s\n", 
                    __LINE__, $section if ($verbose >= MINVERBOSE);
-            export_section_to_json($outfh,
+            export_section_to_json(\$json,
                                    $pprod_db,
                                    $section,
                                    $print_comma);
@@ -594,9 +524,9 @@ sub export_to_json
                 __LINE__, $section;
         }
     }
-    printf $outfh "\n] }\n";
+    $json .= sprintf "\n] }\n";
     #
-    close($outfh);
+    printf $log_fh "JSON:\n%s\n", $json;
     #
     return SUCCESS;
 }
@@ -622,9 +552,9 @@ sub process_file
         printf $log_fh "\t%d: ERROR: Processing product file: %s\n", 
                        __LINE__, $prod_file;
     }
-    elsif (export_to_json($prod_file, \%prod_db) != SUCCESS)
+    elsif (export_to_mongodb($prod_file, \%prod_db) != SUCCESS)
     {
-        printf $log_fh "\t%d: ERROR: Exporting product file to JSON: %s\n", 
+        printf $log_fh "\t%d: ERROR: Exporting product file to MongoDB: %s\n", 
                        __LINE__, $prod_file;
     }
     else
@@ -642,15 +572,11 @@ sub process_file
 # usage: $arg0 [-?] [-h]  \\ 
 #         [-w | -W |-v level] \\ 
 #         [-l logfile] \\ 
-#         [-B base path] \\
-#         [-R relative path] \\
-#         [-P path] \\
-#         [-r]  \\
 #         [-d row delimiter] \\
 #         [maihime-file ...] or reads STDIN
 #
 my %opts;
-if (getopts('?hwWv:B:R:P:l:rd:', \%opts) != 1)
+if (getopts('?hwWv:l:d:', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -662,10 +588,6 @@ foreach my $opt (%opts)
     {
         usage($cmd);
         exit 0;
-    }
-    elsif ($opt eq 'r')
-    {
-        $rmv_json_dir = TRUE;
     }
     elsif ($opt eq 'w')
     {
@@ -700,23 +622,6 @@ foreach my $opt (%opts)
         $log_fh = *FH;
         printf $log_fh "\n%d: Log File: %s\n", __LINE__, $logfile;
     }
-    elsif ($opt eq 'P')
-    {
-        $json_path = $opts{$opt} . '/';
-        printf $log_fh "\n%d: JSON path: %s\n", __LINE__, $json_path;
-    }
-    elsif ($opt eq 'R')
-    {
-        $json_rel_path = $opts{$opt} . '/';
-        $json_path = $json_base_path . '/' . $json_rel_path;
-        printf $log_fh "\n%d: JSON relative path: %s\n", __LINE__, $json_rel_path;
-    }
-    elsif ($opt eq 'B')
-    {
-        $json_base_path = $opts{$opt} . '/';
-        $json_path = $json_base_path . '/' . $json_rel_path;
-        printf $log_fh "\n%d: JSON base path: %s\n", __LINE__, $json_base_path;
-    }
     elsif ($opt eq 'd')
     {
         $row_delimiter = $opts{$opt};
@@ -735,9 +640,6 @@ if ( -t STDIN )
         exit 2;
     }
     #
-    rmtree($json_path) if ($rmv_json_dir == TRUE);
-    ( mkpath($json_path) || die $! ) unless ( -d $json_path );
-    #
     foreach my $prod_file (@ARGV)
     {
         process_file($prod_file);
@@ -747,9 +649,6 @@ if ( -t STDIN )
 else
 {
     printf $log_fh "%d: Reading STDIN for list of files ...\n", __LINE__;
-    #
-    rmtree($json_path) if ($rmv_json_dir == TRUE);
-    ( mkpath($json_path) || die $! ) unless ( -d $json_path );
     #
     while( defined(my $prod_file = <STDIN>) )
     {
