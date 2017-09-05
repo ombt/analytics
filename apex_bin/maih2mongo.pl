@@ -52,6 +52,7 @@ my $logfile = '';
 my $verbose = NOVERBOSE;
 my $delimiter = "\t";
 my $row_delimiter = "\n";
+my $export_to_mongodb = TRUE;
 #
 my $database_name = undef;
 my $collection_name = undef;
@@ -80,7 +81,7 @@ usage: $arg0 [-?] [-h]  \\
         [-l logfile] \\ 
         [-P JSON file path] \\
         [-d row delimiter] \\
-        -D mongo_db_name -C collection_name
+        -D mongo_db_name -C collection_name [-X]
         [maihime-file ...] or reads STDIN
 
 where:
@@ -93,6 +94,7 @@ where:
     -d delimiter - row delimiter (new line by default)
     -D mongo_db_name - name of MongoDB database name
     -C collection_name - name of collection in the above database
+    -X - DO NOT EXPORT to MongoDB and KEEP JSON file.
 
 Mongo database and collection names must be given. There are no
 default values.
@@ -608,8 +610,19 @@ sub export_to_mongo
 #
 ######################################################################
 #
+#     -? or -h - print this usage.
+#     -w - enable warning (level=min=1)
+#     -W - enable warning and trace (level=mid=2)
+#     -v - verbose level: 0=off,1=min,2=mid,3=max
+#     -l logfile - log file path
+#     -P path - JSON file json path, defaults to '${json_path}'
+#     -d delimiter - row delimiter (new line by default)
+#     -D mongo_db_name - name of MongoDB database name
+#     -C collection_name - name of collection in the above database
+#     -X - DO NOT EXPORT to MongoDB and KEEP JSON file.
+# 
 my %opts;
-if (getopts('?hwWv:B:R:P:l:rd:D:C:', \%opts) != 1)
+if (getopts('?hwWv:P:l:d:D:C:X', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -672,6 +685,10 @@ foreach my $opt (%opts)
     {
         $collection_name = $opts{$opt};
     }
+    elsif ($opt eq 'X')
+    {
+        $export_to_mongodb = FALSE;
+    }
 }
 #
 if (( ! defined($database_name)) ||
@@ -733,9 +750,12 @@ else
     #
     close($outfh);
 }
-#
-export_to_mongo($database_name, $collection_name);
-#
-unlink $json_path unless ($verbose >= MINVERBOSE);
+# 
+if ($export_to_mongodb == TRUE)
+{
+    export_to_mongo($database_name, $collection_name);
+    #
+    unlink $json_path unless ($verbose >= MINVERBOSE);
+}
 #
 exit 0;
