@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 ######################################################################
 #
-# process a maihime file and store the data in Mongo DB.
+# process a maihime file and convert to one JSON string.
 #
 ######################################################################
 #
@@ -526,7 +526,7 @@ sub export_to_mongodb
     }
     $json .= sprintf "\n] }\n";
     #
-    printf $log_fh "JSON:\n%s\n", $json;
+    printf $log_fh "\nJSON ==>> %s\n", $json;
     #
     return SUCCESS;
 }
