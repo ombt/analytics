@@ -6,7 +6,7 @@ use DBI;
 #
 if (scalar(@ARGV) == 0)
 {
-    printf "usage: $0 table [host [db [user [passwd]]]]\n", ;
+    printf "usage: $0 table host db [user [passwd]]\n", ;
     exit 0;
 }
 #
