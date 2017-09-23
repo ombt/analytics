@@ -28,8 +28,8 @@ $password = shift @ARGV if (scalar(@ARGV) > 0);
 #
 my $dsn = "dbi:Pg:dbname='';host=$host_name";
 #
-my $dbh = DBI->connect($dsn, $user_name, $password) or 
-    die "Unable to connect to $dsn: $DBI::errstr\n";
+my $dbh = DBI->connect($dsn, $user_name, $password, { PrintError => 0, RaiseError => 0 } );
+die "Unable to connect: $DBI::errstr\n" unless (defined($dbh));
 #
 my $found = 0;
 #
