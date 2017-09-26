@@ -24,7 +24,6 @@ $password = shift @ARGV if (scalar(@ARGV) > 0);
 my $dsn = "dbi:Pg:dbname='';host=$host_name";
 #
 my $dbh = DBI->connect($dsn, $user_name, $password, { PrintError => 0, RaiseError => 0 } );
-, $password);
 die "Unable to connect: $DBI::errstr\n" unless (defined($dbh));
 #
 # my $sth = $dbh->prepare("select * from $table_name");
