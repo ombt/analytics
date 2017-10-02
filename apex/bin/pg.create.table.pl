@@ -69,39 +69,39 @@ else
     $sql .= " )";
     #
     printf "==>> SQL Insert command: %s\n", $sql;
-#     #
-#     $sth = $dbh->prepare($sql);
-#     if (defined($sth->execute()))
-#     {
-#         printf "Database created ... Checking again.\n";
-#         $found = 0;
-#         $sth = $dbh->prepare("select datname from pg_database");
-#         $sth->execute();
-#         while (my @data = $sth->fetchrow_array())
-#         {
-#             if ($data[0] eq $db_name)
-#             {
-#                 $found = 1;
-# 	        last;
-#             }
-#         }
-#         $sth = undef;
-#         #
-#         if ($found)
-#         {
-#             printf "==>> DB %s: EXISTS.\n", $db_name;
-#         }
-#         else
-#         {
-#             printf "==>> DB %s: NOT EXISTS. CREATE DATABASE FAILED.\n", $db_name;
-#         }
-#     }
-#     else
-#     {
-#         printf "==>> DB %s: STILL DOES NOT EXISTS.\n", $db_name;
-#     }
+    #
+    $sth = $dbh->prepare($sql);
+    if (defined($sth->execute()))
+    {
+        printf "Table created ... Checking again.\n";
+        my $sth = $dbh->prepare("select tablename from pg_tables where tablename = '$table_name' and schemaname = 'public'");
+        $sth->execute();
+        #
+        my $found = 0;
+        while (my @data = $sth->fetchrow_array())
+        {
+            if ($data[0] eq $table_name)
+            {
+                $found = 1;
+	        last;
+            }
+        }
+        $sth = undef;
+        #
+        if ($found)
+        {
+            printf "==>> Table %s: EXISTS.\n", $table_name;
+        }
+        else
+        {
+            printf "==>> Table %s: STILL NOT EXISTS.\n", $table_name;
+        }
+    }
+    else
+    {
+        printf "==>> TABLE %s: STILL DOES NOT EXISTS.\n", $table_name;
+    }
 }
-
 #
 $dbh->disconnect;
 #
