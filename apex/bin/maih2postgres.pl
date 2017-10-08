@@ -677,6 +677,13 @@ if (( ! defined($database_name)) ||
     exit 2;
 }
 #
+printf $log_fh "\n%d: Open DB for (host,port,db,user) = (%s,%s,%s,%s)\n", 
+       __LINE__, 
+       $host_name, 
+       $port, 
+       $database_name, 
+       (defined($user_name) ? $user_name : "undef");
+#
 if (open_db(\$dbh, $host_name, $port, 
              $database_name, $user_name, $password) != SUCCESS)
 {
@@ -687,9 +694,6 @@ if (open_db(\$dbh, $host_name, $port,
     usage($cmd);
     exit 2;
 }
-printf $log_fh "\n%d: Open DB for (host,port,db,user) = (%s,%s,%s,%s)\n", __LINE__, 
-                   $host_name, $port, $database_name, 
-                   (defined($user_name) ? $user_name : "undef");
 #
 
 #
