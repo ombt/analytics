@@ -42,7 +42,7 @@ my $sth = $dbh->prepare(
              CAST('create database' AS pg_catalog.text)
          ELSE 
             CAST('' AS pg_catalog.text)
-         END AS \"Attributes\" 
+     END AS \"Attributes\" 
  FROM 
      pg_catalog.pg_user u
  ORDER BY
