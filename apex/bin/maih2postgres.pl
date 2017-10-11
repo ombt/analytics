@@ -56,8 +56,8 @@ my $row_delimiter = "\n";
 my $export_to_postgresql = TRUE;
 #
 my $host_name = "localhost";
-my $database_name = undef;
-my $collection_name = undef; # really, the site name
+my $database_name = undef; # the site name
+my $schema_name = undef; # the type of file
 my $user_name = undef;
 my $password = undef;
 my $port = 5432;
@@ -103,7 +103,7 @@ usage: $arg0 [-?] [-h]  \\
         [-d row delimiter] \\
         [-u user name] [-p passwd] \\
         [-P port ] \\
-        -D db_name -C collection_name [-X]
+        -D db_name -S schema_name [-X]
         [maihime-file ...] or reads STDIN
 
 where:
@@ -118,8 +118,8 @@ where:
     -u user name - PostgresQL user name
     -p passwd - PostgresQL user password
     -P port - PostgreSQL port (default = 5432)
-    -D db_name - name of PostgreSQL database
-    -C collection_name - name of PostgreSQL table (site)
+    -D db_name - name of PostgreSQL database (site name)
+    -S schema_name - name of PostgreSQL schema (file type)
     -X - DO NOT EXPORT to PostgreSQL and KEEP CSV file.
 
 EOF
@@ -581,8 +581,8 @@ $alwd_opts .= 'd:'; # -d delimiter - row delimiter (new line by default)
 $alwd_opts .= 'u:'; # -u user name - PostgresQL user name
 $alwd_opts .= 'p:'; # -p passwd - PostgresQL user password
 $alwd_opts .= 'P:'; # -P port - PostgreSQL port (default = 5432)
-$alwd_opts .= 'D:'; # -D db_name - name of PostgreSQL database name
-$alwd_opts .= 'C:'; # -C collection_name - name of PostgreSQL table (site)
+$alwd_opts .= 'D:'; # -D db_name - name of PostgreSQL database (site name)
+$alwd_opts .= 'S:'; # -S schema_name - name of PostgreSQL schema (file type)
 $alwd_opts .= 'X';  # -X - DO NOT EXPORT to PostgreSQL and KEEP CSV file.
 #
 my %opts;
@@ -657,9 +657,9 @@ foreach my $opt (%opts)
     {
         $database_name = $opts{$opt};
     }
-    elsif ($opt eq 'C')
+    elsif ($opt eq 'S')
     {
-        $collection_name = $opts{$opt};
+        $schema_name = $opts{$opt};
     }
     elsif ($opt eq 'X')
     {
@@ -668,11 +668,11 @@ foreach my $opt (%opts)
 }
 #
 if (( ! defined($database_name)) ||
-    ( ! defined($collection_name)) ||
-    ( $collection_name eq "") ||
+    ( ! defined($schema_name)) ||
+    ( $schema_name eq "") ||
     ( $database_name eq ""))
 {
-    printf $log_fh "%d: ERROR: Database or Collection names are undefined.\n", __LINE__;
+    printf $log_fh "%d: ERROR: Database or Schema names are undefined.\n", __LINE__;
     usage($cmd);
     exit 2;
 }
