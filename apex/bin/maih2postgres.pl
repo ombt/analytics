@@ -202,8 +202,7 @@ sub create_db
         }
         else
         {
-            printf $log_fh "\t%d: ==>> DB %s: STILL DOES NOT EXISTS.\n", 
-                           __LINE__, $db;
+            printf $log_fh "\t%d: ERROR: ==>> DB %s: STILL DOES NOT EXISTS.\n%s\n", __LINE__, $db, $DBI::errstr;
             $dbh->disconnect;
             $dbh = undef;
             return FAIL;
@@ -285,7 +284,7 @@ sub create_schema
         }
         else
         {
-            printf $log_fh "\t%d: ==>> DB %s, SCHEMA %s: STILL DOES NOT EXISTS.\n%s\n", __LINE__, $db, $schema, $DBI::errstr;
+            printf $log_fh "\t%d: ERROR: ==>> DB %s, SCHEMA %s: STILL DOES NOT EXISTS.\n%s\n", __LINE__, $db, $schema, $DBI::errstr;
             $dbh->disconnect;
             $dbh = undef;
             return FAIL;
@@ -859,7 +858,8 @@ if (create_db($host_name, $port,
               $user_name, $password) != SUCCESS)
 {
     printf $log_fh "%d: ERROR: Create DB failed for (host,port,db,user,pass) = (%s,%s,%s,%s,%s)", __LINE__, 
-                   $host_name, $port, $database_name, 
+                   $host_name, $port, 
+                   $database_name, 
                    (defined($user_name) ? $user_name : "undef"),
                    (defined($password) ? $password : "undef");
     exit 2;
@@ -871,7 +871,7 @@ if (create_schema($host_name, $port,
                   $database_name, $schema_name, 
                   $user_name, $password) != SUCCESS)
 {
-    printf $log_fh "%d: ERROR: Create DB failed for (host,port,db,schema,user,pass) = (%s,%s,%s,%s,%s,%s)", __LINE__, 
+    printf $log_fh "%d: ERROR: Create DB schema failed for (host,port,db,schema,user,pass) = (%s,%s,%s,%s,%s,%s)", __LINE__, 
                    $host_name, $port, 
                    $database_name, $schema_name, 
                    (defined($user_name) ? $user_name : "undef"),
@@ -884,7 +884,8 @@ if (open_db(\$dbh, $host_name, $port,
              $user_name, $password) != SUCCESS)
 {
     printf $log_fh "%d: ERROR: Open DB failed for (host,port,db,user,pass) = (%s,%s,%s,%s,%s)", __LINE__, 
-                   $host_name, $port, $database_name, 
+                   $host_name, $port, 
+                   $database_name, 
                    (defined($user_name) ? $user_name : "undef"),
                    (defined($password) ? $password : "undef");
     usage($cmd);
