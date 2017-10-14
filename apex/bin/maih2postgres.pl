@@ -130,6 +130,174 @@ EOF
 #
 # database access functions
 #
+sub create_db
+{
+    my ($host, $port, $db, $user, $pwd) = @_;
+    #
+    my $dbh = undef;
+    my $dsn = "dbi:Pg:dbname='';host=$host;port=$port";
+    if ( ! defined($dbh = DBI->connect($dsn, 
+                                       $user_name, 
+                                       $password, 
+                                       { PrintError => 0,
+                                         RaiseError => 0 })))
+    {
+        printf $log_fh "\t%d: ERROR: DB connect failed: %s\n", 
+                       __LINE__, $DBI::errstr;
+        return FAIL;
+    }
+    #
+    my $found = FALSE;
+    #
+    my $sth = $dbh->prepare("select datname from pg_database");
+    if ( ! defined($sth))
+    {
+        printf $log_fh "\t%d: ERROR: DB prepare failed: %s\n", 
+                       __LINE__, $DBI::errstr;
+        $dbh->disconnect;
+        $dbh = undef;
+        return FAIL;
+    }
+    #
+    $sth->execute();
+    #
+    while (my @data = $sth->fetchrow_array())
+    {
+        if ($data[0] eq $db)
+        {
+            $found = 1;
+	    last;
+        }
+    }
+    #
+    $sth = undef;
+    #
+    if ($found)
+    {
+        printf $log_fh "\t%d: ==>> DB %s: EXISTS.\n", __LINE__, $db;
+    }
+    else
+    {
+        printf $log_fh "\t%d: ==>> DB %s: NOT EXISTS. Creating.\n", 
+                       __LINE__, $db;
+        #
+        my $sql = "create database $db";
+        if (defined($user_name))
+        {
+            $sql .= " owner $user_name";
+        }
+        #
+        $sth = $dbh->prepare($sql);
+        if ( ! defined($sth))
+        {
+            printf $log_fh "\t%d: ERROR: DB prepare failed: %s\n", 
+                           __LINE__, $DBI::errstr;
+            $dbh->disconnect;
+            $dbh = undef;
+            return FAIL;
+        }
+        if (defined($sth->execute()))
+        {
+            printf $log_fh "\t%d: Database created.\n", __LINE__;
+        }
+        else
+        {
+            printf $log_fh "\t%d: ==>> DB %s: STILL DOES NOT EXISTS.\n", 
+                           __LINE__, $db;
+            $dbh->disconnect;
+            $dbh = undef;
+            return FAIL;
+        }
+    }
+    #
+    $dbh->disconnect;
+    $dbh = undef;
+    #
+    return SUCCESS;
+}
+#
+sub create_schema
+{
+    my ($host, $port, $db, $schema, $user, $pwd) = @_;
+    #
+    my $dbh = undef;
+    my $dsn = "dbi:Pg:dbname=$db;host=$host;port=$port";
+    if ( ! defined($dbh = DBI->connect($dsn, 
+                                       $user_name, 
+                                       $password, 
+                                       { PrintError => 0,
+                                         RaiseError => 0 })))
+    {
+        printf $log_fh "\t%d: ERROR: DB connect failed: %s\n", 
+                       __LINE__, $DBI::errstr;
+        return FAIL;
+    }
+    #
+    my $found = FALSE;
+    #
+    my $sth = $dbh->prepare("select catalog_name, schema_name , schema_owner from information_schema.schemata");
+    if ( ! defined($sth))
+    {
+        printf $log_fh "\t%d: ERROR: DB prepare failed: %s\n", 
+                       __LINE__, $DBI::errstr;
+        $dbh->disconnect;
+        $dbh = undef;
+        return FAIL;
+    }
+    #
+    $sth->execute();
+    #
+    while (my @data = $sth->fetchrow_array())
+    {
+        if (($data[0] eq $db) and ($data[1] eq $schema))
+        {
+            $found = 1;
+	    last;
+        }
+    }
+    #
+    $sth = undef;
+    #
+    if ($found)
+    {
+        printf $log_fh "\t%d: ==>> DB %s, SCHEMA %s: EXISTS.\n", 
+               __LINE__, $db, $schema;
+    }
+    else
+    {
+        printf $log_fh "\t%d: ==>> DB %s, SCHEMA %s: NOT EXISTS. Creating.\n", 
+                       __LINE__, $db, $schema;
+        #
+        my $sql = "create schema $schema";
+        #
+        $sth = $dbh->prepare($sql);
+        if ( ! defined($sth))
+        {
+            printf $log_fh "\t%d: ERROR: DB prepare failed: %s\n", 
+                           __LINE__, $DBI::errstr;
+            $dbh->disconnect;
+            $dbh = undef;
+            return FAIL;
+        }
+        if (defined($sth->execute()))
+        {
+            printf $log_fh "\t%d: Database schema created.\n", __LINE__;
+        }
+        else
+        {
+            printf $log_fh "\t%d: ==>> DB %s, SCHEMA %s: STILL DOES NOT EXISTS.\n%s\n", __LINE__, $db, $schema, $DBI::errstr;
+            $dbh->disconnect;
+            $dbh = undef;
+            return FAIL;
+        }
+    }
+    #
+    $dbh->disconnect;
+    $dbh = undef;
+    #
+    return SUCCESS;
+}
+#
 sub open_db
 {
     my ($pdbh, $host, $port, $db, $user, $pwd) = @_;
@@ -684,8 +852,36 @@ printf $log_fh "\n%d: Open DB for (host,port,db,user) = (%s,%s,%s,%s)\n",
        $database_name, 
        (defined($user_name) ? $user_name : "undef");
 #
+# check if db exists.
+#
+if (create_db($host_name, $port, 
+              $database_name, 
+              $user_name, $password) != SUCCESS)
+{
+    printf $log_fh "%d: ERROR: Create DB failed for (host,port,db,user,pass) = (%s,%s,%s,%s,%s)", __LINE__, 
+                   $host_name, $port, $database_name, 
+                   (defined($user_name) ? $user_name : "undef"),
+                   (defined($password) ? $password : "undef");
+    exit 2;
+}
+#
+# check if schema exists.
+#
+if (create_schema($host_name, $port, 
+                  $database_name, $schema_name, 
+                  $user_name, $password) != SUCCESS)
+{
+    printf $log_fh "%d: ERROR: Create DB failed for (host,port,db,schema,user,pass) = (%s,%s,%s,%s,%s,%s)", __LINE__, 
+                   $host_name, $port, 
+                   $database_name, $schema_name, 
+                   (defined($user_name) ? $user_name : "undef"),
+                   (defined($password) ? $password : "undef");
+    exit 2;
+}
+#
 if (open_db(\$dbh, $host_name, $port, 
-             $database_name, $user_name, $password) != SUCCESS)
+             $database_name, 
+             $user_name, $password) != SUCCESS)
 {
     printf $log_fh "%d: ERROR: Open DB failed for (host,port,db,user,pass) = (%s,%s,%s,%s,%s)", __LINE__, 
                    $host_name, $port, $database_name, 
@@ -694,8 +890,6 @@ if (open_db(\$dbh, $host_name, $port,
     usage($cmd);
     exit 2;
 }
-#
-
 #
 if ( -t STDIN )
 {
