@@ -1,0 +1,200 @@
+these notes descibe how to install postgres under cygwin.
+use the version of postgres that comes with cygwin.
+
+1) install postgres from cygwin installer. the postgres
+executables are placed under /bin. the admin executables, pg_ctl, 
+is placed under /usr/sbin.
+
+/bin/pg_archivecleanup.exe*  /bin/pg_test_fsync.exe*
+/bin/pg_basebackup.exe*      /bin/pg_test_timing.exe*
+/bin/pg_config.exe*          /bin/pg_upgrade.exe*
+/bin/pg_dump.exe*            /bin/pg_xlogdump.exe*
+/bin/pg_dumpall.exe*         /bin/psql.exe*
+/bin/pg_isready.exe*
+/bin/pg_receivexlog.exe*
+/bin/pg_recvlogical.exe*
+/bin/pg_rewind.exe*
+
+/usr/sbin/pg_controldata.exe*
+/usr/sbin/pg_ctl.exe*
+/usr/sbin/pg_resetxlog.exe*
+/usr/sbin/pg_restore.exe*
+
+2) now create a directory for all the local database tables, data, etc.
+
+$ pg_ctl initdb -D g:\postgres\datastore
+
+3) before you can start up postgres, you need to startup a cygwin server
+process that provides shared memory, semaphores and message queues for
+postgres. here's a snapshot of what is used by postgres:
+
+ > ipcs
+Message Queues:
+T     ID               KEY        MODE       OWNER    GROUP
+
+Shared Memory:
+T     ID               KEY        MODE       OWNER    GROUP
+m  65536              5432001 --rw-------  mrumore Domain Users
+
+Semaphores:
+T     ID               KEY        MODE       OWNER    GROUP
+s  65536              5432001 --rw-------  mrumore Domain Users
+s  65537              5432002 --rw-------  mrumore Domain Users
+s  65538              5432003 --rw-------  mrumore Domain Users
+
+before starting cygserver, you must create a configuration file.
+
+$ cd /usr/bin
+$ ./cygserver-config
+yes
+
+config file is created under /etc/cycserver.conf in the cygwin environment.
+
+you need to enable some options before starting the server. compare this
+list with the default list after running the above tool.
+
+ > grep -v '^ *#' /etc/cygserver.conf | grep -v '^ *$'
+kern.srv.cleanup_threads 2
+kern.srv.request_threads 10
+kern.srv.process_cache_size 62
+kern.srv.msgqueues yes
+kern.srv.semaphores yes
+kern.srv.sharedmem yes
+kern.ipc.msgseg 2048
+kern.ipc.msgssz 8
+kern.ipc.msgmnb 2048
+kern.ipc.msgmni 40
+kern.ipc.msgtql 40
+kern.ipc.semmni 10
+kern.ipc.semmns 60
+kern.ipc.semmnu 30
+kern.ipc.semmsl 60
+kern.ipc.semopm 100
+kern.ipc.semume 10
+kern.ipc.semvmx 32767
+kern.ipc.semaem 16384
+kern.ipc.shmmaxpgs 8192
+kern.ipc.shmmni 192
+kern.ipc.shmseg 128
+kern.ipc.shm_allow_removed no
+
+
+once the changes are made to the config file, then you can start up
+cygserver as follows:
+
+$ net start cygserver
+
+or
+
+$ cygrunsrv -S cygserver
+
+4) now to start up postgres use the following cmd. notice since 
+postgres was installed via the cygwin installer, the paths are given 
+using the Linux format.
+
+VERY IMPORTANT NOTE: DO NOT USE ANY SYMBOLIC LINKS IN ANY PATH
+GIVEN IN THE COMMAND LINE OR ANY CONFIG FILE.
+
+ > cat /bin/start.postgres
+
+/usr/sbin/pg_ctl -D /cygdrive/g/postgres/datastore -l /cygdrive/g/postgres/logfile start
+
+5) to stop postgres use the followging cmd. notice since postgres was 
+installed via the cygwin installer, the paths are given using the 
+Linux format.
+
+VERY IMPORTANT NOTE: DO NOT USE ANY SYMBOLIC LINKS IN ANY PATH
+GIVEN IN THE COMMAND LINE OR ANY CONFIG FILE.
+
+ > cat /bin/stop.postgres
+
+/usr/sbin/pg_ctl -D /cygdrive/g/postgres/datastore -l /cygdrive/g/postgres/logfile stop
+
+6) use createdb to create a database:
+
+ > createdb --help
+createdb creates a PostgreSQL database.
+
+Usage:
+  createdb [OPTION]... [DBNAME] [DESCRIPTION]
+
+Options:
+  -D, --tablespace=TABLESPACE  default tablespace for the database
+  -e, --echo                   show the commands being sent to the server
+  -E, --encoding=ENCODING      encoding for the database
+  -l, --locale=LOCALE          locale settings for the database
+      --lc-collate=LOCALE      LC_COLLATE setting for the database
+      --lc-ctype=LOCALE        LC_CTYPE setting for the database
+  -O, --owner=OWNER            database user to own the new database
+  -T, --template=TEMPLATE      template database to copy
+  -V, --version                output version information, then exit
+  -?, --help                   show this help, then exit
+
+Connection options:
+  -h, --host=HOSTNAME          database server host or socket directory
+  -p, --port=PORT              database server port
+  -U, --username=USERNAME      user name to connect as
+  -w, --no-password            never prompt for password
+  -W, --password               force password prompt
+  --maintenance-db=DBNAME      alternate maintenance database
+
+By default, a database with the same name as the current user is created.
+
+NOTE: FOR A USER ON THE SAME MACHINE AS THE POSTGRES SERVER, I CHOOSE
+the option,
+
+	-w, --no-password
+
+TO MAKE LOGONS EASY.
+
+7) if you install postgres using the Windows installer, then you are
+automatically asked the psotgres admin user name and password. however, if
+you use the cygwin installer, IT DOES NOT ASK !!! you have to determine
+the user name either from the username from the login:
+
+$ logname
+mrumore
+
+or you can check the postgres config file and look for the user
+which is allowed all privileges. look at the user MRumore shown below.
+
+ > pwd
+/home/mrumore/g/postgres/datastore
+
+ > lf
+base/          pg_hba.conf    pg_replslot/   pg_subtrans/  postgresql.auto.conf
+global/        pg_ident.conf  pg_serial/     pg_tblspc/    postgresql.conf
+pg_clog/       pg_logical/    pg_snapshots/  pg_twophase/  postmaster.opts
+pg_commit_ts/  pg_multixact/  pg_stat/       PG_VERSION    postmaster.pid
+pg_dynshmem/   pg_notify/     pg_stat_tmp/   pg_xlog/
+
+ > cat pg_hba.conf
+
+# If you want to allow non-local connections, you need to add more
+# "host" records.  In that case you will also need to make PostgreSQL
+# listen on a non-local interface via the listen_addresses
+# configuration parameter, or via the -i or -h command line switches.
+
+# CAUTION: Configuring the system for local "trust" authentication
+# allows any local user to connect as any PostgreSQL user, including
+# the database superuser.  If you do not trust all your local users,
+# use another authentication method.
+
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# "local" is for Unix domain socket connections only
+local   all             all                                     trust
+# IPv4 local connections:
+host    all             postgres        127.0.0.1/32            trust
+host    all             MRumore         127.0.0.1/32            trust
+host    all             all             127.0.0.1/32            trust
+# IPv6 local connections:
+host    all             all             ::1/128                 trust
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+#local   replication     MRumore                                trust
+#host    replication     MRumore        127.0.0.1/32            trust
+#host    replication     MRumore        ::1/128                 trust
+
+

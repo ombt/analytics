@@ -1,0 +1,178 @@
+INFO	2017/03/23 01:37:52.392	src/LNBCVTInterface.C	1032	last message repeated 50 times.
+INFO	2017/03/23 02:52:52.672	src/LNBCVTInterface.C	1032	last message repeated 50 times.
+INFO	2017/03/23 04:07:52.394	src/LNBCVTInterface.C	1032	last message repeated 50 times.
+INFO	2017/03/23 05:22:52.363	src/LNBCVTInterface.C	1032	last message repeated 50 times.
+INFO	2017/03/23 06:37:52.186	src/LNBCVTInterface.C	1032	last message repeated 50 times.
+INFO	2017/03/23 07:52:52.232	src/LNBCVTInterface.C	1032	last message repeated 50 times.
+INFO	2017/03/23 09:07:52.854	src/LNBCVTInterface.C	1032	last message repeated 50 times.
+INFO	2017/03/23 10:22:52.744	src/LNBCVTInterface.C	1032	last message repeated 50 times.
+DEBUG	2017/03/23 10:23:41.311	src/AppLogger.C	275	******************** STARTING DEBUG LOGGING ********************
+DEBUG	2017/03/23 10:23:41.491	src/EI_Logger.C	373	(4209->???)  , MessageSource = 4209 , MessageDestination = -1 , MessageClass = MC_Message , MessageType = M_STATUSREQUEST , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:23:41.491	src/EI_Logger.C	373	(E/I->4209)  , MessageSource = -1 , MessageDestination = 4209 , MessageClass = MC_LNBStatusMsg , MessageType =  , MessageId = 65535 , MessageReply = 0 , ApplicationId = 1010 , EquipmentState = 13 , CommunicationState = 0 , ApplicationType = 55
+DEBUG	2017/03/23 10:23:41.491	src/EI_Logger.C	373	(E/I->4209)  , MessageSource = -1 , MessageDestination = 4209 , MessageClass = MC_ExhaustListMsg , MessageType = EL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490282621 , ExhaustListSize = 0 , SpliceNoCheckListSize = 0 , SpliceAlertListSize = 0 , PulledOutInListSize = 0
+DEBUG	2017/03/23 10:23:41.491	src/KXMachineFeederSetup.EC	10117	Sending Setup Check entries
+DEBUG	2017/03/23 10:23:41.491	src/KXMachineFeederSetup.EC	10133	Sending 0 setup check entries
+DEBUG	2017/03/23 10:23:41.491	src/EI_Logger.C	373	(E/I->4209)  , MessageSource = -1 , MessageDestination = 4209 , MessageClass = MC_PendingSetupListMsg , MessageType = PSL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490282621 , ListSize = 0
+DEBUG	2017/03/23 10:23:41.491	src/SetupAuditMachineManager.EC	1782	Setup Audit Status Check
+DEBUG	2017/03/23 10:23:41.493	src/EI_Logger.C	373	(E/I->4209)  , MessageSource = -1 , MessageDestination = 4209 , MessageClass = MC_SetupAuditStatusMsg , MessageType = SAS_STATUS_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , ModuleId = 1010 , SetupAuditId = -1 , SetupAuditStartTime = 0 , SetupAuditCompleteTime = 0 , SetupAuditType = -1 , AuditStatus = 1 , NextAuditStartTime = 0 , FrontAuditStartTime = 0 , FrontAuditCompleteTime = 0 , MachineFrontStatus = 2 , RearAuditStartTime = 0 , RearAuditCompleteTime = 0 , MachineRearStatus = 2
+DEBUG	2017/03/23 10:23:41.493	src/EI_Logger.C	373	last message repeated 1 times.
+DEBUG	2017/03/23 10:23:41.493	src/EI_Logger.C	373	(E/I->4209)  , MessageSource = -1 , MessageDestination = 4209 , MessageClass = MC_LockStatusMsg , MessageType = LCKST_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , LockStatusOverall = 0 , IgnoreStatusOverall = 0 , ProtocolLockStatus = 10 , ListSize = 0
+DEBUG	2017/03/23 10:23:41.493	src/LNBLockStatus.C	532	Canceling all pending Panel Displays for 1
+INFO	2017/03/23 10:24:22.535	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 10:28:41.827	src/EI_Logger.C	373	last message repeated 2 times.
+DEBUG	2017/03/23 10:28:41.827	src/EI_Logger.C	373	(P/M->E/I)  , MessageSource = 0 , MessageDestination = 65 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:28:41.827	src/EI_Logger.C	373	(P/M->P/M)  , MessageSource = 0 , MessageDestination = 0 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+INFO	2017/03/23 10:28:52.839	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 10:33:41.640	src/EI_Logger.C	373	last message repeated 3 times.
+DEBUG	2017/03/23 10:33:41.640	src/EI_Logger.C	373	(P/M->E/I)  , MessageSource = 0 , MessageDestination = 65 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:33:41.640	src/EI_Logger.C	373	(P/M->P/M)  , MessageSource = 0 , MessageDestination = 0 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+INFO	2017/03/23 10:34:52.713	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 10:36:46.901	src/EI_Logger.C	373	last message repeated 1 times.
+DEBUG	2017/03/23 10:36:46.901	src/EI_Logger.C	373	(4209->???)  , MessageSource = 4209 , MessageDestination = -1 , MessageClass = MC_AppDebugModeMsg , MessageType = ADS_START_DEBUG , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:36:46.903	src/EI_Logger.C	373	(3094->???)  , MessageSource = 3094 , MessageDestination = -1 , MessageClass = MC_AppDebugModeMsg , MessageType = ADS_QUERY_DEBUG_STATUS , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:36:46.903	src/EI_Logger.C	373	(3094->3094)  , MessageSource = 3094 , MessageDestination = 3094 , MessageClass = MC_AppDebugModeMsg , MessageType = ADS_DEBUG_ON , MessageId = 65535 , MessageReply = 0 , FileName = "/home/panadmin/data/log/cimclogs/20170323/LNB_CVT_INTERFACE_Module-4_APP_20170323002252.log" , RouteId = 1007
+DEBUG	2017/03/23 10:36:46.904	src/EI_Logger.C	373	(3095->???)  , MessageSource = 3095 , MessageDestination = -1 , MessageClass = MC_AppDebugModeMsg , MessageType = ADS_QUERY_DEBUG_STATUS , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:36:46.904	src/EI_Logger.C	373	(3095->3095)  , MessageSource = 3095 , MessageDestination = 3095 , MessageClass = MC_AppDebugModeMsg , MessageType = ADS_DEBUG_ON , MessageId = 65535 , MessageReply = 0 , FileName = "/home/panadmin/data/log/cimclogs/20170323/LNB_CVT_INTERFACE_Module-4_APP_20170323002252.log" , RouteId = 1007
+DEBUG	2017/03/23 10:36:47.141	src/EI_Logger.C	373	(4209->???)  , MessageSource = 4209 , MessageDestination = -1 , MessageClass = MC_Message , MessageType = M_STATUSREQUEST , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:36:47.141	src/EI_Logger.C	373	(E/I->4209)  , MessageSource = -1 , MessageDestination = 4209 , MessageClass = MC_LNBStatusMsg , MessageType =  , MessageId = 65535 , MessageReply = 0 , ApplicationId = 1010 , EquipmentState = 13 , CommunicationState = 0 , ApplicationType = 55
+DEBUG	2017/03/23 10:36:47.141	src/EI_Logger.C	373	(E/I->4209)  , MessageSource = -1 , MessageDestination = 4209 , MessageClass = MC_ExhaustListMsg , MessageType = EL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490283407 , ExhaustListSize = 0 , SpliceNoCheckListSize = 0 , SpliceAlertListSize = 0 , PulledOutInListSize = 0
+DEBUG	2017/03/23 10:36:47.141	src/KXMachineFeederSetup.EC	10117	Sending Setup Check entries
+DEBUG	2017/03/23 10:36:47.142	src/KXMachineFeederSetup.EC	10133	Sending 0 setup check entries
+DEBUG	2017/03/23 10:36:47.142	src/EI_Logger.C	373	(E/I->4209)  , MessageSource = -1 , MessageDestination = 4209 , MessageClass = MC_PendingSetupListMsg , MessageType = PSL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490283407 , ListSize = 0
+DEBUG	2017/03/23 10:36:47.142	src/SetupAuditMachineManager.EC	1782	Setup Audit Status Check
+DEBUG	2017/03/23 10:36:47.145	src/EI_Logger.C	373	(E/I->4209)  , MessageSource = -1 , MessageDestination = 4209 , MessageClass = MC_SetupAuditStatusMsg , MessageType = SAS_STATUS_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , ModuleId = 1010 , SetupAuditId = -1 , SetupAuditStartTime = 0 , SetupAuditCompleteTime = 0 , SetupAuditType = -1 , AuditStatus = 1 , NextAuditStartTime = 0 , FrontAuditStartTime = 0 , FrontAuditCompleteTime = 0 , MachineFrontStatus = 2 , RearAuditStartTime = 0 , RearAuditCompleteTime = 0 , MachineRearStatus = 2
+DEBUG	2017/03/23 10:36:47.145	src/EI_Logger.C	373	last message repeated 1 times.
+DEBUG	2017/03/23 10:36:47.145	src/EI_Logger.C	373	(E/I->4209)  , MessageSource = -1 , MessageDestination = 4209 , MessageClass = MC_LockStatusMsg , MessageType = LCKST_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , LockStatusOverall = 0 , IgnoreStatusOverall = 0 , ProtocolLockStatus = 10 , ListSize = 0
+DEBUG	2017/03/23 10:36:47.145	src/LNBLockStatus.C	532	Canceling all pending Panel Displays for 1
+INFO	2017/03/23 10:37:52.207	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 10:41:47.511	src/EI_Logger.C	373	last message repeated 2 times.
+DEBUG	2017/03/23 10:41:47.511	src/EI_Logger.C	373	(P/M->E/I)  , MessageSource = 0 , MessageDestination = 65 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:41:47.511	src/EI_Logger.C	373	(P/M->P/M)  , MessageSource = 0 , MessageDestination = 0 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+INFO	2017/03/23 10:42:22.600	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 10:45:42.240	src/EI_Logger.C	373	last message repeated 2 times.
+DEBUG	2017/03/23 10:45:42.240	src/EI_Logger.C	373	(4233->???)  , MessageSource = 4233 , MessageDestination = -1 , MessageClass = MC_PMIdentityMsg , MessageType = ID_CONNECTED , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:45:42.241	src/LNBCVTInterface.C	4667	PVT mbx id 4233 appended and Total connected pvts 3
+DEBUG	2017/03/23 10:45:42.337	src/EI_Logger.C	373	(4233->???)  , MessageSource = 4233 , MessageDestination = -1 , MessageClass = MC_Message , MessageType = M_STATUSREQUEST , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:45:42.337	src/EI_Logger.C	373	(E/I->4233)  , MessageSource = -1 , MessageDestination = 4233 , MessageClass = MC_LNBStatusMsg , MessageType =  , MessageId = 65535 , MessageReply = 0 , ApplicationId = 1010 , EquipmentState = 13 , CommunicationState = 0 , ApplicationType = 55
+DEBUG	2017/03/23 10:45:42.337	src/EI_Logger.C	373	(E/I->4233)  , MessageSource = -1 , MessageDestination = 4233 , MessageClass = MC_ExhaustListMsg , MessageType = EL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490283942 , ExhaustListSize = 0 , SpliceNoCheckListSize = 0 , SpliceAlertListSize = 0 , PulledOutInListSize = 0
+DEBUG	2017/03/23 10:45:42.337	src/KXMachineFeederSetup.EC	10117	Sending Setup Check entries
+DEBUG	2017/03/23 10:45:42.337	src/KXMachineFeederSetup.EC	10133	Sending 0 setup check entries
+DEBUG	2017/03/23 10:45:42.337	src/EI_Logger.C	373	(E/I->4233)  , MessageSource = -1 , MessageDestination = 4233 , MessageClass = MC_PendingSetupListMsg , MessageType = PSL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490283942 , ListSize = 0
+DEBUG	2017/03/23 10:45:42.337	src/SetupAuditMachineManager.EC	1782	Setup Audit Status Check
+DEBUG	2017/03/23 10:45:42.342	src/EI_Logger.C	373	(E/I->4233)  , MessageSource = -1 , MessageDestination = 4233 , MessageClass = MC_SetupAuditStatusMsg , MessageType = SAS_STATUS_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , ModuleId = 1010 , SetupAuditId = -1 , SetupAuditStartTime = 0 , SetupAuditCompleteTime = 0 , SetupAuditType = -1 , AuditStatus = 1 , NextAuditStartTime = 0 , FrontAuditStartTime = 0 , FrontAuditCompleteTime = 0 , MachineFrontStatus = 2 , RearAuditStartTime = 0 , RearAuditCompleteTime = 0 , MachineRearStatus = 2
+DEBUG	2017/03/23 10:45:42.342	src/EI_Logger.C	373	last message repeated 1 times.
+DEBUG	2017/03/23 10:45:42.342	src/EI_Logger.C	373	(E/I->4233)  , MessageSource = -1 , MessageDestination = 4233 , MessageClass = MC_LockStatusMsg , MessageType = LCKST_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , LockStatusOverall = 0 , IgnoreStatusOverall = 0 , ProtocolLockStatus = 10 , ListSize = 0
+DEBUG	2017/03/23 10:45:42.343	src/LNBLockStatus.C	532	Canceling all pending Panel Displays for 1
+DEBUG	2017/03/23 10:46:26.195	src/EI_Logger.C	373	(019->???)  , MessageSource = 19 , MessageDestination = -1 , MessageClass = MC_Message , MessageType = M_STATUSREQUEST , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:46:26.195	src/EI_Logger.C	373	(E/I->019)  , MessageSource = -1 , MessageDestination = 19 , MessageClass = MC_LNBStatusMsg , MessageType =  , MessageId = 65535 , MessageReply = 0 , ApplicationId = 1010 , EquipmentState = 13 , CommunicationState = 0 , ApplicationType = 55
+DEBUG	2017/03/23 10:46:26.195	src/EI_Logger.C	373	(E/I->019)  , MessageSource = -1 , MessageDestination = 19 , MessageClass = MC_ExhaustListMsg , MessageType = EL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490283986 , ExhaustListSize = 0 , SpliceNoCheckListSize = 0 , SpliceAlertListSize = 0 , PulledOutInListSize = 0
+DEBUG	2017/03/23 10:46:26.195	src/KXMachineFeederSetup.EC	10117	Sending Setup Check entries
+DEBUG	2017/03/23 10:46:26.195	src/KXMachineFeederSetup.EC	10133	Sending 0 setup check entries
+DEBUG	2017/03/23 10:46:26.195	src/EI_Logger.C	373	(E/I->019)  , MessageSource = -1 , MessageDestination = 19 , MessageClass = MC_PendingSetupListMsg , MessageType = PSL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490283986 , ListSize = 0
+DEBUG	2017/03/23 10:46:26.195	src/SetupAuditMachineManager.EC	1782	Setup Audit Status Check
+DEBUG	2017/03/23 10:46:26.200	src/EI_Logger.C	373	(E/I->019)  , MessageSource = -1 , MessageDestination = 19 , MessageClass = MC_SetupAuditStatusMsg , MessageType = SAS_STATUS_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , ModuleId = 1010 , SetupAuditId = -1 , SetupAuditStartTime = 0 , SetupAuditCompleteTime = 0 , SetupAuditType = -1 , AuditStatus = 1 , NextAuditStartTime = 0 , FrontAuditStartTime = 0 , FrontAuditCompleteTime = 0 , MachineFrontStatus = 2 , RearAuditStartTime = 0 , RearAuditCompleteTime = 0 , MachineRearStatus = 2
+DEBUG	2017/03/23 10:46:26.200	src/EI_Logger.C	373	last message repeated 1 times.
+DEBUG	2017/03/23 10:46:26.200	src/EI_Logger.C	373	(E/I->019)  , MessageSource = -1 , MessageDestination = 19 , MessageClass = MC_LockStatusMsg , MessageType = LCKST_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , LockStatusOverall = 0 , IgnoreStatusOverall = 0 , ProtocolLockStatus = 10 , ListSize = 0
+DEBUG	2017/03/23 10:46:26.200	src/LNBLockStatus.C	532	Canceling all pending Panel Displays for 1
+DEBUG	2017/03/23 10:46:26.265	src/EI_Logger.C	373	(4235->???)  , MessageSource = 4235 , MessageDestination = -1 , MessageClass = MC_Message , MessageType = M_STATUSREQUEST , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:46:26.265	src/EI_Logger.C	373	(E/I->4235)  , MessageSource = -1 , MessageDestination = 4235 , MessageClass = MC_LNBStatusMsg , MessageType =  , MessageId = 65535 , MessageReply = 0 , ApplicationId = 1010 , EquipmentState = 13 , CommunicationState = 0 , ApplicationType = 55
+DEBUG	2017/03/23 10:46:26.266	src/EI_Logger.C	373	(E/I->4235)  , MessageSource = -1 , MessageDestination = 4235 , MessageClass = MC_ExhaustListMsg , MessageType = EL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490283986 , ExhaustListSize = 0 , SpliceNoCheckListSize = 0 , SpliceAlertListSize = 0 , PulledOutInListSize = 0
+DEBUG	2017/03/23 10:46:26.266	src/KXMachineFeederSetup.EC	10117	Sending Setup Check entries
+DEBUG	2017/03/23 10:46:26.266	src/KXMachineFeederSetup.EC	10133	Sending 0 setup check entries
+DEBUG	2017/03/23 10:46:26.266	src/EI_Logger.C	373	(E/I->4235)  , MessageSource = -1 , MessageDestination = 4235 , MessageClass = MC_PendingSetupListMsg , MessageType = PSL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490283986 , ListSize = 0
+DEBUG	2017/03/23 10:46:26.266	src/SetupAuditMachineManager.EC	1782	Setup Audit Status Check
+DEBUG	2017/03/23 10:46:26.267	src/EI_Logger.C	373	(E/I->4235)  , MessageSource = -1 , MessageDestination = 4235 , MessageClass = MC_SetupAuditStatusMsg , MessageType = SAS_STATUS_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , ModuleId = 1010 , SetupAuditId = -1 , SetupAuditStartTime = 0 , SetupAuditCompleteTime = 0 , SetupAuditType = -1 , AuditStatus = 1 , NextAuditStartTime = 0 , FrontAuditStartTime = 0 , FrontAuditCompleteTime = 0 , MachineFrontStatus = 2 , RearAuditStartTime = 0 , RearAuditCompleteTime = 0 , MachineRearStatus = 2
+DEBUG	2017/03/23 10:46:26.267	src/EI_Logger.C	373	last message repeated 1 times.
+DEBUG	2017/03/23 10:46:26.267	src/EI_Logger.C	373	(E/I->4235)  , MessageSource = -1 , MessageDestination = 4235 , MessageClass = MC_LockStatusMsg , MessageType = LCKST_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , LockStatusOverall = 0 , IgnoreStatusOverall = 0 , ProtocolLockStatus = 10 , ListSize = 0
+DEBUG	2017/03/23 10:46:26.267	src/LNBLockStatus.C	532	Canceling all pending Panel Displays for 1
+INFO	2017/03/23 10:46:52.290	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 10:51:26.158	src/EI_Logger.C	373	last message repeated 3 times.
+DEBUG	2017/03/23 10:51:26.158	src/EI_Logger.C	373	(P/M->E/I)  , MessageSource = 0 , MessageDestination = 65 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:51:26.158	src/EI_Logger.C	373	(P/M->P/M)  , MessageSource = 0 , MessageDestination = 0 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+INFO	2017/03/23 10:52:52.243	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 10:56:04.504	src/EI_Logger.C	373	last message repeated 2 times.
+DEBUG	2017/03/23 10:56:04.504	src/EI_Logger.C	373	(012->???)  , MessageSource = 12 , MessageDestination = -1 , MessageClass = MC_SubstPartChangeMsg , MessageType = SPCM_CHANGED , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:56:04.504	src/EquipLockStatus.C	2338	Setting subst part change condition due to change msg
+DEBUG	2017/03/23 10:56:04.505	src/DbEquipLockStatus.EC	140	Checking reels () for inv/res
+DEBUG	2017/03/23 10:56:04.505	src/LNBLockStatus.C	1084	Front/rear products: 1/1
+DEBUG	2017/03/23 10:56:04.505	src/EquipLockStatus.C	3660	process_invalid_restricted_comps
+DEBUG	2017/03/23 10:56:04.505	src/EquipLockStatus.C	2188	Disregarding lock clearance request: Clear request does not match any current instance
+DEBUG	2017/03/23 10:56:04.505	src/EquipLockStatus.C	3814	last message repeated 1 times.
+DEBUG	2017/03/23 10:56:04.505	src/EquipLockStatus.C	3814	Inv/Res: 1 main, 0 splice, 0 net chg
+DEBUG	2017/03/23 10:56:04.508	src/EquipLockStatus.C	2994	No MSD expiration time set
+DEBUG	2017/03/23 10:56:04.510	src/EquipLockStatus.C	2188	Disregarding lock clearance request: Clear request does not match any current instance
+DEBUG	2017/03/23 10:56:04.510	src/EquipLockStatus.C	3123	Clearing setup lock conditions due to complete setup
+DEBUG	2017/03/23 10:56:04.510	src/EquipLockStatus.C	3273	Updating lock instances via setup check
+DEBUG	2017/03/23 10:56:04.510	src/EquipLockStatus.C	2563	No updates required after Setup Changes, no changes since last update
+DEBUG	2017/03/23 10:56:04.510	src/EI_Logger.C	373	(012->???)  , MessageSource = 12 , MessageDestination = -1 , MessageClass = MC_ProductDataChangedMsg , MessageType = PRODUCT_DATA_CHANGED , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:56:26.097	src/EI_Logger.C	373	(P/M->E/I)  , MessageSource = 0 , MessageDestination = 65 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:56:26.097	src/EI_Logger.C	373	(P/M->P/M)  , MessageSource = 0 , MessageDestination = 0 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+INFO	2017/03/23 10:57:22.159	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 10:58:28.134	src/EI_Logger.C	373	(4068->???)  , MessageSource = 4068 , MessageDestination = -1 , MessageClass = MC_PMIdentityMsg , MessageType = ID_DISCONNECTED , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 10:58:28.136	src/LNBCVTInterface.C	356	Checking for Verification message for source id = 4068
+DEBUG	2017/03/23 10:58:28.136	src/LNBCVTInterface.C	373	No message found for source id= 4068
+INFO	2017/03/23 10:58:52.160	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 11:01:26.150	src/EI_Logger.C	373	last message repeated 1 times.
+DEBUG	2017/03/23 11:01:26.150	src/EI_Logger.C	373	(P/M->E/I)  , MessageSource = 0 , MessageDestination = 65 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:01:26.151	src/EI_Logger.C	373	(P/M->P/M)  , MessageSource = 0 , MessageDestination = 0 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+INFO	2017/03/23 11:01:52.179	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 11:01:59.609	src/EI_Logger.C	373	(4253->???)  , MessageSource = 4253 , MessageDestination = -1 , MessageClass = MC_PMIdentityMsg , MessageType = ID_CONNECTED , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:01:59.610	src/LNBCVTInterface.C	4667	PVT mbx id 4253 appended and Total connected pvts 3
+DEBUG	2017/03/23 11:01:59.668	src/EI_Logger.C	373	(4253->???)  , MessageSource = 4253 , MessageDestination = -1 , MessageClass = MC_Message , MessageType = M_STATUSREQUEST , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:01:59.668	src/EI_Logger.C	373	(E/I->4253)  , MessageSource = -1 , MessageDestination = 4253 , MessageClass = MC_LNBStatusMsg , MessageType =  , MessageId = 65535 , MessageReply = 0 , ApplicationId = 1010 , EquipmentState = 13 , CommunicationState = 0 , ApplicationType = 55
+DEBUG	2017/03/23 11:01:59.668	src/EI_Logger.C	373	(E/I->4253)  , MessageSource = -1 , MessageDestination = 4253 , MessageClass = MC_ExhaustListMsg , MessageType = EL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490284919 , ExhaustListSize = 0 , SpliceNoCheckListSize = 0 , SpliceAlertListSize = 0 , PulledOutInListSize = 0
+DEBUG	2017/03/23 11:01:59.668	src/KXMachineFeederSetup.EC	10117	Sending Setup Check entries
+DEBUG	2017/03/23 11:01:59.668	src/KXMachineFeederSetup.EC	10133	Sending 0 setup check entries
+DEBUG	2017/03/23 11:01:59.668	src/EI_Logger.C	373	(E/I->4253)  , MessageSource = -1 , MessageDestination = 4253 , MessageClass = MC_PendingSetupListMsg , MessageType = PSL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490284919 , ListSize = 0
+DEBUG	2017/03/23 11:01:59.668	src/SetupAuditMachineManager.EC	1782	Setup Audit Status Check
+DEBUG	2017/03/23 11:01:59.670	src/EI_Logger.C	373	(E/I->4253)  , MessageSource = -1 , MessageDestination = 4253 , MessageClass = MC_SetupAuditStatusMsg , MessageType = SAS_STATUS_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , ModuleId = 1010 , SetupAuditId = -1 , SetupAuditStartTime = 0 , SetupAuditCompleteTime = 0 , SetupAuditType = -1 , AuditStatus = 1 , NextAuditStartTime = 0 , FrontAuditStartTime = 0 , FrontAuditCompleteTime = 0 , MachineFrontStatus = 2 , RearAuditStartTime = 0 , RearAuditCompleteTime = 0 , MachineRearStatus = 2
+DEBUG	2017/03/23 11:01:59.670	src/EI_Logger.C	373	last message repeated 1 times.
+DEBUG	2017/03/23 11:01:59.670	src/EI_Logger.C	373	(E/I->4253)  , MessageSource = -1 , MessageDestination = 4253 , MessageClass = MC_LockStatusMsg , MessageType = LCKST_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , LockStatusOverall = 0 , IgnoreStatusOverall = 0 , ProtocolLockStatus = 10 , ListSize = 0
+DEBUG	2017/03/23 11:01:59.670	src/LNBLockStatus.C	532	Canceling all pending Panel Displays for 1
+INFO	2017/03/23 11:03:22.751	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 11:05:25.587	src/EI_Logger.C	373	last message repeated 1 times.
+DEBUG	2017/03/23 11:05:25.587	src/EI_Logger.C	373	(4233->???)  , MessageSource = 4233 , MessageDestination = -1 , MessageClass = MC_PMIdentityMsg , MessageType = ID_DISCONNECTED , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:05:25.587	src/LNBCVTInterface.C	356	Checking for Verification message for source id = 4233
+DEBUG	2017/03/23 11:05:25.587	src/LNBCVTInterface.C	373	No message found for source id= 4233
+INFO	2017/03/23 11:06:22.646	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 11:06:59.697	src/EI_Logger.C	373	(P/M->E/I)  , MessageSource = 0 , MessageDestination = 65 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:06:59.697	src/EI_Logger.C	373	(P/M->P/M)  , MessageSource = 0 , MessageDestination = 0 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:07:32.869	src/EI_Logger.C	373	(4258->???)  , MessageSource = 4258 , MessageDestination = -1 , MessageClass = MC_PMIdentityMsg , MessageType = ID_CONNECTED , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:07:32.869	src/LNBCVTInterface.C	4667	PVT mbx id 4258 appended and Total connected pvts 3
+DEBUG	2017/03/23 11:07:32.927	src/EI_Logger.C	373	(4258->???)  , MessageSource = 4258 , MessageDestination = -1 , MessageClass = MC_Message , MessageType = M_STATUSREQUEST , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:07:32.927	src/EI_Logger.C	373	(E/I->4258)  , MessageSource = -1 , MessageDestination = 4258 , MessageClass = MC_LNBStatusMsg , MessageType =  , MessageId = 65535 , MessageReply = 0 , ApplicationId = 1010 , EquipmentState = 13 , CommunicationState = 0 , ApplicationType = 55
+DEBUG	2017/03/23 11:07:32.927	src/EI_Logger.C	373	(E/I->4258)  , MessageSource = -1 , MessageDestination = 4258 , MessageClass = MC_ExhaustListMsg , MessageType = EL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490285252 , ExhaustListSize = 0 , SpliceNoCheckListSize = 0 , SpliceAlertListSize = 0 , PulledOutInListSize = 0
+DEBUG	2017/03/23 11:07:32.927	src/KXMachineFeederSetup.EC	10117	Sending Setup Check entries
+DEBUG	2017/03/23 11:07:32.927	src/KXMachineFeederSetup.EC	10133	Sending 0 setup check entries
+DEBUG	2017/03/23 11:07:32.927	src/EI_Logger.C	373	(E/I->4258)  , MessageSource = -1 , MessageDestination = 4258 , MessageClass = MC_PendingSetupListMsg , MessageType = PSL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490285252 , ListSize = 0
+DEBUG	2017/03/23 11:07:32.927	src/SetupAuditMachineManager.EC	1782	Setup Audit Status Check
+DEBUG	2017/03/23 11:07:32.929	src/EI_Logger.C	373	(E/I->4258)  , MessageSource = -1 , MessageDestination = 4258 , MessageClass = MC_SetupAuditStatusMsg , MessageType = SAS_STATUS_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , ModuleId = 1010 , SetupAuditId = -1 , SetupAuditStartTime = 0 , SetupAuditCompleteTime = 0 , SetupAuditType = -1 , AuditStatus = 1 , NextAuditStartTime = 0 , FrontAuditStartTime = 0 , FrontAuditCompleteTime = 0 , MachineFrontStatus = 2 , RearAuditStartTime = 0 , RearAuditCompleteTime = 0 , MachineRearStatus = 2
+DEBUG	2017/03/23 11:07:32.929	src/EI_Logger.C	373	last message repeated 1 times.
+DEBUG	2017/03/23 11:07:32.929	src/EI_Logger.C	373	(E/I->4258)  , MessageSource = -1 , MessageDestination = 4258 , MessageClass = MC_LockStatusMsg , MessageType = LCKST_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , LockStatusOverall = 0 , IgnoreStatusOverall = 0 , ProtocolLockStatus = 10 , ListSize = 0
+DEBUG	2017/03/23 11:07:32.929	src/LNBLockStatus.C	532	Canceling all pending Panel Displays for 1
+DEBUG	2017/03/23 11:07:51.061	src/EI_Logger.C	373	(4253->???)  , MessageSource = 4253 , MessageDestination = -1 , MessageClass = MC_PMIdentityMsg , MessageType = ID_DISCONNECTED , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:07:51.061	src/LNBCVTInterface.C	356	Checking for Verification message for source id = 4253
+DEBUG	2017/03/23 11:07:51.061	src/LNBCVTInterface.C	373	No message found for source id= 4253
+INFO	2017/03/23 11:07:52.063	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 11:12:32.556	src/EI_Logger.C	373	last message repeated 3 times.
+DEBUG	2017/03/23 11:12:32.556	src/EI_Logger.C	373	(P/M->E/I)  , MessageSource = 0 , MessageDestination = 65 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:12:32.558	src/EI_Logger.C	373	(P/M->P/M)  , MessageSource = 0 , MessageDestination = 0 , MessageClass = MC_Message , MessageType = M_PING , MessageId = 65535 , MessageReply = 0
+INFO	2017/03/23 11:13:52.647	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 11:14:27.032	src/EI_Logger.C	373	(4263->???)  , MessageSource = 4263 , MessageDestination = -1 , MessageClass = MC_PMIdentityMsg , MessageType = ID_CONNECTED , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:14:27.032	src/LNBCVTInterface.C	4667	PVT mbx id 4263 appended and Total connected pvts 3
+DEBUG	2017/03/23 11:14:27.108	src/EI_Logger.C	373	(4263->???)  , MessageSource = 4263 , MessageDestination = -1 , MessageClass = MC_Message , MessageType = M_STATUSREQUEST , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:14:27.108	src/EI_Logger.C	373	(E/I->4263)  , MessageSource = -1 , MessageDestination = 4263 , MessageClass = MC_LNBStatusMsg , MessageType =  , MessageId = 65535 , MessageReply = 0 , ApplicationId = 1010 , EquipmentState = 13 , CommunicationState = 0 , ApplicationType = 55
+DEBUG	2017/03/23 11:14:27.108	src/EI_Logger.C	373	(E/I->4263)  , MessageSource = -1 , MessageDestination = 4263 , MessageClass = MC_ExhaustListMsg , MessageType = EL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490285667 , ExhaustListSize = 0 , SpliceNoCheckListSize = 0 , SpliceAlertListSize = 0 , PulledOutInListSize = 0
+DEBUG	2017/03/23 11:14:27.108	src/KXMachineFeederSetup.EC	10117	Sending Setup Check entries
+DEBUG	2017/03/23 11:14:27.108	src/KXMachineFeederSetup.EC	10133	Sending 0 setup check entries
+DEBUG	2017/03/23 11:14:27.108	src/EI_Logger.C	373	(E/I->4263)  , MessageSource = -1 , MessageDestination = 4263 , MessageClass = MC_PendingSetupListMsg , MessageType = PSL_MTYPE , MessageId = 65535 , MessageReply = 0 , ZoneId = 1011 , EquipmentId = 1020 , Timestamp = 1490285667 , ListSize = 0
+DEBUG	2017/03/23 11:14:27.108	src/SetupAuditMachineManager.EC	1782	Setup Audit Status Check
+DEBUG	2017/03/23 11:14:27.110	src/EI_Logger.C	373	(E/I->4263)  , MessageSource = -1 , MessageDestination = 4263 , MessageClass = MC_SetupAuditStatusMsg , MessageType = SAS_STATUS_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , ModuleId = 1010 , SetupAuditId = -1 , SetupAuditStartTime = 0 , SetupAuditCompleteTime = 0 , SetupAuditType = -1 , AuditStatus = 1 , NextAuditStartTime = 0 , FrontAuditStartTime = 0 , FrontAuditCompleteTime = 0 , MachineFrontStatus = 2 , RearAuditStartTime = 0 , RearAuditCompleteTime = 0 , MachineRearStatus = 2
+DEBUG	2017/03/23 11:14:27.110	src/EI_Logger.C	373	last message repeated 1 times.
+DEBUG	2017/03/23 11:14:27.110	src/EI_Logger.C	373	(E/I->4263)  , MessageSource = -1 , MessageDestination = 4263 , MessageClass = MC_LockStatusMsg , MessageType = LCKST_MSG , MessageId = 65535 , MessageReply = 0 , EquipmentId = 1020 , LockStatusOverall = 0 , IgnoreStatusOverall = 0 , ProtocolLockStatus = 10 , ListSize = 0
+DEBUG	2017/03/23 11:14:27.110	src/LNBLockStatus.C	532	Canceling all pending Panel Displays for 1
+INFO	2017/03/23 11:15:22.163	src/LNBCVTInterface.C	1032	Component Count Sync Timer expired
+DEBUG	2017/03/23 11:16:03.540	src/EI_Logger.C	373	(4271->???)  , MessageSource = 4271 , MessageDestination = -1 , MessageClass = MC_AppDebugModeMsg , MessageType = ADS_QUERY_DEBUG_STATUS , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:16:03.540	src/EI_Logger.C	373	(4271->4271)  , MessageSource = 4271 , MessageDestination = 4271 , MessageClass = MC_AppDebugModeMsg , MessageType = ADS_DEBUG_ON , MessageId = 65535 , MessageReply = 0 , FileName = "/home/panadmin/data/log/cimclogs/20170323/LNB_CVT_INTERFACE_Module-4_APP_20170323002252.log" , RouteId = 1007
+DEBUG	2017/03/23 11:16:03.694	src/EI_Logger.C	373	(4271->???)  , MessageSource = 4271 , MessageDestination = -1 , MessageClass = MC_AppDebugModeMsg , MessageType = ADS_QUERY_DEBUG_STATUS , MessageId = 65535 , MessageReply = 0
+DEBUG	2017/03/23 11:16:03.694	src/EI_Logger.C	373	(4271->4271)  , MessageSource = 4271 , MessageDestination = 4271 , MessageClass = MC_AppDebugModeMsg , MessageType = ADS_DEBUG_ON , MessageId = 65535 , MessageReply = 0 , FileName = "/home/panadmin/data/log/cimclogs/20170323/LNB_CVT_INTERFACE_Module-4_APP_20170323002252.log" , RouteId = 1007

@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+mybkup
+#
+cd infiles
+mybkup
+cd ..
+#
+cd lnb_msgs
+mybkup
+cd ..
+#
+cd utils
+mybkup
+cd ..
+#
+cd sql
+mybkup *sql
+cd ..
+#
+exit 0
