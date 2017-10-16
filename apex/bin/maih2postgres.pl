@@ -54,6 +54,7 @@ my $verbose = NOVERBOSE;
 my $delimiter = "\t";
 my $row_delimiter = "\n";
 my $export_to_postgresql = TRUE;
+my $debug_flag = FALSE;
 #
 my $host_name = "localhost";
 my $database_name = undef; # the site name
@@ -134,7 +135,7 @@ sub create_db
 {
     my ($host, $port, $db, $user, $pwd) = @_;
     #
-    my $dbh = undef;
+    $dbh = undef;
     my $dsn = "dbi:Pg:dbname='';host=$host;port=$port";
     if ( ! defined($dbh = DBI->connect($dsn, 
                                        $user_name, 
@@ -142,7 +143,7 @@ sub create_db
                                        { PrintError => 0,
                                          RaiseError => 0 })))
     {
-        printf $log_fh "\t%d: ERROR: DB connect failed: %s\n", 
+        printf $log_fh "%d: ERROR: DB connect failed: %s\n", 
                        __LINE__, $DBI::errstr;
         return FAIL;
     }
@@ -152,7 +153,7 @@ sub create_db
     my $sth = $dbh->prepare("select datname from pg_database");
     if ( ! defined($sth))
     {
-        printf $log_fh "\t%d: ERROR: DB prepare failed: %s\n", 
+        printf $log_fh "%d: ERROR: DB prepare failed: %s\n", 
                        __LINE__, $DBI::errstr;
         $dbh->disconnect;
         $dbh = undef;
@@ -174,11 +175,11 @@ sub create_db
     #
     if ($found)
     {
-        printf $log_fh "\t%d: ==>> DB %s: EXISTS.\n", __LINE__, $db;
+        printf $log_fh "%d: ==>> DB %s: EXISTS.\n", __LINE__, $db;
     }
     else
     {
-        printf $log_fh "\t%d: ==>> DB %s: NOT EXISTS. Creating.\n", 
+        printf $log_fh "%d: ==>> DB %s: NOT EXISTS. Creating.\n", 
                        __LINE__, $db;
         #
         my $sql = "create database $db";
@@ -190,7 +191,7 @@ sub create_db
         $sth = $dbh->prepare($sql);
         if ( ! defined($sth))
         {
-            printf $log_fh "\t%d: ERROR: DB prepare failed: %s\n", 
+            printf $log_fh "%d: ERROR: DB prepare failed: %s\n", 
                            __LINE__, $DBI::errstr;
             $dbh->disconnect;
             $dbh = undef;
@@ -198,11 +199,11 @@ sub create_db
         }
         if (defined($sth->execute()))
         {
-            printf $log_fh "\t%d: Database created.\n", __LINE__;
+            printf $log_fh "%d: Database created.\n", __LINE__;
         }
         else
         {
-            printf $log_fh "\t%d: ERROR: ==>> DB %s: STILL DOES NOT EXISTS.\n%s\n", __LINE__, $db, $DBI::errstr;
+            printf $log_fh "%d: ERROR: ==>> DB %s: STILL DOES NOT EXISTS.\n%s\n", __LINE__, $db, $DBI::errstr;
             $dbh->disconnect;
             $dbh = undef;
             return FAIL;
@@ -219,7 +220,7 @@ sub create_schema
 {
     my ($host, $port, $db, $schema, $user, $pwd) = @_;
     #
-    my $dbh = undef;
+    $dbh = undef;
     my $dsn = "dbi:Pg:dbname=$db;host=$host;port=$port";
     if ( ! defined($dbh = DBI->connect($dsn, 
                                        $user_name, 
@@ -227,7 +228,7 @@ sub create_schema
                                        { PrintError => 0,
                                          RaiseError => 0 })))
     {
-        printf $log_fh "\t%d: ERROR: DB connect failed: %s\n", 
+        printf $log_fh "%d: ERROR: DB connect failed: %s\n", 
                        __LINE__, $DBI::errstr;
         return FAIL;
     }
@@ -237,7 +238,7 @@ sub create_schema
     my $sth = $dbh->prepare("select catalog_name, schema_name , schema_owner from information_schema.schemata");
     if ( ! defined($sth))
     {
-        printf $log_fh "\t%d: ERROR: DB prepare failed: %s\n", 
+        printf $log_fh "%d: ERROR: DB prepare failed: %s\n", 
                        __LINE__, $DBI::errstr;
         $dbh->disconnect;
         $dbh = undef;
@@ -259,12 +260,12 @@ sub create_schema
     #
     if ($found)
     {
-        printf $log_fh "\t%d: ==>> DB %s, SCHEMA %s: EXISTS.\n", 
+        printf $log_fh "%d: ==>> DB %s, Schema %s: EXISTS.\n", 
                __LINE__, $db, $schema;
     }
     else
     {
-        printf $log_fh "\t%d: ==>> DB %s, SCHEMA %s: NOT EXISTS. Creating.\n", 
+        printf $log_fh "%d: ==>> DB %s, Schema %s: NOT EXISTS. Creating.\n", 
                        __LINE__, $db, $schema;
         #
         my $sql = "create schema $schema";
@@ -272,7 +273,7 @@ sub create_schema
         $sth = $dbh->prepare($sql);
         if ( ! defined($sth))
         {
-            printf $log_fh "\t%d: ERROR: DB prepare failed: %s\n", 
+            printf $log_fh "%d: ERROR: DB prepare failed: %s\n", 
                            __LINE__, $DBI::errstr;
             $dbh->disconnect;
             $dbh = undef;
@@ -284,7 +285,7 @@ sub create_schema
         }
         else
         {
-            printf $log_fh "\t%d: ERROR: ==>> DB %s, SCHEMA %s: STILL DOES NOT EXISTS.\n%s\n", __LINE__, $db, $schema, $DBI::errstr;
+            printf $log_fh "%d: ERROR: ==>> DB %s, Schema %s: STILL DOES NOT EXISTS.\n%s\n", __LINE__, $db, $schema, $DBI::errstr;
             $dbh->disconnect;
             $dbh = undef;
             return FAIL;
@@ -297,6 +298,84 @@ sub create_schema
     return SUCCESS;
 }
 #
+sub table_exists
+{
+    my ($schema, $table) = @_;
+    #
+    my $sth = $dbh->prepare("select count(*) from pg_tables where tablename = '$table' and schemaname = '$schema'");
+    die "Prepare failed: $DBI::errstr\n" 
+        unless (defined($sth));
+    #
+    die "Unable to execute: " . $sth->errstr 
+        unless (defined($sth->execute()));
+    #
+    my @data = $sth->fetchrow_array();
+    if ($data[0] == 0)
+    {
+        printf $log_fh "%d: Schema.Table does NOT EXIST: %s.%s\n", 
+                       __LINE__, $schema, $table;
+        return FALSE;
+    }
+    else
+    {
+        printf $log_fh "%d: Schema.Table does EXIST: %s.%s\n", 
+                       __LINE__, $schema, $table;
+        return TRUE;
+    }
+}
+#
+sub add_columns_to_table
+{
+    my ($schema, $table, $pcols) = @_;
+    #
+    return SUCCESS;
+}
+#
+sub create_table
+{
+    my ($schema, $table, $pcols) = @_;
+    #
+    my $sql = "create table $schema.$table ( ";
+    #
+    foreach my $col (@{$pcols})
+    {
+        $col =~ tr/A-Z/a-z/;
+        $sql .= "\"$col\" text, ";
+    }
+    #
+    $sql =~ s/, *$//;
+    $sql .= " )";
+    #
+    printf "==>> SQL Insert command: %s\n", $sql;
+    #
+    my $sth = $dbh->prepare($sql);
+    die "Prepare failed: $DBI::errstr\n" 
+        unless (defined($sth));
+    #
+    die "Unable to execute: " . $sth->errstr 
+        unless (defined($sth->execute()));
+    #
+    printf $log_fh "%d: Table.schema created: %s.%s\n", 
+                    __LINE__, $schema, $table;
+    return SUCCESS;
+}
+#
+sub check_table
+{
+    my ($pcols, $schema, $table) = @_;
+    #
+    if (table_exists($schema, $table) == TRUE)
+    {
+        return add_columns_to_table($schema, 
+                                    $table, 
+                                    $pcols);
+    }
+    else
+    {
+        return create_table($schema, $table, $pcols);
+    }
+}
+#
 sub open_db
 {
     my ($pdbh, $host, $port, $db, $user, $pwd) = @_;
@@ -305,9 +384,10 @@ sub open_db
     if ( ! defined($$pdbh = DBI->connect($dsn, 
                                          $user_name, 
                                          $password, 
-                                         { RaiseError => 1 })))
+                                         { PrintError => 0,
+                                           RaiseError => 0 })))
     {
-        printf $log_fh "\t%d: ERROR: DB connect failed: %s\n", 
+        printf $log_fh "%d: ERROR: DB connect failed: %s\n", 
                        __LINE__, $DBI::errstr;
         return FAIL;
     }
@@ -332,19 +412,19 @@ sub read_file
 {
     my ($prod_file, $praw_data) = @_;
     #
-    printf $log_fh "\t%d: Reading Product file: %s\n", 
+    printf $log_fh "%d: Reading Product file: %s\n", 
         __LINE__, $prod_file
         if ($verbose >= MINVERBOSE);
     #
     if ( ! -r $prod_file )
     {
-        printf $log_fh "\t%d: ERROR: file $prod_file is NOT readable\n\n", __LINE__;
+        printf $log_fh "%d: ERROR: file $prod_file is NOT readable\n\n", __LINE__;
         return FAIL;
     }
     #
     unless (open(INFD, $prod_file))
     {
-        printf $log_fh "\t%d: ERROR: unable to open $prod_file.\n\n", __LINE__;
+        printf $log_fh "%d: ERROR: unable to open $prod_file.\n\n", __LINE__;
         return FAIL;
     }
     @{$praw_data} = <INFD>;
@@ -354,7 +434,7 @@ sub read_file
     chomp(@{$praw_data});
     s/\r//g for @{$praw_data};
     #
-    printf $log_fh "\t\t%d: Lines read: %d\n", __LINE__, scalar(@{$praw_data}) if ($verbose >= MINVERBOSE);
+    printf $log_fh "%d: Lines read: %d\n", __LINE__, scalar(@{$praw_data}) if ($verbose >= MINVERBOSE);
     #
     return SUCCESS;
 }
@@ -411,7 +491,7 @@ sub load_name_value
     #
     if (scalar(@{$pprod_db->{DATA}->{$section}}) <= 0)
     {
-        printf $log_fh "\t\t%d: NO NAME-VALUE DATA FOUND IN SECTION %s. Lines read: %d\n", 
+        printf $log_fh "%d: NO NAME-VALUE DATA FOUND IN SECTION %s. Lines read: %d\n", 
             __LINE__, $section, ($$pirec - $start_irec);
         return SUCCESS;
     }
@@ -422,7 +502,7 @@ sub load_name_value
     #
     my $number_columns = scalar(@{$pprod_db->{COLUMN_NAMES}->{$section}});
     #
-    printf $log_fh "\t\t\t%d: Number of Columns: %d\n", 
+    printf $log_fh "%d: Number of Columns: %d\n", 
         __LINE__, 
         $number_columns
         if ($verbose >= MINVERBOSE);
@@ -441,7 +521,7 @@ sub load_name_value
         my @tokens = split_quoted_string($record, "${delimiter}");
         my $number_tokens = scalar(@tokens);
         #
-        printf $log_fh "\t\t\t%d: Number of tokens in record: %d\n", 
+        printf $log_fh "%d: Number of tokens in record: %d\n", 
             __LINE__, $number_tokens 
             if ($verbose >= MAXVERBOSE);
         #
@@ -454,14 +534,14 @@ sub load_name_value
         }
         else
         {
-            printf $log_fh "\t\t\t%d: ERROR: Section: %s, SKIPPING RECORD - NUMBER TOKENS (%d) != NUMBER COLUMNS (%d)\n", __LINE__, $section, $number_tokens, $number_columns;
+            printf $log_fh "%d: ERROR: Section: %s, SKIPPING RECORD - NUMBER TOKENS (%d) != NUMBER COLUMNS (%d)\n", __LINE__, $section, $number_tokens, $number_columns;
         }
     }
-    printf $log_fh "\t\t%d: Number of key-value pairs: %d\n", 
+    printf $log_fh "%d: Number of key-value pairs: %d\n", 
         __LINE__, 
         scalar(@{$pprod_db->{DATA}->{$section}})
         if ($verbose >= MINVERBOSE);
-    printf $log_fh "\t\t%d: Lines read: %d\n", 
+    printf $log_fh "%d: Lines read: %d\n", 
         __LINE__, 
         ($$pirec - $start_irec)
         if ($verbose >= MINVERBOSE);
@@ -573,7 +653,7 @@ sub load_list
     #
     if (scalar(@{$pprod_db->{DATA}->{$section}}) <= 0)
     {
-        printf $log_fh "\t\t\t%d: NO LIST DATA FOUND IN SECTION %s. Lines read: %d\n", 
+        printf $log_fh "%d: NO LIST DATA FOUND IN SECTION %s. Lines read: %d\n", 
             __LINE__, $section, ($$pirec - $start_irec);
         return SUCCESS;
     }
@@ -586,7 +666,7 @@ sub load_list
     #
     my $number_columns = scalar(@{$pprod_db->{COLUMN_NAMES}->{$section}});
     #
-    printf $log_fh "\t\t\t%d: Number of Columns: %d\n", 
+    printf $log_fh "%d: Number of Columns: %d\n", 
         __LINE__, 
         $number_columns
         if ($verbose >= MINVERBOSE);
@@ -605,7 +685,7 @@ sub load_list
         my @tokens = split_quoted_string($record, ' ');
         my $number_tokens = scalar(@tokens);
         #
-        printf $log_fh "\t\t\t%d: Number of tokens in record: %d\n", 
+        printf $log_fh "%d: Number of tokens in record: %d\n", 
             __LINE__, $number_tokens 
             if ($verbose >= MAXVERBOSE);
         #
@@ -618,7 +698,7 @@ sub load_list
         }
         else
         {
-            printf $log_fh "\t\t\t%d: ERROR: Section: %s, SKIPPING RECORD - NUMBER TOKENS (%d) != NUMBER COLUMNS (%d)\n", __LINE__, $section, $number_tokens, $number_columns;
+            printf $log_fh "%d: ERROR: Section: %s, SKIPPING RECORD - NUMBER TOKENS (%d) != NUMBER COLUMNS (%d)\n", __LINE__, $section, $number_tokens, $number_columns;
         }
     }
     #
@@ -629,7 +709,7 @@ sub process_data
 {
     my ($prod_file, $praw_data, $pprod_db) = @_;
     #
-    printf $log_fh "\t%d: Processing product data: %s\n", 
+    printf $log_fh "%d: Processing product data: %s\n", 
         __LINE__, $prod_file 
         if ($verbose >= MINVERBOSE);
     #
@@ -640,7 +720,7 @@ sub process_data
     {
         my $rec = $praw_data->[$irec];
         #
-        printf $log_fh "\t\t%d: Record %04d: <%s>\n", 
+        printf $log_fh "%d: Record %04d: <%s>\n", 
             __LINE__, $irec, $rec
                if ($verbose >= MINVERBOSE);
         #
@@ -648,7 +728,7 @@ sub process_data
         {
             my $section = ${1};
             #
-            printf $log_fh "\t\t%d: Section %03d: %s\n", 
+            printf $log_fh "%d: Section %03d: %s\n", 
                 __LINE__, ++$sec_no, $section
                 if ($verbose >= MINVERBOSE);
             #
@@ -657,7 +737,7 @@ sub process_data
             if ($rec =~ m/^\s*$/)
             {
                 $irec += 2;
-                printf $log_fh "\t\t%d: Empty section - %s\n", 
+                printf $log_fh "%d: Empty section - %s\n", 
                                __LINE__, $section;
             }
             elsif ($rec =~ m/.*=.*/)
@@ -688,19 +768,118 @@ sub process_data
 #
 ######################################################################
 #
-sub export_to_postgres
+sub export_section_to_postgres
 {
-    my ($prod_file, $pprod_db) = @_;
+    my ($pprod_db, $schema, $section) = @_;
+    #
+    my $table_name = $section;
+    $table_name =~ tr/A-Z/a-z/;
+    $table_name =~ s/[\[\]]//g;
+    #
+    printf $log_fh "%d: Export section %s to schema.table %s.%s\n", 
+                   __LINE__, $section, $schema, $table_name;
+    #
+    # check if table exists
+    #
+    my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
+    if (check_table($pcols, $schema, $table_name) != SUCCESS)
+    {
+        printf $log_fh "%d: ERROR: Check table failed: section %s, schema.table %s.%s\n", 
+                   __LINE__, $section, $schema, $table_name;
+        return FAIL;
+    }
+    #
+    if ($debug_flag == TRUE)
+    {
+        printf $log_fh "\n%s\n", $section;
+        #
+        my $table_name = $section;
+        $table_name =~ tr/a-z/A-Z/;
+        $table_name =~ s/[\[\]]//g;
+        printf $log_fh "%s\n", $table_name;
+        #
+        my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
+        my $comma = "";
+        foreach my $col (@{$pcols})
+        {
+            printf $log_fh "%s%s", $comma, $col;
+            $comma = ',';
+        }
+        printf $log_fh "\n";
+        #
+        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
+        {
+            my $comma = "";
+            foreach my $col (@{$pcols})
+            {
+                printf $log_fh "%s%s", $comma, $prow->{$col};
+                $comma = ',';
+            }
+            printf $log_fh "\n";
+        }
+    }
+    else
+    {
+    }
     #
     return SUCCESS;
 }
 #
+sub export_to_postgres
+{
+    my ($prod_file, $schema, $pprod_db) = @_;
+    #
+    printf $log_fh "%d: Exporting data file to Postgres: %s\n", 
+                   __LINE__, $prod_file;
+    #
+    my $prod_name = basename($prod_file);
+    $prod_name =~ tr/a-z/A-Z/;
+    #
+    printf $log_fh "%d: Schema, Product Name: %s, %s\n", 
+                   __LINE__, $schema, $prod_name;
+    #
+    my $status = FAIL;
+    #
+    my $max_isec = scalar(@{$pprod_db->{ORDER}});
+    for (my $isec = 0; $isec<$max_isec; ++$isec)
+    {
+        my $section = $pprod_db->{ORDER}->[$isec];
+        #
+        printf $log_fh "%d: writing section: %s\n", 
+                   __LINE__, $section;
+        #
+        if ($pprod_db->{TYPE}->{$section} == SECTION_NAME_VALUE)
+        {
+            printf $log_fh "%d: Name-Value Section: %s\n", 
+                   __LINE__, $section;
+            $status = export_section_to_postgres($pprod_db,
+                                                 $schema,
+                                                 $section);
+        }
+        elsif ($pprod_db->{TYPE}->{$section} == SECTION_LIST)
+        {
+            printf $log_fh "%d: List Section: %s\n", 
+                   __LINE__, $section;
+            $status = export_section_to_postgres($pprod_db,
+                                                 $schema,
+                                                 $section);
+        }
+        else
+        {
+            printf $log_fh "%d: Unknown type Section: %s\n", 
+                __LINE__, $section;
+        }
+    }
+    #
+    return $status;
+}
+#
 sub process_file
 {
-    my ($prod_file) = @_;
+    my ($prod_file, $schema) = @_;
     #
-    printf $log_fh "\n%d: Processing product File: %s\n", 
-                   __LINE__, $prod_file;
+    printf $log_fh "\n%d: Processing product File, Schema: %s,%s\n", 
+                   __LINE__, $prod_file, $schema;
     #
     my @raw_data = ();
     my %prod_db = ();
@@ -708,22 +887,22 @@ sub process_file
     my $status = FAIL;
     if (read_file($prod_file, \@raw_data) != SUCCESS)
     {
-        printf $log_fh "\t%d: ERROR: Reading product file: %s\n", 
+        printf $log_fh "%d: ERROR: Reading product file: %s\n", 
                        __LINE__, $prod_file;
     }
     elsif (process_data($prod_file, \@raw_data, \%prod_db) != SUCCESS)
     {
-        printf $log_fh "\t%d: ERROR: Processing product file: %s\n", 
+        printf $log_fh "%d: ERROR: Processing product file: %s\n", 
                        __LINE__, $prod_file;
     }
-    elsif (export_to_postgres($prod_file, \%prod_db) != SUCCESS)
+    elsif (export_to_postgres($prod_file, $schema, \%prod_db) != SUCCESS)
     {
-        printf $log_fh "\t%d: ERROR: Exporting product file to CSV: %s\n", 
+        printf $log_fh "%d: ERROR: Exporting product file to CSV: %s\n", 
                        __LINE__, $prod_file;
     }
     else
     {
-        printf $log_fh "\t%d: Success processing product file: %s\n", 
+        printf $log_fh "%d: Success processing product file: %s\n", 
             __LINE__, $prod_file
             if ($verbose >= MINVERBOSE);
         $status = SUCCESS;
@@ -851,6 +1030,21 @@ printf $log_fh "\n%d: Open DB for (host,port,db,user) = (%s,%s,%s,%s)\n",
        $database_name, 
        (defined($user_name) ? $user_name : "undef");
 #
+# clean up upon exit
+#
+END {
+    if (defined($dbh))
+    {
+        printf $log_fh "\n%d: END block. Closing DB.\n", __LINE__;
+        close_db($dbh);
+        $dbh = undef;
+    }
+    else
+    {
+        printf $log_fh "\n%d: END block. DB already closed.\n", __LINE__;
+    }
+}
+#
 # check if db exists.
 #
 if (create_db($host_name, $port, 
@@ -864,6 +1058,7 @@ if (create_db($host_name, $port,
                    (defined($password) ? $password : "undef");
     exit 2;
 }
+#
 #
 # check if schema exists.
 #
@@ -899,17 +1094,17 @@ if ( -t STDIN )
     #
     if (scalar(@ARGV) == 0)
     {
-        printf $log_fh "%d: ERROR: No product files given.\n", __LINE__;
+        printf $log_fh "\n%d: ERROR: No product files given.\n", __LINE__;
         usage($cmd);
         exit 2;
     }
     #
     foreach my $prod_file (@ARGV)
     {
-        my $status = process_file($prod_file);
+        my $status = process_file($prod_file, $schema_name);
         if ($status != SUCCESS)
         {
-            printf $log_fh "%d: ERROR: Failed to process %s.\n", 
+            printf $log_fh "\n%d: ERROR: Failed to process %s.\n", 
                             __LINE__, $prod_file;
             exit 2;
         }
@@ -922,10 +1117,10 @@ else
     while( defined(my $prod_file = <STDIN>) )
     {
         chomp($prod_file);
-        my $status = process_file($prod_file);
+        my $status = process_file($prod_file, $schema_name);
         if ($status != SUCCESS)
         {
-            printf $log_fh "%d: ERROR: Failed to process %s.\n", 
+            printf $log_fh "\n%d: ERROR: Failed to process %s.\n", 
                             __LINE__, $prod_file;
             exit 2;
         }
@@ -933,11 +1128,131 @@ else
 }
 #
 close_db($dbh);
+$dbh = undef;
 # 
 exit 0;
 
 __DATA__
 
+#!/usr/bin/perl -w
+######################################################################
+#
+# process a maihime file and store the data in JSON files.
+#
+######################################################################
+#
+use strict;
+#
+use Carp;
+use Getopt::Std;
+use File::Find;
+use File::Path qw(mkpath);
+use File::Basename;
+use File::Path 'rmtree';
+use Data::Dumper;
+#
+######################################################################
+#
+# logical constants
+#
+use constant TRUE => 1;
+use constant FALSE => 0;
+#
+use constant SUCCESS => 1;
+use constant FAIL => 0;
+#
+# required section names
+#
+use constant INDEX => '[Index]';
+use constant INFORMATION => '[Information]';
+#
+# verbose levels
+#
+use constant NOVERBOSE => 0;
+use constant MINVERBOSE => 1;
+use constant MIDVERBOSE => 2;
+use constant MAXVERBOSE => 3;
+#
+# section types
+#
+use constant SECTION_UNKNOWN => 0;
+use constant SECTION_NAME_VALUE => 1;
+use constant SECTION_LIST => 2;
+#
+######################################################################
+#
+# globals
+#
+my $cmd = $0;
+my $log_fh = *STDOUT;
+#
+# cmd line options
+#
+my $logfile = '';
+my $verbose = NOVERBOSE;
+my $rmv_json_dir = FALSE;
+my $delimiter = "\t";
+my $row_delimiter = "\n";
+my $debug_mode = FALSE;
+my $row_separator = "\n";
+#
+my $json_base_path = undef;
+$json_base_path = $ENV{'OMBT_JSON_BASE_PATH'} 
+    if (exists($ENV{'OMBT_JSON_BASE_PATH'}));
+$json_base_path = "." 
+    unless (defined($json_base_path) and ($json_base_path ne ""));
+#
+my $json_rel_path = undef;
+$json_rel_path = $ENV{'OMBT_JSON_REL_PATH'} 
+    if (exists($ENV{'OMBT_JSON_REL_PATH'}));
+$json_rel_path = "JSON_COMBINED" 
+    unless (defined($json_rel_path) and ($json_rel_path ne ""));
+#
+my $json_path = $json_base_path . '/' . $json_rel_path;
+#
+my %verbose_levels =
+(
+    off => NOVERBOSE(),
+    min => MINVERBOSE(),
+    mid => MIDVERBOSE(),
+    max => MAXVERBOSE()
+);
+#
+######################################################################
+#
+# miscellaneous functions
+#
+sub usage
+{
+    my ($arg0) = @_;
+    print $log_fh <<EOF;
+
+usage: $arg0 [-?] [-h]  \\ 
+        [-w | -W |-v level] \\ 
+        [-l logfile] \\ 
+        [-B base path] \\
+        [-R relative path] \\
+        [-P path] \\
+        [-r] \\
+        [-d row delimiter] \\
+        [maihime-file ...] or reads STDIN
+
+where:
+    -? or -h - print this usage.
+    -w - enable warning (level=min=1)
+    -W - enable warning and trace (level=mid=2)
+    -v - verbose level: 0=off,1=min,2=mid,3=max
+    -l logfile - log file path
+    -B path - base json path, defaults to '${json_base_path}'
+              or use environment variable OMBT_JSON_BASE_PATH.
+    -R path - relative json path, defaults to '${json_rel_path}'
+              or use environment variable OMBT_JSON_REL_PATH.
+    -P path - json path, defaults to '${json_path}'
+    -r - remove old JSON directory (off by default).
+    -d delimiter - row delimiter (new line by default)
+
+EOF
+}
 #
 ######################################################################
 #
@@ -1214,8 +1529,7 @@ sub read_file
     my ($prod_file, $praw_data) = @_;
     #
     printf $log_fh "\t%d: Reading Product file: %s\n", 
-        __LINE__, $prod_file
-        if ($verbose >= MINVERBOSE);
+                   __LINE__, $prod_file;
     #
     if ( ! -r $prod_file )
     {
@@ -1245,8 +1559,7 @@ sub process_data
     my ($prod_file, $praw_data, $pprod_db) = @_;
     #
     printf $log_fh "\t%d: Processing product data: %s\n", 
-        __LINE__, $prod_file 
-        if ($verbose >= MINVERBOSE);
+                   __LINE__, $prod_file;
     #
     my $max_rec = scalar(@{$praw_data});
     my $sec_no = 0;
@@ -1301,10 +1614,35 @@ sub process_data
     return SUCCESS;
 }
 #
-sub export_section_to_csv
+sub export_section_to_json
 {
     my ($outfh, $pprod_db, $section, $print_comma) = @_;
     #
+    if ($debug_mode == TRUE)
+    {
+        printf $outfh "\n%s\n", $section;
+        #
+        my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
+        my $comma = "";
+        foreach my $col (@{$pcols})
+        {
+            printf $outfh "%s%s", $comma, $col;
+            $comma = ',';
+        }
+        printf $outfh "\n";
+        #
+        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
+        {
+            my $comma = "";
+            foreach my $col (@{$pcols})
+            {
+                printf $outfh "%s%s", $comma, $prow->{$col};
+                $comma = ',';
+            }
+            printf $outfh "\n";
+        }
+    }
+    else
     {
         my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
         # printf $log_fh "%d: pcol_names: %s\n", __LINE__, Dumper($pcol_names);
@@ -1339,20 +1677,22 @@ sub export_section_to_csv
     }
 }
 #
-sub export_to_csv
+sub export_to_json
 {
-    my ($outfh, $prod_file, $pprod_db) = @_;
+    my ($prod_file, $pprod_db) = @_;
     #
-    printf $log_fh "\t%d: Writing product data to CSV: %s\n", 
-        __LINE__, $prod_file
-        if ($verbose >= MINVERBOSE);
+    printf $log_fh "\t%d: Writing product data to JSON: %s\n", 
+                   __LINE__, $prod_file;
     #
     my $prod_name = basename($prod_file);
     $prod_name =~ tr/a-z/A-Z/;
     #
-    printf $log_fh "\t\t%d: product: %s\n", 
-        __LINE__, $prod_name
-        if ($verbose >= MINVERBOSE);
+    my $prod_json_path = $json_path . '/' . $prod_name . '.JSON';
+    printf $log_fh "\t\t%d: product %s, JSON path: %s\n", 
+                   __LINE__, $prod_name, $prod_json_path;
+    #
+    open(my $outfh, "+>>" , $prod_json_path) || 
+        die "file is $prod_json_path: $!";
     #
     printf $outfh "{ \"RECIPE\" : \"%s\",\n\"DATA\" : [ ", $prod_name;
     #
@@ -1370,19 +1710,19 @@ sub export_to_csv
         {
             printf $log_fh "\t\t%d: Name-Value Section: %s\n", 
                    __LINE__, $section if ($verbose >= MINVERBOSE);
-            export_section_to_csv($outfh,
-                                  $pprod_db,
-                                  $section,
-                                  $print_comma);
+            export_section_to_json($outfh,
+                                   $pprod_db,
+                                   $section,
+                                   $print_comma);
         }
         elsif ($pprod_db->{TYPE}->{$section} == SECTION_LIST)
         {
             printf $log_fh "\t\t%d: List Section: %s\n", 
                    __LINE__, $section if ($verbose >= MINVERBOSE);
-            export_section_to_csv($outfh,
-                                  $pprod_db,
-                                  $section,
-                                  $print_comma);
+            export_section_to_json($outfh,
+                                   $pprod_db,
+                                   $section,
+                                   $print_comma);
         }
         else
         {
@@ -1391,6 +1731,8 @@ sub export_to_csv
         }
     }
     printf $outfh "\n] }\n";
+    #
+    close($outfh);
     #
     return SUCCESS;
 }
@@ -1416,31 +1758,140 @@ sub process_file
         printf $log_fh "\t%d: ERROR: Processing product file: %s\n", 
                        __LINE__, $prod_file;
     }
-    elsif (export_to_csv($prod_file, \%prod_db) != SUCCESS)
+    elsif (export_to_json($prod_file, \%prod_db) != SUCCESS)
     {
-        printf $log_fh "\t%d: ERROR: Exporting product file to CSV: %s\n", 
+        printf $log_fh "\t%d: ERROR: Exporting product file to JSON: %s\n", 
                        __LINE__, $prod_file;
     }
     else
     {
         printf $log_fh "\t%d: Success processing product file: %s\n", 
-            __LINE__, $prod_file
-            if ($verbose >= MINVERBOSE);
+                       __LINE__, $prod_file;
         $status = SUCCESS;
     }
     #
     return $status;
 }
 #
-sub export_to_postgresql
+######################################################################
+#
+# usage: $arg0 [-?] [-h]  \\ 
+#         [-w | -W |-v level] \\ 
+#         [-l logfile] \\ 
+#         [-B base path] \\
+#         [-R relative path] \\
+#         [-P path] \\
+#         [-r]  \\
+#         [-d row delimiter] \\
+#         [maihime-file ...] or reads STDIN
+#
+my %opts;
+if (getopts('?hwWv:B:R:P:l:rd:', \%opts) != 1)
 {
-    my ($db) = @_;
-    #
-    printf $log_fh "\n%d: Exporting CSV to DB %s\n", __LINE__, $db;
-    #
-    # my $cmd = sprintf "mongoimport -v --db %s --collection %s --file \"%s\"", $db, $col, $csv_path;
-    # printf $log_fh "\n%d: : Mongo import CMD: %s\n", __LINE__, $cmd;
-    #
-    # system $cmd;
+    usage($cmd);
+    exit 2;
 }
 #
+foreach my $opt (%opts)
+{
+    if (($opt eq 'h') or ($opt eq '?'))
+    {
+        usage($cmd);
+        exit 0;
+    }
+    elsif ($opt eq 'r')
+    {
+        $rmv_json_dir = TRUE;
+    }
+    elsif ($opt eq 'w')
+    {
+        $verbose = MINVERBOSE;
+    }
+    elsif ($opt eq 'W')
+    {
+        $verbose = MIDVERBOSE;
+    }
+    elsif ($opt eq 'v')
+    {
+        if ($opts{$opt} =~ m/^[0123]$/)
+        {
+            $verbose = $opts{$opt};
+        }
+        elsif (exists($verbose_levels{$opts{$opt}}))
+        {
+            $verbose = $verbose_levels{$opts{$opt}};
+        }
+        else
+        {
+            printf $log_fh "\n%d: ERROR: Invalid verbose level: $opts{$opt}\n", __LINE__;
+            usage($cmd);
+            exit 2;
+        }
+    }
+    elsif ($opt eq 'l')
+    {
+        local *FH;
+        $logfile = $opts{$opt};
+        open(FH, '>', $logfile) or die $!;
+        $log_fh = *FH;
+        printf $log_fh "\n%d: Log File: %s\n", __LINE__, $logfile;
+    }
+    elsif ($opt eq 'P')
+    {
+        $json_path = $opts{$opt} . '/';
+        printf $log_fh "\n%d: JSON path: %s\n", __LINE__, $json_path;
+    }
+    elsif ($opt eq 'R')
+    {
+        $json_rel_path = $opts{$opt} . '/';
+        $json_path = $json_base_path . '/' . $json_rel_path;
+        printf $log_fh "\n%d: JSON relative path: %s\n", __LINE__, $json_rel_path;
+    }
+    elsif ($opt eq 'B')
+    {
+        $json_base_path = $opts{$opt} . '/';
+        $json_path = $json_base_path . '/' . $json_rel_path;
+        printf $log_fh "\n%d: JSON base path: %s\n", __LINE__, $json_base_path;
+    }
+    elsif ($opt eq 'd')
+    {
+        $row_delimiter = $opts{$opt};
+    }
+}
+#
+if ( -t STDIN )
+{
+    #
+    # getting a list of files from command line.
+    #
+    if (scalar(@ARGV) == 0)
+    {
+        printf $log_fh "%d: ERROR: No product files given.\n", __LINE__;
+        usage($cmd);
+        exit 2;
+    }
+    #
+    rmtree($json_path) if ($rmv_json_dir == TRUE);
+    ( mkpath($json_path) || die $! ) unless ( -d $json_path );
+    #
+    foreach my $prod_file (@ARGV)
+    {
+        process_file($prod_file);
+    }
+    #
+}
+else
+{
+    printf $log_fh "%d: Reading STDIN for list of files ...\n", __LINE__;
+    #
+    rmtree($json_path) if ($rmv_json_dir == TRUE);
+    ( mkpath($json_path) || die $! ) unless ( -d $json_path );
+    #
+    while( defined(my $prod_file = <STDIN>) )
+    {
+        chomp($prod_file);
+        process_file($prod_file);
+    }
+}
+#
+exit 0;
