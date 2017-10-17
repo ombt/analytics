@@ -52,7 +52,6 @@ my $log_fh = *STDOUT;
 my $logfile = '';
 my $verbose = NOVERBOSE;
 my $delimiter = "\t";
-my $row_delimiter = "\n";
 my $export_to_postgresql = TRUE;
 my $debug_flag = FALSE;
 #
@@ -341,7 +340,7 @@ sub add_columns_to_table
     #
     my @cols_from_file = @{$pcols};
     tr/A-Z/a-z/ for @cols_from_file;
-    printf $log_fh "\n\t:%d: cols-from-file %s\n", 
+    printf $log_fh "\n\t%d: cols-from-file %s\n", 
            __LINE__, join(";", @{$pcols})
         if ($verbose >= MINVERBOSE);
     #
@@ -363,19 +362,19 @@ sub add_columns_to_table
         if ($same == TRUE)
         {
             # nothing to do, just return
-            printf $log_fh "\t:%d: file cols == table cols.\n", __LINE__
+            printf $log_fh "\t%d: file cols == table cols.\n", __LINE__
                 if ($verbose >= MINVERBOSE);
             return SUCCESS;
         }
         delete $columns_in_tables{$schema_table};
     }
-    printf $log_fh "\t:%d: file cols != table cols.\n", __LINE__;
+    printf $log_fh "\t%d: file cols != table cols.\n", __LINE__;
     #
     # unique columns in file section
     #
     my %seen = ();
     my @unique_cols_from_file = grep { ! $seen{$_}++ } @cols_from_file;
-    printf $log_fh "\n\t:%d: unique-cols-from-file %s\n", 
+    printf $log_fh "\n\t%d: unique-cols-from-file %s\n", 
            __LINE__, join(";", @unique_cols_from_file)
         if ($verbose >= MINVERBOSE);
     #
@@ -391,9 +390,9 @@ sub add_columns_to_table
     my @cols_from_table = ();
     while (my @data = $sth->fetchrow_array())
     {
-        unshift @cols_from_table, $data[2];
+        push @cols_from_table, $data[2];
     }
-    printf $log_fh "\n\t:%d: cols-from-table %s\n", 
+    printf $log_fh "\n\t%d: cols-from-table %s\n", 
            __LINE__, join(";", @cols_from_table)
         if ($verbose >= MINVERBOSE);
     #
@@ -401,7 +400,7 @@ sub add_columns_to_table
     #
     %seen = ();
     my @unique_cols_from_table = grep { ! $seen{$_}++ } @cols_from_table;
-    printf $log_fh "\t:%d: unique-cols-from-table %s\n", 
+    printf $log_fh "\t%d: unique-cols-from-table %s\n", 
            __LINE__, join(";", @unique_cols_from_table)
         if ($verbose >= MINVERBOSE);
     #
@@ -435,15 +434,15 @@ sub add_columns_to_table
     {
         if ($counts{$col} == 1)
         {
-            unshift @file_minus_table, $col;
+            push @file_minus_table, $col;
         }
         elsif ($counts{$col} == 2)
         {
-            unshift @table_minus_file, $col;
+            push @table_minus_file, $col;
         }
         else
         {
-            unshift @intersection, $col;
+            push @intersection, $col;
         }
     }
     #
@@ -482,12 +481,12 @@ sub create_table
     #
     foreach my $col (@{$pcols})
     {
-        $col =~ tr/A-Z/a-z/;
         $sql .= "\"$col\" text, ";
     }
     #
     $sql =~ s/, *$//;
     $sql .= " )";
+    $sql =~ tr/A-Z/a-z/;
     #
     printf $log_fh "%d: ==>> SQL CREATE DB command: %s\n", __LINE__, $sql;
     #
@@ -498,7 +497,7 @@ sub create_table
     die "Unable to execute: " . $sth->errstr 
         unless (defined($sth->execute()));
     #
-    printf $log_fh "%d: Table.schema created: %s.%s\n", 
+    printf $log_fh "%d: schema.table created: %s.%s\n", 
                     __LINE__, $schema, $table;
     return SUCCESS;
 }
@@ -509,9 +508,7 @@ sub check_table
     #
     if (table_exists($schema, $table) == TRUE)
     {
-        return add_columns_to_table($schema, 
-                                    $table, 
-                                    $pcols);
+        return add_columns_to_table($schema, $table, $pcols);
     }
     else
     {
@@ -915,54 +912,89 @@ sub export_section_to_postgres
 {
     my ($pprod_db, $schema, $section) = @_;
     #
-    my $table_name = $section;
-    $table_name =~ tr/A-Z/a-z/;
-    $table_name =~ s/[\[\]]//g;
+    my $table = $section;
+    $table =~ tr/A-Z/a-z/;
+    $table =~ s/[\[\]]//g;
     #
     printf $log_fh "%d: Export section %s to schema.table %s.%s\n", 
-                   __LINE__, $section, $schema, $table_name;
+                   __LINE__, $section, $schema, $table;
     #
     # check if table exists
     #
     my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
-    if (check_table($pcols, $schema, $table_name) != SUCCESS)
+    if (check_table($pcols, $schema, $table) != SUCCESS)
     {
         printf $log_fh "%d: ERROR: Check table failed: section %s, schema.table %s.%s\n", 
-                   __LINE__, $section, $schema, $table_name;
+                   __LINE__, $section, $schema, $table;
         return FAIL;
     }
     #
     if ($debug_flag == TRUE)
     {
-        printf $log_fh "\n%s\n", $section;
+        printf $log_fh "\n%d: ==>> section: %s\n", __LINE__, $section;
         #
-        my $table_name = $section;
-        $table_name =~ tr/a-z/A-Z/;
-        $table_name =~ s/[\[\]]//g;
-        printf $log_fh "%s\n", $table_name;
+        printf $log_fh "%d; schema.table: %s.%s\n", 
+                       __LINE__, $schema, $table;
         #
         my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
-        my $comma = "";
+        my $local_delimiter = "";
         foreach my $col (@{$pcols})
         {
-            printf $log_fh "%s%s", $comma, $col;
-            $comma = ',';
+            printf $log_fh "%s%s", $local_delimiter, $col;
+            $local_delimiter = $delimiter;
         }
         printf $log_fh "\n";
         #
         foreach my $prow (@{$pprod_db->{DATA}->{$section}})
         {
-            my $comma = "";
+            my $local_delimiter = "";
             foreach my $col (@{$pcols})
             {
-                printf $log_fh "%s%s", $comma, $prow->{$col};
-                $comma = ',';
+                printf $log_fh "%s%s", $local_delimiter, $prow->{$col};
+                $local_delimiter = $delimiter;
             }
             printf $log_fh "\n";
         }
     }
     else
     {
+        my $csv_file = "/tmp/csv.$$";
+        open(my $outfh, ">" , $csv_file) || die "file is $csv_file: $!";
+        #
+        my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
+        my $local_delimiter = "";
+        foreach my $col (@{$pcols})
+        {
+            printf $outfh "%s%s", $local_delimiter, $col;
+            $local_delimiter = $delimiter;
+        }
+        printf $outfh "\n";
+        #
+        foreach my $prow (@{$pprod_db->{DATA}->{$section}})
+        {
+            my $local_delimiter = "";
+            foreach my $col (@{$pcols})
+            {
+                printf $outfh "%s%s", $local_delimiter, $prow->{$col};
+                $local_delimiter = $delimiter;
+            }
+            printf $outfh "\n";
+        }
+        #
+        close($outfh);
+        #
+        my @cols_from_file = @{$pcols};
+        tr/A-Z/a-z/ for @cols_from_file;
+        #
+        my $sql = "copy ${schema}.${table} ( \"" . join("\",\"", @cols_from_file) . "\" ) from '${csv_file}' with ( format csv, delimiter '${delimiter}', header ) ";
+        printf $log_fh "%d: COPY CMD: %s\n", __LINE__, $sql;
+        #
+        my $sth = $dbh->prepare($sql);
+        die "Prepare failed: $DBI::errstr\n" 
+            unless (defined($sth));
+        #
+        die "Unable to execute: " . $sth->errstr 
+            unless (defined($sth->execute()));
     }
     #
     return SUCCESS;
@@ -1128,7 +1160,7 @@ foreach my $opt (%opts)
     }
     elsif ($opt eq 'd')
     {
-        $row_delimiter = $opts{$opt};
+        $delimiter = $opts{$opt};
     }
     elsif ($opt eq 'u')
     {
@@ -1309,7 +1341,7 @@ sub add_columns_to_table
     while (my @data = $sth->fetchrow_array())
     {
         # printf "==>> %s\n", join("|", @data);
-        unshift @cols_from_table, $data[2];
+        push @cols_from_table, $data[2];
     }
     #
     my @sorted_cols_from_table = sort @cols_from_table;
@@ -1337,22 +1369,22 @@ sub add_columns_to_table
     {
         if ($sorted_cols_from_file[$ifile] lt $sorted_cols_from_table[$itable])
         {
-            # unshift @union, $sorted_cols_from_file[$ifile];
-            unshift @file_minus_table, $sorted_cols_from_file[$ifile];
+            # push @union, $sorted_cols_from_file[$ifile];
+            push @file_minus_table, $sorted_cols_from_file[$ifile];
             #
             $ifile += 1;
         }
         elsif ($sorted_cols_from_file[$ifile] gt $sorted_cols_from_table[$itable])
         {
-            # unshift @union, $sorted_cols_from_table[$itable];
-            # unshift @table_minus_file, $sorted_cols_from_table[$itable];
+            # push @union, $sorted_cols_from_table[$itable];
+            # push @table_minus_file, $sorted_cols_from_table[$itable];
             #
             $itable += 1;
         }
         else
         {
-            # unshift @union, $sorted_cols_from_file[$ifile];
-            # unshift @intersection, $sorted_cols_from_file[$ifile];
+            # push @union, $sorted_cols_from_file[$ifile];
+            # push @intersection, $sorted_cols_from_file[$ifile];
             #
             $ifile += 1;
             $itable += 1;
@@ -1363,16 +1395,16 @@ sub add_columns_to_table
     #
     while ($ifile < $max_ifile) 
     {
-        # unshift @union, $sorted_cols_from_file[$ifile];
-        unshift @file_minus_table, $sorted_cols_from_file[$ifile];
+        # push @union, $sorted_cols_from_file[$ifile];
+        push @file_minus_table, $sorted_cols_from_file[$ifile];
         #
         $ifile += 1;
     }
     #
     # while ($itable < $max_itable)
     # {
-        # unshift @union, $sorted_cols_from_table[$itable];
-        # unshift @table_minus_file, $sorted_cols_from_table[$itable];
+        # push @union, $sorted_cols_from_table[$itable];
+        # push @table_minus_file, $sorted_cols_from_table[$itable];
         # #
         # $itable += 1;
     # }
