@@ -59,7 +59,7 @@ my $debug_flag = FALSE;
 my $host_name = "localhost";
 my $database_name = undef; # the site name
 my $schema_name = undef; # the type of file
-my $user_name = undef;
+my $user_name = "cim";
 my $password = undef;
 my $port = 5432;
 #
@@ -87,6 +87,10 @@ my %tables =
         csv_file => undef
     }
 );
+#
+# track the columns in tables.
+#
+my %columns_in_tables = ();
 #
 ######################################################################
 #
@@ -137,13 +141,19 @@ sub create_db
     $dbh = undef;
     my $dsn = "dbi:Pg:dbname='';host=$host;port=$port";
     if ( ! defined($dbh = DBI->connect($dsn, 
-                                       $user_name, 
-                                       $password, 
+                                       $user, 
+                                       $pwd, 
                                        { PrintError => 0,
                                          RaiseError => 0 })))
     {
-        printf $log_fh "%d: ERROR: DB connect failed: %s\n", 
-                       __LINE__, $DBI::errstr;
+        printf $log_fh "%d: (host:%s,port:%s,db:%s,user:%s,pwd:%s) ERROR: DB connect failed: %s\n", 
+                       __LINE__,
+                       $host, 
+                       $port,
+                       (defined($db) ? $db : "undef"),
+                       (defined($user) ? $user : "undef"),
+                       (defined($pwd) ? $pwd : "undef"),
+                       $DBI::errstr;
         return FAIL;
     }
     #
@@ -222,8 +232,8 @@ sub create_schema
     $dbh = undef;
     my $dsn = "dbi:Pg:dbname=$db;host=$host;port=$port";
     if ( ! defined($dbh = DBI->connect($dsn, 
-                                       $user_name, 
-                                       $password, 
+                                       $user, 
+                                       $pwd, 
                                        { PrintError => 0,
                                          RaiseError => 0 })))
     {
@@ -327,7 +337,49 @@ sub add_columns_to_table
 {
     my ($schema, $table, $pcols) = @_;
     #
-    # get columns for this schema/table pair.
+    # columns in file section
+    #
+    my @cols_from_file = @{$pcols};
+    tr/A-Z/a-z/ for @cols_from_file;
+    printf $log_fh "\n\t:%d: cols-from-file %s\n", 
+           __LINE__, join(";", @{$pcols})
+        if ($verbose >= MINVERBOSE);
+    #
+    # check if we already know the current columns in the table.
+    #
+    my $schema_table = "$schema.$table";
+    if (exists($columns_in_tables{$schema_table}))
+    {
+        my $same = TRUE;
+        foreach my $col (@cols_from_file)
+        {
+            if ( ! exists($columns_in_tables{$schema_table}{$col}))
+            {
+                $same = FALSE;
+                last;
+            }
+        }
+        #
+        if ($same == TRUE)
+        {
+            # nothing to do, just return
+            printf $log_fh "\t:%d: file cols == table cols.\n", __LINE__
+                if ($verbose >= MINVERBOSE);
+            return SUCCESS;
+        }
+        delete $columns_in_tables{$schema_table};
+    }
+    printf $log_fh "\t:%d: file cols != table cols.\n", __LINE__;
+    #
+    # unique columns in file section
+    #
+    my %seen = ();
+    my @unique_cols_from_file = grep { ! $seen{$_}++ } @cols_from_file;
+    printf $log_fh "\n\t:%d: unique-cols-from-file %s\n", 
+           __LINE__, join(";", @unique_cols_from_file)
+        if ($verbose >= MINVERBOSE);
+    #
+    # get columns from schema/table pair.
     # 
     my $sth = $dbh->prepare("select table_schema, table_name, column_name, data_type from information_schema.columns where table_name = '$table' and table_schema = '$schema'");
     die "Prepare failed: $DBI::errstr\n" 
@@ -336,114 +388,88 @@ sub add_columns_to_table
     die "Unable to execute: " . $sth->errstr 
         unless (defined($sth->execute()));
     #
-    # report the columns in the file section
-    #
-    printf $log_fh "\n\t:%d: cols-from-file %s\n", 
-           __LINE__, join(";", @{$pcols})
-        if ($verbose >= MINVERBOSE);
-    #
-    my @sorted_cols_from_file = @{$pcols};
-    tr/A-Z/a-z/ for @sorted_cols_from_file;
-    @sorted_cols_from_file = sort @{sorted_cols_from_file};
-    printf $log_fh "\n\t:%d: sorted-cols-from-file %s\n", 
-           __LINE__, join(";", @sorted_cols_from_file)
-        if ($verbose >= MINVERBOSE);
-    #
-    # report the columns from the db table.
-    #
     my @cols_from_table = ();
     while (my @data = $sth->fetchrow_array())
     {
-        # printf "==>> %s\n", join("|", @data);
         unshift @cols_from_table, $data[2];
     }
-    #
-    my @sorted_cols_from_table = sort @cols_from_table;
-    printf $log_fh "\t:%d: sorted-cols-from-table %s\n", 
-           __LINE__, join(";", @sorted_cols_from_table)
+    printf $log_fh "\n\t:%d: cols-from-table %s\n", 
+           __LINE__, join(";", @cols_from_table)
         if ($verbose >= MINVERBOSE);
     #
+    # get unique columns from schema/table pair.
     #
-    # generate a list of fields in the file that are not 
-    # in the table ... if any.
+    %seen = ();
+    my @unique_cols_from_table = grep { ! $seen{$_}++ } @cols_from_table;
+    printf $log_fh "\t:%d: unique-cols-from-table %s\n", 
+           __LINE__, join(";", @unique_cols_from_table)
+        if ($verbose >= MINVERBOSE);
     #
-    # my @intersection = ();
-    # my @union = ();
-    my @file_minus_table = ();
-    # my @table_minus_file = ();
+    # difference between file and table schema
     #
-    my $ifile = 0;
-    my $itable = 0;
+    my %counts = ();
     #
-    my $max_ifile = scalar(@sorted_cols_from_file);
-    my $max_itable = scalar(@sorted_cols_from_table);
-    #
-    while (($ifile < $max_ifile) && 
-           ($itable < $max_itable))
+    foreach my $col (@unique_cols_from_file)
     {
-        if ($sorted_cols_from_file[$ifile] lt $sorted_cols_from_table[$itable])
+        $counts{$col} = 1;
+    }
+    foreach my $col (@unique_cols_from_table)
+    {
+        if (exists($counts{$col}))
         {
-            # unshift @union, $sorted_cols_from_file[$ifile];
-            unshift @file_minus_table, $sorted_cols_from_file[$ifile];
-            #
-            $ifile += 1;
-        }
-        elsif ($sorted_cols_from_file[$ifile] gt $sorted_cols_from_table[$itable])
-        {
-            # unshift @union, $sorted_cols_from_table[$itable];
-            # unshift @table_minus_file, $sorted_cols_from_table[$itable];
-            #
-            $itable += 1;
+            $counts{$col} += 2;
         }
         else
         {
-            # unshift @union, $sorted_cols_from_file[$ifile];
-            # unshift @intersection, $sorted_cols_from_file[$ifile];
-            #
-            $ifile += 1;
-            $itable += 1;
+            $counts{$col} = 2;
         }
     }
     #
-    # add any fields which were not handled above.
+    my @union = keys %counts;
     #
-    while ($ifile < $max_ifile) 
+    my @intersection = ();
+    my @file_minus_table = ();
+    my @table_minus_file = ();
+    #
+    foreach my $col (keys %counts)
     {
-        # unshift @union, $sorted_cols_from_file[$ifile];
-        unshift @file_minus_table, $sorted_cols_from_file[$ifile];
-        #
-        $ifile += 1;
+        if ($counts{$col} == 1)
+        {
+            unshift @file_minus_table, $col;
+        }
+        elsif ($counts{$col} == 2)
+        {
+            unshift @table_minus_file, $col;
+        }
+        else
+        {
+            unshift @intersection, $col;
+        }
     }
     #
-    # while ($itable < $max_itable)
-    # {
-        # unshift @union, $sorted_cols_from_table[$itable];
-        # unshift @table_minus_file, $sorted_cols_from_table[$itable];
-        # #
-        # $itable += 1;
-    # }
+    # die "Column(s) in file, but not in table: " . join(";", @file_minus_table) unless (scalar(@file_minus_table) == 0);
+    if (scalar(@file_minus_table) > 0)
+    {
+        printf $log_fh "%d: Adding to table new column(s) in file, but not already in table: %s\n", __LINE__, join(";", @file_minus_table);
+        #
+        my $sql = "alter table $schema.$table ";
+        #
+        foreach my $col (@file_minus_table)
+        {
+            $sql .= "add column \"$col\" text, ";
+        }
+        #
+        $sql =~ s/, *$//;
+        #
+        my $sth = $dbh->prepare($sql);
+        die "Prepare failed: $DBI::errstr\n" 
+            unless (defined($sth));
+        #
+        die "Unable to execute: " . $sth->errstr 
+            unless (defined($sth->execute()));
+    }
     #
-    # show the fields which are not common
-    #
-    # printf $log_fh "\t:%d: intersection %s\n", 
-           # __LINE__, join(";", @intersection)
-        # if ($verbose >= MINVERBOSE);
-    # printf $log_fh "\t:%d: union %s\n", 
-           # __LINE__, join(";", @union)
-        # if ($verbose >= MINVERBOSE);
-    printf $log_fh "\t:%d: file-table %s\n", 
-           __LINE__, join(";", @file_minus_table)
-        if ($verbose >= MINVERBOSE);
-    # printf $log_fh "\t:%d: table-file %s\n", 
-           # __LINE__, join(";", @table_minus_file)
-        # if ($verbose >= MINVERBOSE);
-    #
-    # if (scalar(@file_minus_table) > 0)
-    # {
-        # printf $log_fh "\n\t:%d: Column(s) in file, but not in table: %s\n", __LINE__, join(";", @file_minus_table);
-    # }
-    #
-    die "Column(s) in file, but not in table: " . join(";", @file_minus_table) unless (scalar(@file_minus_table) == 0);
+    @{$columns_in_tables{$schema_table}}{@union} = 1;
     #
     return SUCCESS;
 }
@@ -463,7 +489,7 @@ sub create_table
     $sql =~ s/, *$//;
     $sql .= " )";
     #
-    printf "==>> SQL Insert command: %s\n", $sql;
+    printf $log_fh "%d: ==>> SQL CREATE DB command: %s\n", __LINE__, $sql;
     #
     my $sth = $dbh->prepare($sql);
     die "Prepare failed: $DBI::errstr\n" 
@@ -499,8 +525,8 @@ sub open_db
     #
     my $dsn = "dbi:Pg:dbname=$db;host=$host;port=$port";
     if ( ! defined($$pdbh = DBI->connect($dsn, 
-                                         $user_name, 
-                                         $password, 
+                                         $user, 
+                                         $pwd, 
                                          { PrintError => 0,
                                            RaiseError => 0 })))
     {
@@ -1250,6 +1276,132 @@ $dbh = undef;
 exit 0;
 
 __DATA__
+
+sub add_columns_to_table
+{
+    my ($schema, $table, $pcols) = @_;
+    #
+    # get columns for this schema/table pair.
+    # 
+    my $sth = $dbh->prepare("select table_schema, table_name, column_name, data_type from information_schema.columns where table_name = '$table' and table_schema = '$schema'");
+    die "Prepare failed: $DBI::errstr\n" 
+        unless (defined($sth));
+    #
+    die "Unable to execute: " . $sth->errstr 
+        unless (defined($sth->execute()));
+    #
+    # report the columns in the file section
+    #
+    printf $log_fh "\n\t:%d: cols-from-file %s\n", 
+           __LINE__, join(";", @{$pcols})
+        if ($verbose >= MINVERBOSE);
+    #
+    my @sorted_cols_from_file = @{$pcols};
+    tr/A-Z/a-z/ for @sorted_cols_from_file;
+    @sorted_cols_from_file = sort @{sorted_cols_from_file};
+    printf $log_fh "\n\t:%d: sorted-cols-from-file %s\n", 
+           __LINE__, join(";", @sorted_cols_from_file)
+        if ($verbose >= MINVERBOSE);
+    #
+    # report the columns from the db table.
+    #
+    my @cols_from_table = ();
+    while (my @data = $sth->fetchrow_array())
+    {
+        # printf "==>> %s\n", join("|", @data);
+        unshift @cols_from_table, $data[2];
+    }
+    #
+    my @sorted_cols_from_table = sort @cols_from_table;
+    printf $log_fh "\t:%d: sorted-cols-from-table %s\n", 
+           __LINE__, join(";", @sorted_cols_from_table)
+        if ($verbose >= MINVERBOSE);
+    #
+    #
+    # generate a list of fields in the file that are not 
+    # in the table ... if any.
+    #
+    # my @intersection = ();
+    # my @union = ();
+    my @file_minus_table = ();
+    # my @table_minus_file = ();
+    #
+    my $ifile = 0;
+    my $itable = 0;
+    #
+    my $max_ifile = scalar(@sorted_cols_from_file);
+    my $max_itable = scalar(@sorted_cols_from_table);
+    #
+    while (($ifile < $max_ifile) && 
+           ($itable < $max_itable))
+    {
+        if ($sorted_cols_from_file[$ifile] lt $sorted_cols_from_table[$itable])
+        {
+            # unshift @union, $sorted_cols_from_file[$ifile];
+            unshift @file_minus_table, $sorted_cols_from_file[$ifile];
+            #
+            $ifile += 1;
+        }
+        elsif ($sorted_cols_from_file[$ifile] gt $sorted_cols_from_table[$itable])
+        {
+            # unshift @union, $sorted_cols_from_table[$itable];
+            # unshift @table_minus_file, $sorted_cols_from_table[$itable];
+            #
+            $itable += 1;
+        }
+        else
+        {
+            # unshift @union, $sorted_cols_from_file[$ifile];
+            # unshift @intersection, $sorted_cols_from_file[$ifile];
+            #
+            $ifile += 1;
+            $itable += 1;
+        }
+    }
+    #
+    # add any fields which were not handled above.
+    #
+    while ($ifile < $max_ifile) 
+    {
+        # unshift @union, $sorted_cols_from_file[$ifile];
+        unshift @file_minus_table, $sorted_cols_from_file[$ifile];
+        #
+        $ifile += 1;
+    }
+    #
+    # while ($itable < $max_itable)
+    # {
+        # unshift @union, $sorted_cols_from_table[$itable];
+        # unshift @table_minus_file, $sorted_cols_from_table[$itable];
+        # #
+        # $itable += 1;
+    # }
+    #
+    # show the fields which are not common
+    #
+    # printf $log_fh "\t:%d: intersection %s\n", 
+           # __LINE__, join(";", @intersection)
+        # if ($verbose >= MINVERBOSE);
+    # printf $log_fh "\t:%d: union %s\n", 
+           # __LINE__, join(";", @union)
+        # if ($verbose >= MINVERBOSE);
+    printf $log_fh "\t:%d: file-table %s\n", 
+           __LINE__, join(";", @file_minus_table)
+        if ($verbose >= MINVERBOSE);
+    # printf $log_fh "\t:%d: table-file %s\n", 
+           # __LINE__, join(";", @table_minus_file)
+        # if ($verbose >= MINVERBOSE);
+    #
+    # if (scalar(@file_minus_table) > 0)
+    # {
+        # printf $log_fh "\n\t:%d: Column(s) in file, but not in table: %s\n", __LINE__, join(";", @file_minus_table);
+    # }
+    #
+    die "Column(s) in file, but not in table: " . join(";", @file_minus_table) unless (scalar(@file_minus_table) == 0);
+    #
+    return SUCCESS;
+}
+#
 
 #!/usr/bin/perl -w
 ######################################################################
