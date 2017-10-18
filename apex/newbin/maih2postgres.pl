@@ -7,32 +7,35 @@
 ######################################################################
 #
 use strict;
+use warnings;
+#
+my $binpath = undef;
+#
+BEGIN {
+    use File::Basename;
+    #
+    $binpath = dirname($0);
+    $binpath = "." if ($binpath eq "");
+}
 #
 use Carp;
 use Getopt::Std;
 use File::Find;
 use File::Path qw(mkpath);
-use File::Basename;
 use File::Path 'rmtree';
 use Data::Dumper;
 use DBI;
 #
+# my mods
+#
+use lib "$binpath";
+use lib "$binpath/utils";
+#
+use myconstants;
+use mylogger;
+use myutils;
+#
 ######################################################################
-#
-# logical constants
-#
-use constant TRUE => 1;
-use constant FALSE => 0;
-#
-use constant SUCCESS => 1;
-use constant FAIL => 0;
-#
-# verbose levels
-#
-use constant NOVERBOSE => 0;
-use constant MINVERBOSE => 1;
-use constant MIDVERBOSE => 2;
-use constant MAXVERBOSE => 3;
 #
 # section types
 #
@@ -46,6 +49,12 @@ use constant SECTION_LIST => 2;
 #
 my $cmd = $0;
 my $log_fh = *STDOUT;
+#
+my $plog = mylogger->new();
+die "Unable to create logger: $!" unless (defined($plog));
+#
+my $putils = myutils->new($plog);
+die "Unable to create utils: $!" unless (defined($putils));
 #
 # cmd line options
 #
