@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 ######################################################################
 #
-# process a maihime file and store the data in Mongo DB.
+# process a maihime file and write data out as JSON
 #
 ######################################################################
 #
@@ -115,11 +115,11 @@ sub export_section_to_json
     $$pjson .= sprintf "\n";
 }
 #
-sub export_to_mongodb
+sub export_to_json
 {
     my ($prod_file, $pprod_db) = @_;
     #
-    $plog->log_msg("Writing product data to MongoDB: %s\n", $prod_file);
+    $plog->log_msg("Writing product data to JSON: %s\n", $prod_file);
     #
     my $prod_name = basename($prod_file);
     $prod_name =~ tr/a-z/A-Z/;
@@ -184,9 +184,9 @@ sub process_file
     {
         $plog->log_err("Processing product file: %s\n", $prod_file);
     }
-    elsif (export_to_mongodb($prod_file, \%prod_db) != SUCCESS)
+    elsif (export_to_json($prod_file, \%prod_db) != SUCCESS)
     {
-        $plog->log_err("Exporting product file to MongoDB: %s\n", $prod_file);
+        $plog->log_err("Exporting product file to JSON: %s\n", $prod_file);
     }
     else
     {

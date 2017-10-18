@@ -4,36 +4,38 @@
 # combine FIDs, U0X and MPR files to generate a CSV file with
 # combined data: FID, LANE, STAGE, OUTPUT, MACHINE, PRODUCT, TIME.
 #
-# 12/17/2015 - adding extra timestamp field
-#
 ######################################################################
 #
 use strict;
+use warnings;
+#
+my $binpath = undef;
+#
+BEGIN {
+    use File::Basename;
+    #
+    $binpath = dirname($0);
+    $binpath = "." if ($binpath eq "");
+}
 #
 use Carp;
 use Getopt::Std;
 use File::Find;
 use File::Path qw(mkpath);
-use File::Basename;
 use File::Path 'rmtree';
 use Time::Local;
+use Data::Dumper;
+#
+# my mods
+#
+use lib "$binpath";
+use lib "$binpath/utils";
+#
+use myconstants;
+use mylogger;
+use myutils;
 #
 ######################################################################
-#
-# logical constants
-#
-use constant TRUE => 1;
-use constant FALSE => 0;
-#
-use constant SUCCESS => 1;
-use constant FAIL => 0;
-#
-# verbose levels
-#
-use constant NOVERBOSE => 0;
-use constant MINVERBOSE => 1;
-use constant MIDVERBOSE => 2;
-use constant MAXVERBOSE => 3;
 #
 # files to read.
 #
@@ -50,23 +52,19 @@ use constant FID_DATA => 'FID_DATA.csv';
 # globals
 #
 my $cmd = $0;
-my $log_fh = *STDOUT;
+#
+my $plog = mylogger->new();
+die "Unable to create logger: $!" unless (defined($plog));
+#
+my $putils = myutils->new($plog);
+die "Unable to create utils: $!" unless (defined($putils));
 #
 # cmd line options
 #
 my $logfile = '';
-my $verbose = NOVERBOSE;
 my $delimiter = "\t";
 my $append_data = FALSE;
 my $fid_data_path = FID_DATA();
-#
-my %verbose_levels =
-(
-    off => NOVERBOSE(),
-    min => MINVERBOSE(),
-    mid => MIDVERBOSE(),
-    max => MAXVERBOSE()
-);
 #
 my @required_files = ( INDEX(), INFORMATION(), FILENAME_TO_IDS() );
 #
@@ -75,11 +73,12 @@ my @required_files = ( INDEX(), INFORMATION(), FILENAME_TO_IDS() );
 sub usage
 {
     my ($arg0) = @_;
+    my $log_fh = $plog->log_fh();
     print $log_fh <<EOF;
 
 usage: $arg0 [-?] [-h]  \\ 
         [-w | -W |-v level] \\ 
-        [-l logfile] \\ 
+        [-l logfile] [-T] \\ 
         [-d delimiter] \\
         [-r|-a] 
 
@@ -89,38 +88,12 @@ where:
     -W - enable warning and trace (level=mid=2)
     -v - verbose level: 0=off,1=min,2=mid,3=max
     -l logfile - log file path
+    -T - turn on trace
     -d delimiter - CSV delimiter character. default is a tab.
     -r - remove old FID_DATA CSV file (default).
     -a - append to old FID_DATA CSV file.
 
 EOF
-}
-#
-sub read_file
-{
-    my ($file, $pdata) = @_;
-    #
-    printf $log_fh "%d: Reading file: %s\n", __LINE__, $file;
-    #
-    if ( ! -r $file )
-    {
-        printf $log_fh "%d: ERROR: file $file is NOT readable\n\n", __LINE__;
-        return FAIL;
-    }
-    #
-    unless (open(INFD, $file))
-    {
-        printf $log_fh "%d: ERROR: unable to open $file.\n\n", __LINE__;
-        return FAIL;
-    }
-    @{$pdata} = <INFD>;
-    close(INFD);
-    #
-    # remove any CR-NL sequences from Windose.
-    chomp(@{$pdata});
-    s/\r//g for @{$pdata};
-    #
-    return SUCCESS;
 }
 #
 sub sort_data
@@ -163,11 +136,11 @@ sub dump_data
 {
     my ($name, $pdata) = @_;
     #
-    return unless ($verbose >= MINVERBOSE);
+    return unless ($plog->verbose() >= MINVERBOSE);
     #
     foreach my $key (@{$pdata})
     {
-        printf $log_fh "%d: %s key: %s\n", __LINE__, $name, $key
+        $plog->log_msg("%s key: %s\n", $name, $key);
     }
 }
 #
@@ -227,12 +200,12 @@ sub merge_data
     #
     if (scalar(@{$pindex_sorted_keys}) <= 0)
     {
-        printf $log_fh "%d: ERROR: INDEX keys array is empty\n", __LINE__;
+        $plog->log_err("INDEX keys array is empty\n");
         return FAIL;
     }
     elsif (scalar(@{$pinfo_sorted_keys}) <= 0)
     {
-        printf $log_fh "%d: ERROR: INFORMATION keys array is empty\n", __LINE__;
+        $plog->log_err("INFORMATION keys array is empty\n");
         return FAIL;
     }
     #
@@ -282,7 +255,7 @@ sub merge_data
                 # unknown file type
                 $infokey = shift @{$pinfo_sorted_keys};
                 $indexkey = shift @{$pindex_sorted_keys};
-                printf $log_fh "%d: Unknown file type: %s\n", __LINE__, $fname;
+                $plog->log_warn("Unknown file type: %s\n", $fname);
                 next;
             }
             #
@@ -402,7 +375,7 @@ sub merge_data
         if ($file_type eq '')
         {
             # unknown file type
-            printf $log_fh "%d: Unknown file type: %s\n", __LINE__, $fname;
+            $plog->log_warn("Unknown file type: %s\n", $fname);
         }
         else
         {
@@ -511,6 +484,11 @@ sub merge_data
 #
 ######################################################################
 #
+# start of main
+#
+$plog->trace(FALSE);
+$plog->disable_stdout_buffering();
+#
 my %opts;
 if (getopts('?hwWv:l:d:ra', \%opts) != 1)
 {
@@ -525,6 +503,32 @@ foreach my $opt (%opts)
         usage($cmd);
         exit 0;
     }
+    elsif ($opt eq 'T')
+    {
+        $plog->trace(TRUE);
+    }
+    elsif ($opt eq 'w')
+    {
+        $plog->verbose(MINVERBOSE);
+    }
+    elsif ($opt eq 'W')
+    {
+        $plog->verbose(MIDVERBOSE);
+    }
+    elsif ($opt eq 'v')
+    {
+        if (!defined($plog->verbose($opts{$opt})))
+        {
+            $plog->log_err("Invalid verbose level: $opts{$opt}\n");
+            usage($cmd);
+            exit 2;
+        }
+    }
+    elsif ($opt eq 'l')
+    {
+        $plog->logfile($opts{$opt});
+        $plog->log_msg("Log File: %s\n", $opts{$opt});
+    }
     elsif ($opt eq 'r')
     {
         $append_data = FALSE;
@@ -532,39 +536,6 @@ foreach my $opt (%opts)
     elsif ($opt eq 'a')
     {
         $append_data = TRUE;
-    }
-    elsif ($opt eq 'w')
-    {
-        $verbose = MINVERBOSE;
-    }
-    elsif ($opt eq 'W')
-    {
-        $verbose = MIDVERBOSE;
-    }
-    elsif ($opt eq 'v')
-    {
-        if ($opts{$opt} =~ m/^[0123]$/)
-        {
-            $verbose = $opts{$opt};
-        }
-        elsif (exists($verbose_levels{$opts{$opt}}))
-        {
-            $verbose = $verbose_levels{$opts{$opt}};
-        }
-        else
-        {
-            printf $log_fh "\n%d: ERROR: Invalid verbose level: $opts{$opt}\n", __LINE__;
-            usage($cmd);
-            exit 2;
-        }
-    }
-    elsif ($opt eq 'l')
-    {
-        local *FH;
-        $logfile = $opts{$opt};
-        open(FH, '>', $logfile) or die $!;
-        $log_fh = *FH;
-        printf $log_fh "\n%d: Log File: %s\n", __LINE__, $logfile;
     }
     elsif ($opt eq 'd')
     {
@@ -581,7 +552,7 @@ foreach my $req_file (@required_files)
 {
     if ( ! -r "$req_file")
     {
-        printf $log_fh "%d: ERROR: Required file NOT found: %s\n", __LINE__, $req_file;
+        $plog->log_err("Required file NOT found: %s\n", $req_file);
         $ok = FALSE;
     }
 }
@@ -593,7 +564,7 @@ if ( $ok == FALSE )
 #
 my @index_raw = ();
 die "Unable to read file INDEX" 
-    unless (read_file(INDEX(), \@index_raw) == SUCCESS);
+    unless ($putils->read_file(INDEX(), \@index_raw) == SUCCESS);
 #
 my %index_hash = ();
 my @index_sorted_keys = ();
@@ -603,7 +574,7 @@ dump_data("Index", \@index_sorted_keys);
 #
 my @info_raw = ();
 die "Unable to read file INFORMATION" 
-    unless (read_file(INFORMATION(), \@info_raw) == SUCCESS);
+    unless ($putils->read_file(INFORMATION(), \@info_raw) == SUCCESS);
 #
 my %info_hash = ();
 my @info_sorted_keys = ();
@@ -613,16 +584,14 @@ dump_data("Information", \@info_sorted_keys);
 #
 my @fname_raw = ();
 die "Unable to read file FILENAME_TO_IDS" 
-    unless (read_file(FILENAME_TO_IDS(), \@fname_raw) == SUCCESS);
+    unless ($putils->read_file(FILENAME_TO_IDS(), \@fname_raw) == SUCCESS);
 #
 my %fname_hash = ();
 die "Unable to sort file FILENAME_TO_IDS data" 
     unless (split_fname_data(\@fname_raw, \%fname_hash) == SUCCESS);
-printf $log_fh "%d: FNAME Key Count: %d\n", __LINE__, scalar(keys %fname_hash);
-#foreach my $key ( sort { $a <=> $b } keys %fname_hash )
-#{
-    #printf $log_fh "%d: FNAME %s => ID %s\n", __LINE__, $key, $fname_hash{$key};
-#}
+$plog->log_msg("FNAME Key Count: %d\n", scalar(keys %fname_hash));
+#
+$plog->log_vmax("FNAME Hash: %s\n", Dump(\%fname_hash));
 #
 die "Unable to merge data" 
     unless (merge_data($fid_data_path, 
