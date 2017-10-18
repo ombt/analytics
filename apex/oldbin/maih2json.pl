@@ -6,39 +6,36 @@
 ######################################################################
 #
 use strict;
-use warnings;
-#
-my $binpath = undef;
-#
-BEGIN {
-    use File::Basename;
-    #
-    $binpath = dirname($0);
-    $binpath = "." if ($binpath eq "");
-}
 #
 use Carp;
 use Getopt::Std;
 use File::Find;
 use File::Path qw(mkpath);
+use File::Basename;
 use File::Path 'rmtree';
 use Data::Dumper;
 #
-# my mods
-#
-use lib "$binpath";
-use lib "$binpath/utils";
-#
-use myconstants;
-use mylogger;
-use myutils;
-#
 ######################################################################
+#
+# logical constants
+#
+use constant TRUE => 1;
+use constant FALSE => 0;
+#
+use constant SUCCESS => 1;
+use constant FAIL => 0;
 #
 # required section names
 #
 use constant INDEX => '[Index]';
 use constant INFORMATION => '[Information]';
+#
+# verbose levels
+#
+use constant NOVERBOSE => 0;
+use constant MINVERBOSE => 1;
+use constant MIDVERBOSE => 2;
+use constant MAXVERBOSE => 3;
 #
 # section types
 #
@@ -51,12 +48,7 @@ use constant SECTION_LIST => 2;
 # globals
 #
 my $cmd = $0;
-#
-my $plog = mylogger->new();
-die "Unable to create logger: $!" unless (defined($plog));
-#
-my $putils = myutils->new($plog);
-die "Unable to create utils: $!" unless (defined($putils));
+my $log_fh = *STDOUT;
 #
 # cmd line options
 #
@@ -97,12 +89,11 @@ my %verbose_levels =
 sub usage
 {
     my ($arg0) = @_;
-    my $log_fh = $plog->log_fh();
     print $log_fh <<EOF;
 
 usage: $arg0 [-?] [-h]  \\ 
         [-w | -W |-v level] \\ 
-        [-l logfile] [-T] \\ 
+        [-l logfile] \\ 
         [-B base path] \\
         [-R relative path] \\
         [-P path] \\
@@ -172,11 +163,15 @@ sub load_name_value
         }
     }
     #
-    $plog->log_vmax("<%s>\n", join("\n", @{$pprod_db->{DATA}->{$section}}));
+    printf $log_fh "%d: <%s>\n", 
+        __LINE__, 
+        join("\n", @{$pprod_db->{DATA}->{$section}})
+        if ($verbose >= MAXVERBOSE);
     #
     if (scalar(@{$pprod_db->{DATA}->{$section}}) <= 0)
     {
-        $plog->log_msg("NO NAME-VALUE DATA FOUND IN SECTION %s. Lines read: %d\n", $section, ($$pirec - $start_irec));
+        printf $log_fh "\t\t%d: NO NAME-VALUE DATA FOUND IN SECTION %s. Lines read: %d\n", 
+            __LINE__, $section, ($$pirec - $start_irec);
         return SUCCESS;
     }
     #
@@ -186,7 +181,10 @@ sub load_name_value
     #
     my $number_columns = scalar(@{$pprod_db->{COLUMN_NAMES}->{$section}});
     #
-    $plog->log_vmin("Number of Columns: %d\n", $number_columns);
+    printf $log_fh "\t\t\t%d: Number of Columns: %d\n", 
+        __LINE__, 
+        $number_columns
+        if ($verbose >= MINVERBOSE);
     #
     my $nrecs = scalar(@{$pprod_db->{DATA}->{$section}});
     #
@@ -202,7 +200,9 @@ sub load_name_value
         my @tokens = split_quoted_string($record, "${delimiter}");
         my $number_tokens = scalar(@tokens);
         #
-        $plog->log_vmax("Number of tokens in record: %d\n", $number_tokens);
+        printf $log_fh "\t\t\t%d: Number of tokens in record: %d\n", 
+            __LINE__, $number_tokens 
+            if ($verbose >= MAXVERBOSE);
         #
         if ($number_tokens == $number_columns)
         {
@@ -213,13 +213,17 @@ sub load_name_value
         }
         else
         {
-            $plog->log_err("Section: %s, SKIPPING RECORD - NUMBER TOKENS (%d) != NUMBER COLUMNS (%d)\n", $section, $number_tokens, $number_columns);
+            printf $log_fh "\t\t\t%d: ERROR: Section: %s, SKIPPING RECORD - NUMBER TOKENS (%d) != NUMBER COLUMNS (%d)\n", __LINE__, $section, $number_tokens, $number_columns;
         }
     }
-    #
-    $plog->log_vmin("Number of key-value pairs: %d\n", 
-                    scalar(@{$pprod_db->{DATA}->{$section}}));
-    $plog->log_vmin("Lines read: %d\n", ($$pirec - $start_irec));
+    printf $log_fh "\t\t%d: Number of key-value pairs: %d\n", 
+        __LINE__, 
+        scalar(@{$pprod_db->{DATA}->{$section}})
+        if ($verbose >= MINVERBOSE);
+    printf $log_fh "\t\t%d: Lines read: %d\n", 
+        __LINE__, 
+        ($$pirec - $start_irec)
+        if ($verbose >= MINVERBOSE);
     #
     return SUCCESS;
 }
@@ -259,6 +263,7 @@ sub split_quoted_string
         }
         elsif ($c eq $separator)
         {
+            # printf $log_fh "Token ... <%s>\n", $token;
             push (@tokens, $token);
             $token = '';
         }
@@ -270,6 +275,7 @@ sub split_quoted_string
     #
     if (length($token) > 0)
     {
+        # printf $log_fh "Token ... <%s>\n", $token;
         push (@tokens, $token);
         $token = '';
     }
@@ -279,6 +285,8 @@ sub split_quoted_string
         $token = '';
         push (@tokens, $token);
     }
+    #
+    # printf $log_fh "Tokens: \n%s\n", join("\n",@tokens);
     #
     return @tokens;
 }
@@ -317,12 +325,15 @@ sub load_list
         }
     }
     #
-    $plog->log_vmax("<%s>\n", join("\n", @{$pprod_db->{DATA}->{$section}}));
+    printf $log_fh "%d: <%s>\n", 
+        __LINE__, 
+        join("\n", @{$pprod_db->{DATA}->{$section}})
+        if ($verbose >= MAXVERBOSE);
     #
     if (scalar(@{$pprod_db->{DATA}->{$section}}) <= 0)
     {
-        $plog->log_msg("NO LIST DATA FOUND IN SECTION %s. Lines read: %d\n", 
-                       $section, ($$pirec - $start_irec));
+        printf $log_fh "\t\t\t%d: NO LIST DATA FOUND IN SECTION %s. Lines read: %d\n", 
+            __LINE__, $section, ($$pirec - $start_irec);
         return SUCCESS;
     }
     #
@@ -334,7 +345,10 @@ sub load_list
     #
     my $number_columns = scalar(@{$pprod_db->{COLUMN_NAMES}->{$section}});
     #
-    $plog->log_msg("Number of Columns: %d\n", $number_columns);
+    printf $log_fh "\t\t\t%d: Number of Columns: %d\n", 
+        __LINE__, 
+        $number_columns
+        if ($verbose >= MINVERBOSE);
     #
     my $nrecs = scalar(@{$pprod_db->{DATA}->{$section}});
     #
@@ -350,7 +364,9 @@ sub load_list
         my @tokens = split_quoted_string($record, ' ');
         my $number_tokens = scalar(@tokens);
         #
-        $plog->log_vmax("Number of tokens in record: %d\n", $number_tokens);
+        printf $log_fh "\t\t\t%d: Number of tokens in record: %d\n", 
+            __LINE__, $number_tokens 
+            if ($verbose >= MAXVERBOSE);
         #
         if ($number_tokens == $number_columns)
         {
@@ -361,7 +377,7 @@ sub load_list
         }
         else
         {
-            $plog->log_err("Section: %s, SKIPPING RECORD - NUMBER TOKENS (%d) != NUMBER COLUMNS (%d)\n", $section, $number_tokens, $number_columns);
+            printf $log_fh "\t\t\t%d: ERROR: Section: %s, SKIPPING RECORD - NUMBER TOKENS (%d) != NUMBER COLUMNS (%d)\n", __LINE__, $section, $number_tokens, $number_columns;
         }
     }
     #
@@ -372,11 +388,42 @@ sub load_list
 #
 # load and process product files, either CRB or MAI
 #
+sub read_file
+{
+    my ($prod_file, $praw_data) = @_;
+    #
+    printf $log_fh "\t%d: Reading Product file: %s\n", 
+                   __LINE__, $prod_file;
+    #
+    if ( ! -r $prod_file )
+    {
+        printf $log_fh "\t%d: ERROR: file $prod_file is NOT readable\n\n", __LINE__;
+        return FAIL;
+    }
+    #
+    unless (open(INFD, $prod_file))
+    {
+        printf $log_fh "\t%d: ERROR: unable to open $prod_file.\n\n", __LINE__;
+        return FAIL;
+    }
+    @{$praw_data} = <INFD>;
+    close(INFD);
+    #
+    # remove any CR-NL sequences from Windose.
+    chomp(@{$praw_data});
+    s/\r//g for @{$praw_data};
+    #
+    printf $log_fh "\t\t%d: Lines read: %d\n", __LINE__, scalar(@{$praw_data}) if ($verbose >= MINVERBOSE);
+    #
+    return SUCCESS;
+}
+#
 sub process_data
 {
     my ($prod_file, $praw_data, $pprod_db) = @_;
     #
-    $plog->log_msg("Processing product data: %s\n", $prod_file);
+    printf $log_fh "\t%d: Processing product data: %s\n", 
+                   __LINE__, $prod_file;
     #
     my $max_rec = scalar(@{$praw_data});
     my $sec_no = 0;
@@ -385,20 +432,25 @@ sub process_data
     {
         my $rec = $praw_data->[$irec];
         #
-        $plog->log_vmin("Record %04d: <%s>\n", $irec, $rec);
+        printf $log_fh "\t\t%d: Record %04d: <%s>\n", 
+            __LINE__, $irec, $rec
+               if ($verbose >= MINVERBOSE);
         #
         if ($rec =~ m/^(\[[^\]]*\])/)
         {
             my $section = ${1};
             #
-            $plog->log_vmin("Section %03d: %s\n", ++$sec_no, $section);
+            printf $log_fh "\t\t%d: Section %03d: %s\n", 
+                __LINE__, ++$sec_no, $section
+                if ($verbose >= MINVERBOSE);
             #
             $rec = $praw_data->[${irec}+1];
             #
             if ($rec =~ m/^\s*$/)
             {
                 $irec += 2;
-                $plog->log_msg("Empty section - %s\n", $section);
+                printf $log_fh "\t\t%d: Empty section - %s\n", 
+                               __LINE__, $section;
             }
             elsif ($rec =~ m/.*=.*/)
             {
@@ -457,6 +509,7 @@ sub export_section_to_json
     else
     {
         my $pcol_names = $pprod_db->{COLUMN_NAMES}->{$section};
+        # printf $log_fh "%d: pcol_names: %s\n", __LINE__, Dumper($pcol_names);
         my $num_col_names = scalar(@{$pcol_names});
         #
         printf $outfh "\n{ \"%s\" : ", $section;
@@ -466,6 +519,7 @@ sub export_section_to_json
         {
             my $out = "";
             my $o_comma = "";
+            # printf $log_fh "%d: prow: %s\n", __LINE__, Dumper($prow);
             for (my $i=0; $i<$num_col_names; ++$i)
             {
                 my $col_name = $pcol_names->[$i];
@@ -491,14 +545,15 @@ sub export_to_json
 {
     my ($prod_file, $pprod_db) = @_;
     #
-    $plog->log_msg("Writing product data to JSON: %s\n", $prod_file);
+    printf $log_fh "\t%d: Writing product data to JSON: %s\n", 
+                   __LINE__, $prod_file;
     #
     my $prod_name = basename($prod_file);
     $prod_name =~ tr/a-z/A-Z/;
     #
     my $prod_json_path = $json_path . '/' . $prod_name . '.JSON';
-    $plog->log_msg("Product %s, JSON path: %s\n", 
-                   $prod_name, $prod_json_path);
+    printf $log_fh "\t\t%d: product %s, JSON path: %s\n", 
+                   __LINE__, $prod_name, $prod_json_path;
     #
     open(my $outfh, "+>>" , $prod_json_path) || 
         die "file is $prod_json_path: $!";
@@ -512,11 +567,13 @@ sub export_to_json
         my $section = $pprod_db->{ORDER}->[$isec];
         $print_comma = FALSE if ($isec >= ($max_isec-1));
         #
-        $plog->log_vmin("Writing section: %s\n", $section);
+        printf $log_fh "\t\t%d: writing section: %s\n", 
+                   __LINE__, $section if ($verbose >= MINVERBOSE);
         #
         if ($pprod_db->{TYPE}->{$section} == SECTION_NAME_VALUE)
         {
-            $plog->log_vmin("Name-Value Section: %s\n", $section);
+            printf $log_fh "\t\t%d: Name-Value Section: %s\n", 
+                   __LINE__, $section if ($verbose >= MINVERBOSE);
             export_section_to_json($outfh,
                                    $pprod_db,
                                    $section,
@@ -524,7 +581,8 @@ sub export_to_json
         }
         elsif ($pprod_db->{TYPE}->{$section} == SECTION_LIST)
         {
-            $plog->log_vmin("List Section: %s\n", $section);
+            printf $log_fh "\t\t%d: List Section: %s\n", 
+                   __LINE__, $section if ($verbose >= MINVERBOSE);
             export_section_to_json($outfh,
                                    $pprod_db,
                                    $section,
@@ -532,7 +590,8 @@ sub export_to_json
         }
         else
         {
-            $plog->log_err("Unknown type Section: %s\n", $section);
+            printf $log_fh "\t\t%d: Unknown type Section: %s\n", 
+                __LINE__, $section;
         }
     }
     printf $outfh "\n] }\n";
@@ -546,27 +605,32 @@ sub process_file
 {
     my ($prod_file) = @_;
     #
-    $plog->log_msg("Processing product File: %s\n", $prod_file);
+    printf $log_fh "\n%d: Processing product File: %s\n", 
+                   __LINE__, $prod_file;
     #
     my @raw_data = ();
     my %prod_db = ();
     #
     my $status = FAIL;
-    if ($putils->read_file($prod_file, \@raw_data) != SUCCESS)
+    if (read_file($prod_file, \@raw_data) != SUCCESS)
     {
-        $plog->log_err("Reading product file: %s\n", $prod_file);
+        printf $log_fh "\t%d: ERROR: Reading product file: %s\n", 
+                       __LINE__, $prod_file;
     }
     elsif (process_data($prod_file, \@raw_data, \%prod_db) != SUCCESS)
     {
-        $plog->log_err("Processing product file: %s\n", $prod_file);
+        printf $log_fh "\t%d: ERROR: Processing product file: %s\n", 
+                       __LINE__, $prod_file;
     }
     elsif (export_to_json($prod_file, \%prod_db) != SUCCESS)
     {
-        $plog->log_err("Exporting product file to JSON: %s\n", $prod_file);
+        printf $log_fh "\t%d: ERROR: Exporting product file to JSON: %s\n", 
+                       __LINE__, $prod_file;
     }
     else
     {
-        $plog->log_msg("Success processing product file: %s\n", $prod_file);
+        printf $log_fh "\t%d: Success processing product file: %s\n", 
+                       __LINE__, $prod_file;
         $status = SUCCESS;
     }
     #
@@ -586,7 +650,7 @@ sub process_file
 #         [maihime-file ...] or reads STDIN
 #
 my %opts;
-if (getopts('?ThwWv:B:R:P:l:rd:', \%opts) != 1)
+if (getopts('?hwWv:B:R:P:l:rd:', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -603,48 +667,55 @@ foreach my $opt (%opts)
     {
         $rmv_json_dir = TRUE;
     }
-    elsif ($opt eq 'T')
-    {
-        $plog->trace(TRUE);
-    }
     elsif ($opt eq 'w')
     {
-        $plog->verbose(MINVERBOSE);
+        $verbose = MINVERBOSE;
     }
     elsif ($opt eq 'W')
     {
-        $plog->verbose(MIDVERBOSE);
+        $verbose = MIDVERBOSE;
     }
     elsif ($opt eq 'v')
     {
-        if (!defined($plog->verbose($opts{$opt})))
+        if ($opts{$opt} =~ m/^[0123]$/)
         {
-            $plog->log_err("Invalid verbose level: $opts{$opt}\n");
+            $verbose = $opts{$opt};
+        }
+        elsif (exists($verbose_levels{$opts{$opt}}))
+        {
+            $verbose = $verbose_levels{$opts{$opt}};
+        }
+        else
+        {
+            printf $log_fh "\n%d: ERROR: Invalid verbose level: $opts{$opt}\n", __LINE__;
             usage($cmd);
             exit 2;
         }
     }
     elsif ($opt eq 'l')
     {
-        $plog->logfile($opts{$opt});
-        $plog->log_msg("Log File: %s\n", $opts{$opt});
+        local *FH;
+        $logfile = $opts{$opt};
+        open(FH, '>', $logfile) or die $!;
+        $log_fh = *FH;
+        printf $log_fh "\n%d: Log File: %s\n", __LINE__, $logfile;
     }
     elsif ($opt eq 'P')
     {
         $json_path = $opts{$opt} . '/';
-        $plog->log_msg("JSON path: %s\n", $json_path);
+        printf $log_fh "\n%d: JSON path: %s\n", __LINE__, $json_path;
     }
     elsif ($opt eq 'R')
     {
         $json_rel_path = $opts{$opt} . '/';
         $json_path = $json_base_path . '/' . $json_rel_path;
-        $plog->log_msg("JSON relative path: %s\n", $json_rel_path);
+        printf $log_fh "\n%d: JSON relative path: %s\n", __LINE__, $json_rel_path;
     }
     elsif ($opt eq 'B')
     {
         $json_base_path = $opts{$opt} . '/';
         $json_path = $json_base_path . '/' . $json_rel_path;
-        $plog->log_msg("JSON base path: %s\n", $json_base_path);
+        printf $log_fh "\n%d: JSON base path: %s\n", __LINE__, $json_base_path;
     }
     elsif ($opt eq 'd')
     {
@@ -659,7 +730,7 @@ if ( -t STDIN )
     #
     if (scalar(@ARGV) == 0)
     {
-        $plog->log_err("No product files given.\n");
+        printf $log_fh "%d: ERROR: No product files given.\n", __LINE__;
         usage($cmd);
         exit 2;
     }
@@ -675,7 +746,7 @@ if ( -t STDIN )
 }
 else
 {
-    $plog->log_msg("Reading STDIN for list of files ...\n");
+    printf $log_fh "%d: Reading STDIN for list of files ...\n", __LINE__;
     #
     rmtree($json_path) if ($rmv_json_dir == TRUE);
     ( mkpath($json_path) || die $! ) unless ( -d $json_path );

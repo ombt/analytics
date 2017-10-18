@@ -6,30 +6,29 @@
 ######################################################################
 #
 use strict;
+use warnings;
+#
+my $binpath = undef;
+#
+BEGIN {
+    use File::Basename;
+    #
+    $binpath = dirname($0);
+    $binpath = "." if ($binpath eq "");
+}
 #
 use Carp;
 use Getopt::Std;
 use File::Find;
 use File::Path qw(mkpath);
-use File::Basename;
 use File::Path 'rmtree';
 #
-######################################################################
+# my mods
 #
-# logical constants
+use lib "$binpath";
+use lib "$binpath/utils";
 #
-use constant TRUE => 1;
-use constant FALSE => 0;
-#
-use constant SUCCESS => 1;
-use constant FAIL => 0;
-#
-# verbose levels
-#
-use constant NOVERBOSE => 0;
-use constant MINVERBOSE => 1;
-use constant MIDVERBOSE => 2;
-use constant MAXVERBOSE => 3;
+use myconstants;
 #
 ######################################################################
 #

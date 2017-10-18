@@ -6,38 +6,35 @@
 ######################################################################
 #
 use strict;
-use warnings;
-#
-my $binpath = undef;
-#
-BEGIN {
-    use File::Basename;
-    #
-    $binpath = dirname($0);
-    $binpath = "." if ($binpath eq "");
-}
 #
 use Carp;
 use Getopt::Std;
 use File::Find;
 use File::Path qw(mkpath);
+use File::Basename;
 use File::Path 'rmtree';
 #
-# my mods
-#
-use lib "$binpath";
-use lib "$binpath/utils";
-#
-use myconstants;
-use mylogger;
-use myutils;
-#
 ######################################################################
+#
+# logical constants
+#
+use constant TRUE => 1;
+use constant FALSE => 0;
+#
+use constant SUCCESS => 1;
+use constant FAIL => 0;
 #
 # required section names
 #
 use constant INDEX => '[Index]';
 use constant INFORMATION => '[Information]';
+#
+# verbose levels
+#
+use constant NOVERBOSE => 0;
+use constant MINVERBOSE => 1;
+use constant MIDVERBOSE => 2;
+use constant MAXVERBOSE => 3;
 #
 # section types
 #
@@ -60,12 +57,7 @@ use constant MAX_RECORDS_BEFORE_WRITE => 100;
 # globals
 #
 my $cmd = $0;
-#
-my $plog = mylogger->new();
-die "Unable to create logger: $!" unless (defined($plog));
-#
-my $putils = myutils->new($plog);
-die "Unable to create utils: $!" unless (defined($putils));
+my $log_fh = *STDOUT;
 #
 # cmd line options
 #
@@ -91,6 +83,14 @@ $csv_rel_path = "CSV"
 #
 my $csv_path = $csv_base_path . '/' . $csv_rel_path;
 #
+my %verbose_levels =
+(
+    off => NOVERBOSE(),
+    min => MINVERBOSE(),
+    mid => MIDVERBOSE(),
+    max => MAXVERBOSE()
+);
+#
 my %fname_ids = 
 (
     initialized => FALSE,
@@ -102,6 +102,7 @@ my %fname_ids =
 );
 my %last_fname_ids = ();
 #
+#
 my %sections = ();
 #
 ######################################################################
@@ -111,12 +112,11 @@ my %sections = ();
 sub usage
 {
     my ($arg0) = @_;
-    my $log_fh = $plog->log_fh();
     print $log_fh <<EOF;
 
 usage: $arg0 [-?] [-h]  \\ 
         [-w | -W |-v level] \\ 
-        [-l logfile] [-T] \\ 
+        [-l logfile] \\ 
         [-B base path] \\
         [-R relative path] \\
         [-P path] \\
@@ -132,7 +132,6 @@ where:
     -W - enable warning and trace (level=mid=2)
     -v - verbose level: 0=off,1=min,2=mid,3=max
     -l logfile - log file path
-    -T - turn on trace
     -B path - base csv path, defaults to '${csv_base_path}'
               or use environment variable OMBT_CSV_BASE_PATH.
     -R path - relative csv path, defaults to '${csv_rel_path}'
@@ -194,12 +193,16 @@ sub load_name_value
         $$pirec += 1;
     }
     #
-    $plog->log_vmax("<%s>\n", join("\n", @section_data));
+    printf $log_fh "%d: <%s>\n", 
+        __LINE__, 
+        join("\n", @section_data) 
+        if ($verbose >= MAXVERBOSE);
     #
     if (scalar(@section_data) <= 0)
     {
         $pprod_db->{$section} = {};
-        $plog->log_err("NO NAME-VALUE DATA FOUND IN SECTION %s. Lines read: %d\n", $section, scalar(@section_data));
+        printf $log_fh "\t\t%d: NO NAME-VALUE DATA FOUND IN SECTION %s. Lines read: %d\n", 
+            __LINE__, $section, scalar(@section_data);
         return FAIL;
     }
     #
@@ -214,9 +217,14 @@ sub load_name_value
     #
     $pprod_db->{found_data}->{$section} = TRUE;
     #
-    $plog->log_vmin("Number of key-value pairs: %d\n", 
-                    scalar(keys %{$pprod_db->{$section}->{data}}));
-    $plog->log_vmin("Lines read: %d\n", scalar(@section_data));
+    printf $log_fh "\t\t%d: Number of key-value pairs: %d\n", 
+        __LINE__, 
+        scalar(keys %{$pprod_db->{$section}->{data}})
+        if ($verbose >= MINVERBOSE);
+    printf $log_fh "\t\t%d: Lines read: %d\n", 
+        __LINE__, 
+        scalar(@section_data)
+        if ($verbose >= MINVERBOSE);
     #
     return SUCCESS;
 }
@@ -256,6 +264,7 @@ sub split_quoted_string
         }
         elsif ($c eq $separator)
         {
+            # printf $log_fh "Token ... <%s>\n", $token;
             push (@tokens, $token);
             $token = '';
         }
@@ -267,6 +276,7 @@ sub split_quoted_string
     #
     if (length($token) > 0)
     {
+        # printf $log_fh "Token ... <%s>\n", $token;
         push (@tokens, $token);
         $token = '';
     }
@@ -276,6 +286,8 @@ sub split_quoted_string
         $token = '';
         push (@tokens, $token);
     }
+    #
+    # printf $log_fh "Tokens: \n%s\n", join("\n",@tokens);
     #
     return @tokens;
 }
@@ -309,12 +321,16 @@ sub load_list
         $$pirec += 1;
     }
     #
-    $plog->log_vmax("<%s>\n", join("\n", @section_data));
+    printf $log_fh "%d: <%s>\n", __LINE__, join("\n", @section_data) 
+        if ($verbose >= MAXVERBOSE);
     #
     if (scalar(@section_data) <= 0)
     {
         $pprod_db->{$section} = {};
-        $plog->log_vmin("NO LIST DATA FOUND IN SECTION %s. Lines read: %d\n", $section, scalar(@section_data));
+        printf $log_fh "\t\t\t%d: NO LIST DATA FOUND IN SECTION %s. Lines read: %d\n", 
+            __LINE__, 
+            $section, scalar(@section_data)
+            if ($verbose >= MINVERBOSE);
         return SUCCESS;
     }
     #
@@ -325,7 +341,10 @@ sub load_list
     #
     @{$pprod_db->{$section}->{data}} = ();
     #
-    $plog->log_vmin("Number of Columns: %d\n", $number_columns);
+    printf $log_fh "\t\t\t%d: Number of Columns: %d\n", 
+        __LINE__, 
+        $number_columns
+        if ($verbose >= MINVERBOSE);
     #
     foreach my $record (@section_data)
     {
@@ -338,7 +357,7 @@ sub load_list
         my @tokens = split_quoted_string($record, ' ');
         my $number_tokens = scalar(@tokens);
         #
-        $plog->log_vmax("Number of tokens in record: %d\n", $number_tokens);
+        printf $log_fh "\t\t\t%d: Number of tokens in record: %d\n", __LINE__, $number_tokens if ($verbose >= MAXVERBOSE);
         #
         if ($number_tokens == $number_columns)
         {
@@ -346,11 +365,11 @@ sub load_list
             @data{@{$pprod_db->{$section}->{column_names}}} = @tokens;
             #
             unshift @{$pprod_db->{$section}->{data}}, \%data;
-            $plog->log_vmax("Current Number of Records: %d\n", scalar(@{$pprod_db->{$section}->{data}}));
+            printf $log_fh "\t\t\t%d: Current Number of Records: %d\n", __LINE__, scalar(@{$pprod_db->{$section}->{data}}) if ($verbose >= MAXVERBOSE);
         }
         else
         {
-            $plog->log_err("Section: %s, SKIPPING RECORD - NUMBER TOKENS (%d) != NUMBER COLUMNS (%d)\n", $section, $number_tokens, $number_columns);
+            printf $log_fh "\t\t\t%d: ERROR: Section: %s, SKIPPING RECORD - NUMBER TOKENS (%d) != NUMBER COLUMNS (%d)\n", __LINE__, $section, $number_tokens, $number_columns;
         }
     }
     #
@@ -362,6 +381,36 @@ sub load_list
 ######################################################################
 #
 # load and process product files, either CRB or MAI
+#
+sub read_file
+{
+    my ($prod_file, $praw_data) = @_;
+    #
+    printf $log_fh "\t%d: Reading Product file: %s\n", 
+                   __LINE__, $prod_file;
+    #
+    if ( ! -r $prod_file )
+    {
+        printf $log_fh "\t%d: ERROR: file $prod_file is NOT readable\n\n", __LINE__;
+        return FAIL;
+    }
+    #
+    unless (open(INFD, $prod_file))
+    {
+        printf $log_fh "\t%d: ERROR: unable to open $prod_file.\n\n", __LINE__;
+        return FAIL;
+    }
+    @{$praw_data} = <INFD>;
+    close(INFD);
+    #
+    # remove any CR-NL sequences from Windose.
+    chomp(@{$praw_data});
+    s/\r//g for @{$praw_data};
+    #
+    printf $log_fh "\t\t%d: Lines read: %d\n", __LINE__, scalar(@{$praw_data}) if ($verbose >= MINVERBOSE);
+    #
+    return SUCCESS;
+}
 #
 sub read_filename_id
 {
@@ -381,8 +430,8 @@ sub read_filename_id
     #
     my $fname_to_ids_path = $prod_csv_dir . "/FILENAME_TO_IDS.csv";
     #
-    $plog->log_msg("Reading FILENAME_TO_IDS file: %s\n", 
-                   $fname_to_ids_path);
+    printf $log_fh "\t%d: Reading FILENAME_TO_IDS file: %s\n", 
+                   __LINE__, $fname_to_ids_path;
     #
     $fname_ids{fname_to_ids_path} = $fname_to_ids_path;
     if ( ! -r $fname_to_ids_path )
@@ -395,8 +444,8 @@ sub read_filename_id
     # read in file and parse
     #
     my @raw_data = ();
-    return FAIL unless ($putils->read_file($fname_to_ids_path, 
-                                          \@raw_data) == TRUE);
+    return FAIL unless (read_file($fname_to_ids_path, 
+                                   \@raw_data) == TRUE);
     #
     # remove header record
     #
@@ -432,24 +481,27 @@ sub read_filename_id
 sub write_filename_id
 {
     my $outnm = $fname_ids{fname_to_ids_path};
-    $plog->log_msg("Writing FILENAME_TO_IDS file: %s\n", $outnm);
+    printf $log_fh "\t%d: Writing FILENAME_TO_IDS file: %s\n", 
+                   __LINE__, $outnm;
     #
     my $outfh = undef;
     if ( -r $outnm )
     {
-        $plog->log_msg("Appending to FILENAME_TO_IDS file: %s\n", $outnm);
+        printf $log_fh "\t%d: Appending to FILENAME_TO_IDS file: %s\n", 
+                       __LINE__, $outnm;
         open($outfh, ">>" , $outnm) || die "file is $outnm: $!";
     }
     else
     {
-        $plog->log_msg("Writing FILENAME_TO_IDS file: %s\n", $outnm);
+        printf $log_fh "\t%d: Writing FILENAME_TO_IDS file: %s\n", 
+                       __LINE__, $outnm;
         open($outfh, ">" , $outnm) || die "file is $outnm: $!";
         printf $outfh "FNAME%sFID\n", $delimiter;
     }
     #
     my @last_keys = keys %last_fname_ids;
-    $plog->log_msg("Writing %d keys to FILENAME_TO_IDS file: %s\n", 
-                   scalar(@last_keys), $outnm);
+    printf $log_fh "\t%d: Writing %d keys to FILENAME_TO_IDS file: %s\n", 
+                       __LINE__, scalar(@last_keys), $outnm;
     #
     foreach my $key (@last_keys)
     {
@@ -483,7 +535,7 @@ sub get_filename_id
         if ((($fname_ids{last_fid}%MAX_RECORDS_BEFORE_WRITE) == 0) &&
             (write_filename_id() != SUCCESS))
         {
-            $plog->log_err("Unable to write FNAME_TO_FID.\n");
+            printf $log_fh "\t%d: ERROR: Unable to write FNAME_TO_FID.\n", __LINE__;
             die "Writing FILENAME_TO_IDS failed.";
         }
     }
@@ -495,7 +547,8 @@ sub process_data
 {
     my ($prod_file, $praw_data, $pprod_db) = @_;
     #
-    $plog->log_msg("Processing product data: %s\n", $prod_file);
+    printf $log_fh "\t%d: Processing product data: %s\n", 
+                   __LINE__, $prod_file;
     #
     my $max_rec = scalar(@{$praw_data});
     my $sec_no = 0;
@@ -504,7 +557,9 @@ sub process_data
     {
         my $rec = $praw_data->[$irec];
         #
-        $plog->log_vmin("Record %04d: <%s>\n", $irec, $rec);
+        printf $log_fh "\t\t%d: Record %04d: <%s>\n", 
+            __LINE__, $irec, $rec
+               if ($verbose >= MINVERBOSE);
         #
         if ($rec =~ m/^(\[[^\]]*\])/)
         {
@@ -517,14 +572,17 @@ sub process_data
                 next;
             }
             #
-            $plog->log_vmin("Section %03d: %s\n", ++$sec_no, $section);
+            printf $log_fh "\t\t%d: Section %03d: %s\n", 
+                __LINE__, ++$sec_no, $section
+                if ($verbose >= MINVERBOSE);
             #
             $rec = $praw_data->[${irec}+1];
             #
             if ($rec =~ m/^\s*$/)
             {
                 $irec += 2;
-                $plog->log_msg("Empty section - %s\n", $section);
+                printf $log_fh "\t\t%d: Empty section - %s\n", 
+                               __LINE__, $section;
             }
             elsif ($rec =~ m/.*=.*/)
             {
@@ -896,7 +954,8 @@ sub export_to_csv
 {
     my ($prod_file, $pprod_db) = @_;
     #
-    $plog->log_msg("Writing product data to CSV: %s\n", $prod_file);
+    printf $log_fh "\t%d: Writing product data to CSV: %s\n", 
+                   __LINE__, $prod_file;
     #
     my $prod_name = basename($prod_file);
     $prod_name =~ tr/a-z/A-Z/;
@@ -916,7 +975,8 @@ sub export_to_csv
         {
             if (read_filename_id($prod_csv_dir) != SUCCESS)
             {
-                $plog->log_err("Unable to read FNAME_TO_FID: %s\n", $prod_file);
+                printf $log_fh "\t%d: ERROR: Unable to read FNAME_TO_FID: %s\n", 
+                   __LINE__, $prod_file;
                 die "Reading FILENAME_TO_IDS failed.";
             }
         }
@@ -927,18 +987,20 @@ sub export_to_csv
         ( mkpath($prod_csv_dir) || die $! ) unless ( -d $prod_csv_dir );
     }
     #
-    $plog->log_msg("Product %s CSV directory: %s\n", 
-                    $prod_name, $prod_csv_dir);
+    printf $log_fh "\t\t%d: product %s CSV directory: %s\n", 
+        __LINE__, $prod_name, $prod_csv_dir;
     #
     foreach my $section (sort keys %{$pprod_db->{found_data}})
     {
         if ($pprod_db->{found_data}->{$section} != TRUE)
         {
-            $plog->log_vmin("No data for section %s. Skipping it.\n", $section);
+            printf $log_fh "\t\t%d: No data for section %s. Skipping it.\n", 
+                __LINE__, $section if ($verbose >= MINVERBOSE);
         }
         elsif ($pprod_db->{section_type}->{$section} == SECTION_NAME_VALUE)
         {
-            $plog->log_msg("Name-Value Section: %s\n", $section);
+            printf $log_fh "\t\t%d: Name-Value Section: %s\n", 
+                __LINE__, $section;
             export_name_value_to_csv($prod_file,
                                      $prod_name,
                                      $pprod_db,
@@ -947,7 +1009,8 @@ sub export_to_csv
         }
         elsif ($pprod_db->{section_type}->{$section} == SECTION_LIST)
         {
-            $plog->log_msg("List Section: %s\n", $section);
+            printf $log_fh "\t\t%d: List Section: %s\n", 
+                __LINE__, $section;
             export_list_to_csv($prod_file,
                                $prod_name,
                                $pprod_db,
@@ -956,7 +1019,8 @@ sub export_to_csv
         }
         else
         {
-            $plog->log_err("Unknown type Section: %s\n", $section);
+            printf $log_fh "\t\t%d: Unknown type Section: %s\n", 
+                __LINE__, $section;
         }
     }
     #
@@ -967,27 +1031,32 @@ sub process_file
 {
     my ($prod_file) = @_;
     #
-    $plog->log_msg("Processing product File: %s\n", $prod_file);
+    printf $log_fh "\n%d: Processing product File: %s\n", 
+                   __LINE__, $prod_file;
     #
     my @raw_data = ();
     my %prod_db = ();
     #
     my $status = FAIL;
-    if ($putils->read_file($prod_file, \@raw_data) != SUCCESS)
+    if (read_file($prod_file, \@raw_data) != SUCCESS)
     {
-        $plog->log_err("Reading product file: %s\n", $prod_file);
+        printf $log_fh "\t%d: ERROR: Reading product file: %s\n", 
+                       __LINE__, $prod_file;
     }
     elsif (process_data($prod_file, \@raw_data, \%prod_db) != SUCCESS)
     {
-        $plog->log_err("Processing product file: %s\n", $prod_file);
+        printf $log_fh "\t%d: ERROR: Processing product file: %s\n", 
+                       __LINE__, $prod_file;
     }
     elsif (export_to_csv($prod_file, \%prod_db) != SUCCESS)
     {
-        $plog->log_err("Exporting product file to CSV: %s\n", $prod_file);
+        printf $log_fh "\t%d: ERROR: Exporting product file to CSV: %s\n", 
+                       __LINE__, $prod_file;
     }
     else
     {
-        $plog->log_msg("Success processing product file: %s\n", $prod_file);
+        printf $log_fh "\t%d: Success processing product file: %s\n", 
+                       __LINE__, $prod_file;
         $status = SUCCESS;
     }
     #
@@ -996,13 +1065,8 @@ sub process_file
 #
 ######################################################################
 #
-# start of main
-#
-$plog->trace(FALSE);
-$plog->disable_stdout_buffering();
-#
 my %opts;
-if (getopts('?ThwWv:B:R:P:l:d:rLCcs:S:', \%opts) != 1)
+if (getopts('?hwWv:B:R:P:l:d:rLCcs:S:', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -1014,32 +1078,6 @@ foreach my $opt (%opts)
     {
         usage($cmd);
         exit 0;
-    }
-    elsif ($opt eq 'T')
-    {
-        $plog->trace(TRUE);
-    }
-    elsif ($opt eq 'w')
-    {
-        $plog->verbose(MINVERBOSE);
-    }
-    elsif ($opt eq 'W')
-    {
-        $plog->verbose(MIDVERBOSE);
-    }
-    elsif ($opt eq 'v')
-    {
-        if (!defined($plog->verbose($opts{$opt})))
-        {
-            $plog->log_err("Invalid verbose level: $opts{$opt}\n");
-            usage($cmd);
-            exit 2;
-        }
-    }
-    elsif ($opt eq 'l')
-    {
-        $plog->logfile($opts{$opt});
-        $plog->log_msg("Log File: %s\n", $opts{$opt});
     }
     elsif ($opt eq 'r')
     {
@@ -1057,36 +1095,69 @@ foreach my $opt (%opts)
     {
         $combine_data = COMBINE_BY_FILENAME_ID;
     }
+    elsif ($opt eq 'w')
+    {
+        $verbose = MINVERBOSE;
+    }
+    elsif ($opt eq 'W')
+    {
+        $verbose = MIDVERBOSE;
+    }
     elsif ($opt eq 's')
     {
         $filter_sections = TRUE;
         %sections = map { $_ => 1 } split /,/, $opts{$opt};
         $sections{INDEX()} = 1;
         $sections{INFORMATION()} = 1;
-        $plog->log_msg("Filter sections: \n%s\n", join("\n", keys %sections));
+        printf $log_fh "\n%d: filter sections: \n%s\n", __LINE__, join("\n", keys %sections);
     }
     elsif ($opt eq 'S')
     {
         $filter_sections = TRUE;
         %sections = map { $_ => 1 } split /,/, $opts{$opt};
-        $plog->log_msg("Filter sections: \n%s\n", join("\n", keys %sections));
+        printf $log_fh "\n%d: filter sections: \n%s\n", __LINE__, join("\n", keys %sections);
+    }
+    elsif ($opt eq 'v')
+    {
+        if ($opts{$opt} =~ m/^[0123]$/)
+        {
+            $verbose = $opts{$opt};
+        }
+        elsif (exists($verbose_levels{$opts{$opt}}))
+        {
+            $verbose = $verbose_levels{$opts{$opt}};
+        }
+        else
+        {
+            printf $log_fh "\n%d: ERROR: Invalid verbose level: $opts{$opt}\n", __LINE__;
+            usage($cmd);
+            exit 2;
+        }
+    }
+    elsif ($opt eq 'l')
+    {
+        local *FH;
+        $logfile = $opts{$opt};
+        open(FH, '>', $logfile) or die $!;
+        $log_fh = *FH;
+        printf $log_fh "\n%d: Log File: %s\n", __LINE__, $logfile;
     }
     elsif ($opt eq 'P')
     {
         $csv_path = $opts{$opt} . '/';
-        $plog->log_msg("CSV path: %s\n", $csv_path);
+        printf $log_fh "\n%d: CSV path: %s\n", __LINE__, $csv_path;
     }
     elsif ($opt eq 'R')
     {
         $csv_rel_path = $opts{$opt} . '/';
         $csv_path = $csv_base_path . '/' . $csv_rel_path;
-        $plog->log_msg("CSV relative path: %s\n", $csv_rel_path);
+        printf $log_fh "\n%d: CSV relative path: %s\n", __LINE__, $csv_rel_path;
     }
     elsif ($opt eq 'B')
     {
         $csv_base_path = $opts{$opt} . '/';
         $csv_path = $csv_base_path . '/' . $csv_rel_path;
-        $plog->log_msg("CSV base path: %s\n", $csv_base_path);
+        printf $log_fh "\n%d: CSV base path: %s\n", __LINE__, $csv_base_path;
     }
     elsif ($opt eq 'd')
     {
@@ -1102,7 +1173,7 @@ if ( -t STDIN )
     #
     if (scalar(@ARGV) == 0)
     {
-        $plog->log_err("No product files given.\n");
+        printf $log_fh "%d: ERROR: No product files given.\n", __LINE__;
         usage($cmd);
         exit 2;
     }
@@ -1118,7 +1189,7 @@ if ( -t STDIN )
 }
 else
 {
-    $plog->log_msg("Reading STDIN for list of files ...\n");
+    printf $log_fh "%d: Reading STDIN for list of files ...\n", __LINE__;
     #
     rmtree($csv_path) if ($rmv_csv_dir == TRUE);
     ( mkpath($csv_path) || die $! ) unless ( -d $csv_path );
@@ -1135,7 +1206,7 @@ if (($combine_data == COMBINE_BY_FILENAME_ID) &&
 {
     if (write_filename_id() != SUCCESS)
     {
-        $plog->log_err("Unable to write FNAME_TO_FID.\n");
+        printf $log_fh "\t%d: ERROR: Unable to write FNAME_TO_FID.\n", __LINE__;
         die "Writing FILENAME_TO_IDS failed.";
     }
 }
