@@ -807,7 +807,7 @@ if (( ! defined($database_name)) ||
     ( $schema_name eq "") ||
     ( $database_name eq ""))
 {
-        $plog->log_err("Database or Schema names are undefined.\n");
+    $plog->log_err("Database or Schema names are undefined.\n");
     usage($cmd);
     exit 2;
 }
