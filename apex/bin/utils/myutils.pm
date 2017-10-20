@@ -111,6 +111,55 @@ sub is_float
     }
 }
 #
+# following function is from here:
+#
+# http://billauer.co.il/blog/2011/05/perl-crc32-crc-xs-module/
+#
+# but modified so it can be called from this mod.
+#
+sub crc32
+{
+    my $self = shift;
+    #
+    my $input = shift @_;
+    #
+    my $init_value = 0;
+    $init_value = shift @_ if @_;
+    #
+    my $polynomial = 0xedb88320;
+    $polynomial = shift @_ if @_;
+    #
+    my @lookup_table = ();
+    #
+    for (my $i=0; $i<256; $i++)
+    {
+        my $x = $i;
+        for (my $j=0; $j<8; $j++)
+        {
+            if ($x & 1)
+            {
+                $x = ($x >> 1) ^ $polynomial;
+            }
+            else
+            {
+                $x = $x >> 1;
+            }
+        }
+        push @lookup_table, $x;
+    }
+    #
+    my $crc = $init_value ^ 0xffffffff;
+    #
+    foreach my $x (unpack ('C*', $input))
+    {
+        $crc = (($crc >> 8) & 0xffffff) ^ $lookup_table[ ($crc ^ $x) & 0xff ];
+    }
+    #
+    $crc = $crc ^ 0xffffffff;
+    #
+    return $crc;
+}
+#
 # exit with success
 #
 1;
