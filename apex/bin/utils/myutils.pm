@@ -117,6 +117,9 @@ sub is_float
 #
 # but modified so it can be called from this mod.
 #
+our @lookup_table = ();
+our $init_lookup_table = TRUE;
+#
 sub crc32
 {
     my $self = shift;
@@ -129,23 +132,25 @@ sub crc32
     my $polynomial = 0xedb88320;
     $polynomial = shift @_ if @_;
     #
-    my @lookup_table = ();
-    #
-    for (my $i=0; $i<256; $i++)
+    if ($init_lookup_table == TRUE)
     {
-        my $x = $i;
-        for (my $j=0; $j<8; $j++)
+        for (my $i=0; $i<256; $i++)
         {
-            if ($x & 1)
+            my $x = $i;
+            for (my $j=0; $j<8; $j++)
             {
-                $x = ($x >> 1) ^ $polynomial;
+                if ($x & 1)
+                {
+                    $x = ($x >> 1) ^ $polynomial;
+                }
+                else
+                {
+                    $x = $x >> 1;
+                }
             }
-            else
-            {
-                $x = $x >> 1;
-            }
+            push @lookup_table, $x;
         }
-        push @lookup_table, $x;
+        $init_lookup_table = FALSE;
     }
     #
     my $crc = $init_value ^ 0xffffffff;
