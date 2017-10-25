@@ -25,7 +25,6 @@ $db_name = shift @ARGV;
 $user_name = shift @ARGV if (scalar(@ARGV) > 0);
 $password = shift @ARGV if (scalar(@ARGV) > 0);
 #
-#
 my $dsn = "dbi:Pg:dbname=$db_name;host=$host_name";
 #
 my $dbh = DBI->connect($dsn, $user_name, $password, { PrintError => 0, RaiseError => 0 } );
