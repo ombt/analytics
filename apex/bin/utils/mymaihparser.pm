@@ -36,6 +36,7 @@ sub new
     #
     return($self);
 }
+#
 sub delimiter {
     my $self = shift;
     $self->{delimiter} = shift @_ if (@_);
