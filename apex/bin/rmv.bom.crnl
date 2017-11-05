@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+#
+if [[ $# -eq 0 ]]
+then
+	xargs sed -i -e '1 s/^\xef\xbb\xbf//' -e 's/\xd//g'
+else
+	sed -i -e '1 s/^\xef\xbb\xbf//' -e 's/\xd//g' "${@}"
+fi
+#
+exit $?
