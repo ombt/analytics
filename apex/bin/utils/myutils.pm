@@ -39,6 +39,14 @@ sub read_file
     @{$praw_data} = <INFD>;
     close(INFD);
     #
+    # remove BOM character sequence from windows
+    #
+    if ($praw_data->[0] =~ /^\xEF\xBB\xBF/)
+    {
+        $praw_data->[0] =~ s/^\xEF\xBB\xBF//;
+        $self->{logger}->log_warn("Removing BOM from line 1 in file %s", $file_nm);
+    }
+    #
     # remove any CR-NL sequences from windows.
     #
     chomp(@{$praw_data});
