@@ -542,9 +542,10 @@ sub export_section_to_postgres
     my $table = $section;
     $table =~ tr/A-Z/a-z/;
     $table =~ s/[\[\]]//g;
+    $table =~ s/<([0-9]+)>/_$1/g;
     #
-        $plog->log_msg("Export section %s to schema.table %s.%s\n", 
-                       $section, $schema, $table);
+    $plog->log_msg("Export section %s to schema.table %s.%s\n", 
+                   $section, $schema, $table);
     #
     # check if table exists
     #
