@@ -33,6 +33,7 @@ use lib "$binpath/utils";
 use myconstants;
 use mylogger;
 use myutils;
+use mymaihparser;
 #
 ######################################################################
 #
@@ -46,10 +47,12 @@ die "Unable to create logger: $!" unless (defined($plog));
 my $putils = myutils->new($plog);
 die "Unable to create utils: $!" unless (defined($putils));
 #
+my $pmaih = mymaihparser->new($plog);
+die "Unable to create maih parser: $!" unless (defined($pmaih));
+#
 # cmd line options
 #
 my $logfile = '';
-my $delimiter = "+-+";
 #
 ######################################################################
 #
@@ -62,7 +65,6 @@ sub usage
 usage: $arg0 [-?] [-h]  \\ 
         [-w | -W |-v level] \\ 
         [-l logfile] [-T] \\ 
-        [-d delimiter] \\
         [file ...] or reads STDIN
 
 where:
@@ -72,23 +74,8 @@ where:
     -v - verbose level: 0=off,1=min,2=mid,3=max
     -l logfile - log file path
     -T - turn on trace
-    -d delimiter - delimiter ("+-+" be default)
-
-Mongo database and collection names must be given. There are no
-default values.
 
 EOF
-}
-#
-sub parse_filename
-{
-    my ($fname) = @_;
-    #
-    $plog->log_msg("Parsing File Name: %s\n", $fname);
-    #
-    
-    #
-    return SUCCESS;
 }
 #
 ######################################################################
@@ -99,10 +86,9 @@ sub parse_filename
 # -v - verbose level: 0=off,1=min,2=mid,3=max
 # -l logfile - log file path
 # -T - turn on trace
-# -d delimiter - delimiter ("+-+" be default)
 # 
 my %opts;
-if (getopts('?hwWv:l:Td:', \%opts) != 1)
+if (getopts('?hwWv:l:T', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -141,10 +127,6 @@ foreach my $opt (%opts)
         $plog->logfile($opts{$opt});
         $plog->log_msg("Log File: %s\n", $opts{$opt});
     }
-    elsif ($opt eq 'd')
-    {
-        $delimiter = $opts{$opt};
-    }
 }
 #
 if ( -t STDIN )
@@ -161,7 +143,7 @@ if ( -t STDIN )
     #
     foreach my $file_name (@ARGV)
     {
-        my $status = parse_filename($file_name);
+        my $status = $pmaih->parse_filename($file_name);
         if ($status != SUCCESS)
         {
             $plog->log_err_exit("Failed to process %s.\n", $file_name);
@@ -175,7 +157,7 @@ else
     while( defined(my $file_name = <STDIN>) )
     {
         chomp($file_name);
-        my $status = parse_filename($file_name);
+        my $status = $pmaih->parse_filename($file_name);
         if ($status != SUCCESS)
         {
             $plog->log_err_exit("Failed to process %s.\n", $file_name);

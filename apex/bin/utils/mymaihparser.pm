@@ -5,6 +5,7 @@ package mymaihparser;
 use strict;
 use warnings;
 #
+use File::Basename;
 use FileHandle;
 use base qw( Exporter );
 #
@@ -347,6 +348,117 @@ sub process_data
     }
     #
     return SUCCESS;
+}
+#
+sub parse_with_ext
+{
+    my $self = shift;
+    my ($fname, $ext) = @_;
+    #
+    $self->{logger}->log_msg("File Name (ext=%s): %s\n", $ext, $fname);
+    #
+    if (($ext =~ m/^u01$/i) ||
+        ($ext =~ m/^u03$/i) ||
+        ($ext =~ m/^mpr$/i))
+    {
+        my ($count) = scalar( @{ [ $fname =~ /\+\-\+/gi ] } );
+        #
+        if ($count > 0)
+        {
+            my @tokens = split /\+\-\+/, $fname;
+            #
+            my $date = shift @tokens;
+            my $machine_order = shift @tokens;
+            my $stage_no = shift @tokens;
+            my $lane_no = shift @tokens;
+            my $pcb_serial = shift @tokens;
+            my $pcb_id = shift @tokens;
+            my $output_no = shift @tokens;
+            my $pcb_id_lot_no = shift @tokens;
+            my $pcb_id_serial_no = shift @tokens;
+            #
+                $self->{logger}->log_msg("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
+                $date,
+                $machine_order,
+                $stage_no,
+                $lane_no,
+                $pcb_serial,
+                $pcb_id,
+                $output_no,
+                $pcb_id_lot_no,
+                $pcb_id_serial_no);
+        }
+        else
+        {
+            my @tokens = split /-/, $fname;
+            #
+            my $date = shift @tokens;
+            my $machine_order = shift @tokens;
+            my $stage_no = shift @tokens;
+            my $lane_no = shift @tokens;
+            my $pcb_serial = shift @tokens;
+            #
+            # PCB ID can contain dashes, so we have to kludge
+            # along now.
+            #
+            my $pcb_id_serial_no = pop @tokens;
+            my $pcb_id_lot_no = pop @tokens;
+            my $output_no = pop @tokens;
+            #
+            my $pcb_id = join("-", @tokens);
+            #
+            $self->{logger}->log_msg("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
+                $date,
+                $machine_order,
+                $stage_no,
+                $lane_no,
+                $pcb_serial,
+                $pcb_id,
+                $output_no,
+                $pcb_id_lot_no,
+                $pcb_id_serial_no);
+        }
+        #
+        return SUCCESS;
+    }
+    else
+    {
+        $self->{logger}->log_err("Unknown ext %s for %s\n", $ext, $fname);
+        return FAIL;
+    }
+}
+#
+sub parse_without_ext
+{
+    my $self = shift;
+    my ($fname) = @_;
+    #
+    $self->{logger}->log_msg("File Name (ext=none): %s\n", $fname);
+    #
+    return SUCCESS;
+}
+#
+sub parse_filename
+{
+    my $self = shift;
+    my ($fpath) = @_;
+    #
+    $self->{logger}->log_msg("Parsing File Path: %s\n", $fpath);
+    #
+    my $fname = basename($fpath);
+    #
+    if ($fname =~ m/\.([^\.]+)$/)
+    {
+        my $ext = ${1};
+        #
+        $fname =~ s/\.${ext}$//;
+        #
+        return $self->parse_with_ext($fname, $ext);
+    }
+    else
+    {
+        return $self->parse_without_ext($fname);
+    }
 }
 #
 # exit with success
