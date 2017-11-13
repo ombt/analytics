@@ -353,9 +353,11 @@ sub process_data
 sub parse_with_ext
 {
     my $self = shift;
-    my ($fname, $ext) = @_;
+    my ($fname, $ext, $pparts) = @_;
     #
-    $self->{logger}->log_msg("File Name (ext=%s): %s\n", $ext, $fname);
+    $self->{logger}->log_vmin("File Name (ext=%s): %s\n", $ext, $fname);
+    #
+    @{$pparts} = undef;
     #
     if (($ext =~ m/^u01$/i) ||
         ($ext =~ m/^u03$/i) ||
@@ -367,6 +369,12 @@ sub parse_with_ext
         {
             my @tokens = split /\+\-\+/, $fname;
             #
+            if (scalar(@tokens) != 9)
+            {
+                $self->{logger}->log_err("Incorrect number of file tokens for file: %s\n", $fname);
+                return FAIL;
+            }
+            #
             my $date = shift @tokens;
             my $machine_order = shift @tokens;
             my $stage_no = shift @tokens;
@@ -377,7 +385,7 @@ sub parse_with_ext
             my $pcb_id_lot_no = shift @tokens;
             my $pcb_id_serial_no = shift @tokens;
             #
-                $self->{logger}->log_msg("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
+                $self->{logger}->log_vmin("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
                 $date,
                 $machine_order,
                 $stage_no,
@@ -387,10 +395,27 @@ sub parse_with_ext
                 $output_no,
                 $pcb_id_lot_no,
                 $pcb_id_serial_no);
+            #
+            my $idx = -1;
+            #
+            $pparts->[++$idx] = $date;
+            $pparts->[++$idx] = $machine_order;
+            $pparts->[++$idx] = $stage_no;
+            $pparts->[++$idx] = $lane_no;
+            $pparts->[++$idx] = $pcb_serial;
+            $pparts->[++$idx] = $pcb_id;
+            $pparts->[++$idx] = $output_no;
+            $pparts->[++$idx] = $pcb_id_lot_no;
+            $pparts->[++$idx] = $pcb_id_serial_no;
         }
         else
         {
             my @tokens = split /-/, $fname;
+            if (scalar(@tokens) < 9)
+            {
+                $self->{logger}->log_err("Incorrect number of file tokens for file: %s\n", $fname);
+                return FAIL;
+            }
             #
             my $date = shift @tokens;
             my $machine_order = shift @tokens;
@@ -407,7 +432,7 @@ sub parse_with_ext
             #
             my $pcb_id = join("-", @tokens);
             #
-            $self->{logger}->log_msg("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
+            $self->{logger}->log_vmin("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
                 $date,
                 $machine_order,
                 $stage_no,
@@ -417,6 +442,18 @@ sub parse_with_ext
                 $output_no,
                 $pcb_id_lot_no,
                 $pcb_id_serial_no);
+            #
+            my $idx = -1;
+            #
+            $pparts->[++$idx] = $date;
+            $pparts->[++$idx] = $machine_order;
+            $pparts->[++$idx] = $stage_no;
+            $pparts->[++$idx] = $lane_no;
+            $pparts->[++$idx] = $pcb_serial;
+            $pparts->[++$idx] = $pcb_id;
+            $pparts->[++$idx] = $output_no;
+            $pparts->[++$idx] = $pcb_id_lot_no;
+            $pparts->[++$idx] = $pcb_id_serial_no;
         }
         #
         return SUCCESS;
@@ -431,9 +468,13 @@ sub parse_with_ext
 sub parse_without_ext
 {
     my $self = shift;
-    my ($fname) = @_;
+    my ($fname, $pparts) = @_;
     #
-    $self->{logger}->log_msg("File Name (ext=none): %s\n", $fname);
+    $self->{logger}->log_vmin("File Name (ext=none): %s\n", $fname);
+    #
+    @{$pparts} = undef;
+    #
+    unshift @{$pparts}, $fname;
     #
     return SUCCESS;
 }
@@ -441,23 +482,24 @@ sub parse_without_ext
 sub parse_filename
 {
     my $self = shift;
-    my ($fpath) = @_;
+    my ($fpath, $pext, $pparts) = @_;
     #
-    $self->{logger}->log_msg("Parsing File Path: %s\n", $fpath);
+    $self->{logger}->log_vmin("Parsing File Path: %s\n", $fpath);
     #
     my $fname = basename($fpath);
     #
     if ($fname =~ m/\.([^\.]+)$/)
     {
-        my $ext = ${1};
+        ${$pext} = ${1};
         #
-        $fname =~ s/\.${ext}$//;
+        $fname =~ s/\.${$pext}$//;
         #
-        return $self->parse_with_ext($fname, $ext);
+        return $self->parse_with_ext($fname, ${$pext}, $pparts);
     }
     else
     {
-        return $self->parse_without_ext($fname);
+        ${$pext} = "";
+        return $self->parse_without_ext($fname, $pparts);
     }
 }
 #

@@ -143,10 +143,17 @@ if ( -t STDIN )
     #
     foreach my $file_name (@ARGV)
     {
-        my $status = $pmaih->parse_filename($file_name);
+        $plog->log_msg("File Name: %s\n", $file_name);
+        my $ext = "";
+        my @parts = undef;
+        my $status = $pmaih->parse_filename($file_name, \$ext, \@parts);
         if ($status != SUCCESS)
         {
-            $plog->log_err_exit("Failed to process %s.\n", $file_name);
+            $plog->log_err("Failed to process %s.\n", $file_name);
+        }
+        else
+        {
+            $plog->log_msg("File Name Parts (ext=<%s>): %s\n", $ext, join("\n", @parts));
         }
     }
 }
@@ -156,11 +163,18 @@ else
     #
     while( defined(my $file_name = <STDIN>) )
     {
+        $plog->log_msg("File Name: %s\n", $file_name);
         chomp($file_name);
-        my $status = $pmaih->parse_filename($file_name);
+        my $ext = "";
+        my @parts = undef;
+        my $status = $pmaih->parse_filename($file_name, \$ext, \@parts);
         if ($status != SUCCESS)
         {
-            $plog->log_err_exit("Failed to process %s.\n", $file_name);
+            $plog->log_err("Failed to process %s.\n", $file_name);
+        }
+        else
+        {
+            $plog->log_msg("File Name Parts (ext=<%s>): %s\n", $ext, join("\n", @parts));
         }
     }
 }
