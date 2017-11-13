@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 ######################################################################
 #
-# parse a file name. known types are : u01, u03, mpr. all other
+# parse an MAIH file name. known types are : u01, u03, mpr. all other
 # file names are just echoed as is.
 #
 ######################################################################
