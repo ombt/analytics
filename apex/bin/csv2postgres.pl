@@ -28,7 +28,7 @@ use DBI;
 # my mods
 #
 use lib "$binpath";
-use lib "$binpath/utils";
+use lib "$binpath/myutils";
 #
 use myconstants;
 use mylogger;

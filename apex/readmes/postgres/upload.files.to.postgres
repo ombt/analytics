@@ -1,0 +1,62 @@
+These notes descibe how to upload U01, U03, MPR, CRB files
+into Postgresql.
+
+1) make sure a postgres cim user and db exists.
+
+to create user cim:
+
+ > createuser --h localhost --p 5432 -d -l -r -s cim
+
+to create cim database:
+
+ > createdb -O cim -h localhost -p 5432 -w cim
+
+2) the use maih2postgres.pl to upload files:
+
+ > ./maih2postgres.pl
+
+811: ERROR: Database or Schema names are undefined.
+
+usage: ./maih2postgres.pl [-?] [-h]  \
+        [-w | -W |-v level] \
+        [-l logfile] [-T] \
+        [-t temp directory path] \
+        [-d row delimiter] \
+        [-u user name] [-p passwd] \
+        [-P port ] \
+        -D db_name -S schema_name [-X]
+        [maihime-file ...] or reads STDIN
+
+where:
+
+    -? or -h - print this usage.
+    -w - enable warning (level=min=1)
+    -W - enable warning and trace (level=mid=2)
+    -v level - verbose level: 0=off,1=min,2=mid,3=max
+    -l logfile - log file path
+    -T - turn on trace
+    -t path - temp directory path, defaults to 'PSQL.CSV.8476'
+    -d delimiter - delimiter (tab by default)
+    -u user name - PostgresQL user name
+    -p passwd - PostgresQL user password
+    -P port - PostgreSQL port (default = 5432)
+    -D db_name - name of PostgreSQL database (site name)
+    -S schema_name - name of PostgreSQL schema (file type)
+    -X - DO NOT EXPORT to PostgreSQL and KEEP CSV file.
+
+3) another way to create a database if you are running under
+the default user for postgres is to use the testbin script:
+
+ > pwd -P
+/cygdrive/g/sandbox/analytics/apex/testbin/postgres
+ > lf
+pg.add.table.col.pl*   pg.dump.table.pl*          pg.list.tables.pl*
+pg.create.db.pl*       pg.list.dbs.pl*            pg.list.users.pl*
+pg.create.table.pl*    pg.list.dbs.sh*            pg.schema.table.cols.pl*
+pg.drop.db.pl*         pg.list.schema.tables.pl*  pg.table.cols.pl*
+pg.drop.table.col.pl*  pg.list.schemas.pl*        pg.table.exists.pl*
+
+ > ./pg.create.db.pl
+usage: ./pg.create.db.pl db host [user [passwd]]
+
+4) 
