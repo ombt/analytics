@@ -5,6 +5,7 @@ package myutils;
 use strict;
 use warnings;
 #
+use Digest::CRC qw(crc64 crc32 crc16 crcccitt crc crc8);
 use myconstants;
 #
 sub new
@@ -128,7 +129,7 @@ sub is_float
 our @lookup_table = ();
 our $init_lookup_table = TRUE;
 #
-sub crc32
+sub my_crc_32
 {
     my $self = shift;
     #
@@ -170,6 +171,38 @@ sub crc32
     #
     $crc = $crc ^ 0xffffffff;
     #
+    return $crc;
+}
+#
+sub crc_ccitt
+{
+    my $self = shift;
+    my $input = shift @_;
+    my $crc = crcccitt($input);
+    return $crc;
+}
+#
+sub crc_16
+{
+    my $self = shift;
+    my $input = shift @_;
+    my $crc = crc16($input);
+    return $crc;
+}
+#
+sub crc_32
+{
+    my $self = shift;
+    my $input = shift @_;
+    my $crc = crc32($input);
+    return $crc;
+}
+#
+sub crc_64
+{
+    my $self = shift;
+    my $input = shift @_;
+    my $crc = crc64($input);
     return $crc;
 }
 #

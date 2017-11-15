@@ -86,6 +86,11 @@ my %tables =
 #
 my %columns_in_tables = ();
 #
+# filename table data
+#
+my $fid_table_name = "filename_to_fid";
+my @fid_table_cols = ( "_filename", "_filename_id" );
+#
 ######################################################################
 #
 # miscellaneous functions
@@ -279,7 +284,7 @@ sub create_schema
         }
         if (defined($sth->execute()))
         {
-        $plog->log_msg("Database schema created.\n");
+            $plog->log_msg("Database schema created.\n");
         }
         else
         {
@@ -310,12 +315,12 @@ sub table_exists
     my @data = $sth->fetchrow_array();
     if ($data[0] == 0)
     {
-        $plog->log_msg("Schema.Table does NOT EXIST: %s.%s\n", $schema, $table);
+        $plog->log_vmid("Schema.Table does NOT EXIST: %s.%s\n", $schema, $table);
         return FALSE;
     }
     else
     {
-        $plog->log_msg("Schema.Table does EXIST: %s.%s\n", $schema, $table);
+        $plog->log_vmid("Schema.Table does EXIST: %s.%s\n", $schema, $table);
         return TRUE;
     }
 }
@@ -328,7 +333,7 @@ sub add_columns_to_table
     #
     my @cols_from_file = @{$pcols};
     tr/A-Z/a-z/ for @cols_from_file;
-    $plog->log_vmin("cols-from-file %s\n", join(";", @{$pcols}));
+    $plog->log_vmid("cols-from-file %s\n", join(";", @{$pcols}));
     #
     # check if we already know the current columns in the table.
     #
@@ -348,20 +353,20 @@ sub add_columns_to_table
         if ($same == TRUE)
         {
             # nothing to do, just return
-            $plog->log_vmin("file cols == table cols.\n");
+            $plog->log_vmid("file cols == table cols.\n");
             return SUCCESS;
         }
         #
         delete $columns_in_tables{$schema_table};
     }
     #
-    $plog->log_msg("File cols != table cols.\n");
+    $plog->log_vmid("File cols != table cols.\n");
     #
     # unique columns in file section
     #
     my %seen = ();
     my @unique_cols_from_file = grep { ! $seen{$_}++ } @cols_from_file;
-    $plog->log_vmin("unique-cols-from-file %s\n", 
+    $plog->log_vmid("unique-cols-from-file %s\n", 
                      join(";", @unique_cols_from_file));
     #
     # get columns from schema/table pair.
@@ -378,13 +383,13 @@ sub add_columns_to_table
     {
         push @cols_from_table, $data[2];
     }
-    $plog->log_vmin("cols-from-table %s\n", join(";", @cols_from_table));
+    $plog->log_vmid("cols-from-table %s\n", join(";", @cols_from_table));
     #
     # get unique columns from schema/table pair.
     #
     %seen = ();
     my @unique_cols_from_table = grep { ! $seen{$_}++ } @cols_from_table;
-    $plog->log_vmin("unique-cols-from-table %s\n", 
+    $plog->log_vmid("unique-cols-from-table %s\n", 
                      join(";", @unique_cols_from_table));
     #
     # difference between file and table schema
@@ -440,7 +445,7 @@ sub add_columns_to_table
     #
     if (scalar(@file_minus_table) > 0)
     {
-        $plog->log_msg("Adding to table new column(s) in file, but not already in table: %s\n", join(";", @file_minus_table));
+        $plog->log_vmid("Adding to table new column(s) in file, but not already in table: %s\n", join(";", @file_minus_table));
         #
         my $sql = "alter table $schema.$table ";
         #
@@ -472,7 +477,8 @@ sub create_table
     #
     foreach my $col (@{$pcols})
     {
-        $sql .= "\"$col\" text, ";
+        # $sql .= "\"$col\" text, ";
+        $sql .= "$col text, ";
     }
     #
     $sql =~ s/, *$//;
@@ -537,20 +543,21 @@ sub close_db
 #
 sub export_section_to_postgres
 {
-    my ($pprod_db, $schema, $section) = @_;
+    my ($fname_id, $pprod_db, $schema, $section) = @_;
     #
     my $table = $section;
     $table =~ tr/A-Z/a-z/;
     $table =~ s/[\[\]]//g;
     $table =~ s/<([0-9]+)>/_$1/g;
     #
-    $plog->log_msg("Export section %s to schema.table %s.%s\n", 
+    $plog->log_vmid("Export section %s to schema.table %s.%s\n", 
                    $section, $schema, $table);
     #
     # check if table exists
     #
-    my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
-    if (check_table($pcols, $schema, $table) != SUCCESS)
+    my $pcols_wo_fid = $pprod_db->{COLUMN_NAMES}->{$section};
+    my $pcols_w_fid = $pprod_db->{COLUMN_NAMES_WITH_FID}->{$section};
+    if (check_table($pcols_w_fid, $schema, $table) != SUCCESS)
     {
         $plog->log_err("Check table failed: section %s, schema.table %s.%s\n", $section, $schema, $table);
         return FAIL;
@@ -562,9 +569,8 @@ sub export_section_to_postgres
         #
         $plog->log_msg("schema.table: %s.%s\n", $schema, $table);
         #
-        my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
         my $local_delimiter = "";
-        foreach my $col (@{$pcols})
+        foreach my $col (@{$pcols_w_fid})
         {
             $plog->log_msg("%s%s", $local_delimiter, $col);
             $local_delimiter = $delimiter;
@@ -573,8 +579,8 @@ sub export_section_to_postgres
         #
         foreach my $prow (@{$pprod_db->{DATA}->{$section}})
         {
-            my $local_delimiter = "";
-            foreach my $col (@{$pcols})
+            my $local_delimiter = "${fname_id}${delimiter}";
+            foreach my $col (@{$pcols_wo_fid})
             {
                 $plog->log_msg("%s%s", $local_delimiter, $prow->{$col});
                 $local_delimiter = $delimiter;
@@ -587,9 +593,8 @@ sub export_section_to_postgres
         my $csv_file = "/tmp/csv.$$";
         open(my $outfh, ">" , $csv_file) || die "file is $csv_file: $!";
         #
-        my $pcols = $pprod_db->{COLUMN_NAMES}->{$section};
         my $local_delimiter = "";
-        foreach my $col (@{$pcols})
+        foreach my $col (@{$pcols_w_fid})
         {
             printf $outfh "%s%s", $local_delimiter, $col;
             $local_delimiter = $delimiter;
@@ -598,8 +603,8 @@ sub export_section_to_postgres
         #
         foreach my $prow (@{$pprod_db->{DATA}->{$section}})
         {
-            my $local_delimiter = "";
-            foreach my $col (@{$pcols})
+            my $local_delimiter = "${fname_id}${delimiter}";
+            foreach my $col (@{$pcols_wo_fid})
             {
                 printf $outfh "%s%s", $local_delimiter, $prow->{$col};
                 $local_delimiter = $delimiter;
@@ -609,11 +614,12 @@ sub export_section_to_postgres
         #
         close($outfh);
         #
-        my @cols_from_file = @{$pcols};
+        my @cols_from_file = @{$pcols_w_fid};
         tr/A-Z/a-z/ for @cols_from_file;
         #
-        my $sql = "copy ${schema}.${table} ( \"" . join("\",\"", @cols_from_file) . "\" ) from '${csv_file}' with ( format csv, delimiter '${delimiter}', header ) ";
-        $plog->log_msg("COPY CMD: %s\n", $sql);
+        # my $sql = "copy ${schema}.${table} ( \"" . join("\",\"", @cols_from_file) . "\" ) from '${csv_file}' with ( format csv, delimiter '${delimiter}', header ) ";
+         my $sql = "copy ${schema}.${table} ( " . join(",", @cols_from_file) . " ) from '${csv_file}' with ( format csv, delimiter '${delimiter}', header ) ";
+        $plog->log_vmid("COPY CMD: %s\n", $sql);
         #
         my $sth = $dbh->prepare($sql);
         die "Prepare failed: $DBI::errstr\n" 
@@ -626,16 +632,52 @@ sub export_section_to_postgres
     return SUCCESS;
 }
 #
+sub insert_filename_to_id
+{
+    my ($schema, $fname, $fname_id) = @_;
+    #
+    $plog->log_vmid("Inserting %s ==>> %s into %s filename-to-id table\n",
+                    $fname, $fname_id, $schema);
+    #
+    my $sql = "insert into ${schema}.${fid_table_name} ( " .  join(",", @fid_table_cols) . " ) values ( '$fname', '$fname_id' )";
+    #
+    my $sth = $dbh->prepare($sql);
+    if ( ! defined($sth))
+    {
+        $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
+        return FAIL;
+    }
+    if ( ! defined($sth->execute()))
+    {
+        $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
+        return FAIL;
+    }
+    #
+    return SUCCESS;
+}
+#
 sub export_to_postgres
 {
     my ($prod_file, $schema, $pprod_db) = @_;
     #
     $plog->log_msg("Exporting data file to Postgres: %s\n", $prod_file);
     #
+    my $filename = basename($prod_file);
+    #
+    # add filename to filename-to-id table.
+    #
+    my $filename_id = $putils->crc_64($filename);
+    if (insert_filename_to_id($schema, $filename, $filename_id) != SUCCESS)
+    {
+        $plog->log_err("Failed to insert filename-to-id tuple: %s ==>> %s\n", 
+                       $filename, $filename_id);
+        return FAIL;
+    }
+    #
     my $prod_name = basename($prod_file);
     $prod_name =~ tr/a-z/A-Z/;
     #
-    $plog->log_msg("Schema, Product Name: %s, %s\n", $schema, $prod_name);
+    $plog->log_vmid("Schema, Product Name: %s, %s\n", $schema, $prod_name);
     #
     my $status = FAIL;
     #
@@ -644,25 +686,27 @@ sub export_to_postgres
     {
         my $section = $pprod_db->{ORDER}->[$isec];
         #
-        $plog->log_msg("writing section: %s\n", $section);
+        $plog->log_vmid("writing section: %s\n", $section);
         #
         if ($pprod_db->{TYPE}->{$section} == SECTION_NAME_VALUE)
         {
-            $plog->log_msg("Name-Value Section: %s\n", $section);
-            $status = export_section_to_postgres($pprod_db,
+            $plog->log_vmid("Name-Value Section: %s\n", $section);
+            $status = export_section_to_postgres($filename_id,
+                                                 $pprod_db,
                                                  $schema,
                                                  $section);
         }
         elsif ($pprod_db->{TYPE}->{$section} == SECTION_LIST)
         {
-            $plog->log_msg("List Section: %s\n", $section);
-            $status = export_section_to_postgres($pprod_db,
+            $plog->log_vmid("List Section: %s\n", $section);
+            $status = export_section_to_postgres($filename_id,
+                                                 $pprod_db,
                                                  $schema,
                                                  $section);
         }
         else
         {
-            $plog->log_msg("Unknown type Section: %s\n", $section);
+            $plog->log_err("Unknown type Section: %s\n", $section);
         }
     }
     #
@@ -673,8 +717,8 @@ sub process_file
 {
     my ($prod_file, $schema) = @_;
     #
-        $plog->log_msg("Processing product File, Schema: %s,%s\n", 
-                       $prod_file, $schema);
+    $plog->log_msg("Processing product File, Schema: %s,%s\n", 
+                   $prod_file, $schema);
     #
     my @raw_data = ();
     my %prod_db = ();
@@ -690,11 +734,11 @@ sub process_file
     }
     elsif (export_to_postgres($prod_file, $schema, \%prod_db) != SUCCESS)
     {
-        $plog->log_err("Exporting product file to CSV: %s\n", $prod_file);
+        $plog->log_err("Exporting product file to Postgresql: %s\n", $prod_file);
     }
     else
     {
-        $plog->log_vmin("Success processing product file: %s\n", 
+        $plog->log_msg("Success processing product file: %s\n", 
                         $prod_file);
         $status = SUCCESS;
     }
@@ -847,7 +891,6 @@ if (create_db($host_name, $port,
                         (defined($password) ? $password : "undef"));
 }
 #
-#
 # check if schema exists.
 #
 if (create_schema($host_name, $port, 
@@ -871,6 +914,19 @@ if (open_db(\$dbh, $host_name, $port,
                    (defined($user_name) ? $user_name : "undef"),
                    (defined($password) ? $password : "undef"));
     usage($cmd);
+    exit 2;
+}
+#
+# check if filename-to-id table exists.
+#
+if ((table_exists($schema_name, $fid_table_name) != TRUE) &&
+    (create_table($schema_name, $fid_table_name, \@fid_table_cols) != TRUE))
+{
+    $plog->log_err("Unable to create filename-to-id table for (host,port,db,user,pass) = (%s,%s,%s,%s,%s)", 
+                   $host_name, $port, 
+                   $database_name, 
+                   (defined($user_name) ? $user_name : "undef"),
+                   (defined($password) ? $password : "undef"));
     exit 2;
 }
 #

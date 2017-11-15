@@ -41,11 +41,11 @@ die "Unable to create utils: $!" unless (defined($putils));
 #
 if ($use_join == TRUE)
 {
-    my $crc32 = $putils->crc32(join("", @ARGV));
+    my $crc32 = $putils->my_crc_32(join("", @ARGV));
     #
-    printf "\nCRC32 (string) = %s\n", $crc32;
-    printf "CRC32 (long) = %ld\n", $crc32;
-    printf "CRC32 (HEX) = %X\n", $crc32;
+    printf "\nMY CRC32 (string) = %s\n", $crc32;
+    printf "MY CRC32 (long) = %ld\n", $crc32;
+    printf "MY CRC32 (HEX) = %X\n", $crc32;
 }
 else
 {
@@ -53,9 +53,9 @@ else
     {
         my $crc32 = $putils->crc32($arg);
         #
-        printf "\nCRC32 (string) = %s\n", $crc32;
-        printf "CRC32 (long) = %ld\n", $crc32;
-        printf "CRC32 (HEX) = %X\n", $crc32;
+        printf "\nMY CRC32 (string) = %s\n", $crc32;
+        printf "MY CRC32 (long) = %ld\n", $crc32;
+        printf "MY CRC32 (HEX) = %X\n", $crc32;
     }
 }
 #

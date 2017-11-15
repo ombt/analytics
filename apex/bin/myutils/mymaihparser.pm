@@ -103,9 +103,20 @@ sub load_name_value
     @{$pprod_db->{COLUMN_NAMES}->{$section}} = 
         split /${delimiter}/, $pprod_db->{HEADER}->{$section};
     #
+    # precede each column name with an underscore to prevent clashes
+    # with postgresql key words or aliases.
+    #
+    s/^(.*)$/_$1/ for @{$pprod_db->{COLUMN_NAMES}->{$section}};
+    #
+    # add filename-id to headers.
+    #
+    @{$pprod_db->{COLUMN_NAMES_WITH_FID}->{$section}} = 
+        @{$pprod_db->{COLUMN_NAMES}->{$section}};
+    unshift @{$pprod_db->{COLUMN_NAMES_WITH_FID}->{$section}}, '_filename_id';
+    #
     my $number_columns = scalar(@{$pprod_db->{COLUMN_NAMES}->{$section}});
     #
-    $self->{logger}->log_vmin("Number of Columns: %d\n", $number_columns);
+    $self->{logger}->log_vmid("Number of Columns: %d\n", $number_columns);
     #
     my $nrecs = scalar(@{$pprod_db->{DATA}->{$section}});
     #
@@ -135,9 +146,9 @@ sub load_name_value
             $self->{logger}->log_err("Section: %s, SKIPPING RECORD - NUMBER TOKENS (%d) != NUMBER COLUMNS (%d)\n", $section, $number_tokens, $number_columns);
         }
     }
-    $self->{logger}->log_vmin("Number of key-value pairs: %d\n", 
+    $self->{logger}->log_vmid("Number of key-value pairs: %d\n", 
                     scalar(@{$pprod_db->{DATA}->{$section}}));
-    $self->{logger}->log_vmin("Lines read: %d\n", ($$pirec - $start_irec));
+    $self->{logger}->log_vmid("Lines read: %d\n", ($$pirec - $start_irec));
     #
     return SUCCESS;
 }
@@ -259,9 +270,20 @@ sub load_list
     @{$pprod_db->{COLUMN_NAMES}->{$section}} = 
         split / /, $pprod_db->{HEADER}->{$section};
     #
+    # precede each column name with an underscore to prevent clashes
+    # with postgresql key words or aliases.
+    #
+    s/^(.*)$/_$1/ for @{$pprod_db->{COLUMN_NAMES}->{$section}};
+    #
+    # add filename-id to headers.
+    #
+    @{$pprod_db->{COLUMN_NAMES_WITH_FID}->{$section}} = 
+        @{$pprod_db->{COLUMN_NAMES}->{$section}};
+    unshift @{$pprod_db->{COLUMN_NAMES_WITH_FID}->{$section}}, '_filename_id';
+    #
     my $number_columns = scalar(@{$pprod_db->{COLUMN_NAMES}->{$section}});
     #
-    $self->{logger}->log_vmin("Number of Columns: %d\n", $number_columns);
+    $self->{logger}->log_vmid("Number of Columns: %d\n", $number_columns);
     #
     my $nrecs = scalar(@{$pprod_db->{DATA}->{$section}});
     #
@@ -300,7 +322,7 @@ sub process_data
     my $self = shift;
     my ($prod_file, $praw_data, $pprod_db) = @_;
     #
-    $self->{logger}->log_vmin("Processing product data: %s\n", $prod_file);
+    $self->{logger}->log_vmid("Processing product data: %s\n", $prod_file);
     #
     my $max_rec = scalar(@{$praw_data});
     my $sec_no = 0;
@@ -309,13 +331,13 @@ sub process_data
     {
         my $rec = $praw_data->[$irec];
         #
-        $self->{logger}->log_vmin("Record %04d: <%s>\n", $irec, $rec);
+        $self->{logger}->log_vmid("Record %04d: <%s>\n", $irec, $rec);
         #
         if ($rec =~ m/^(\[[^\]]*\])/)
         {
             my $section = ${1};
             #
-            $self->{logger}->log_vmin("Section %03d: %s\n", ++$sec_no, $section);
+            $self->{logger}->log_vmid("Section %03d: %s\n", ++$sec_no, $section);
             #
             $rec = $praw_data->[${irec}+1];
             #
@@ -355,7 +377,7 @@ sub parse_with_ext
     my $self = shift;
     my ($fname, $ext, $pparts) = @_;
     #
-    $self->{logger}->log_vmin("File Name (ext=%s): %s\n", $ext, $fname);
+    $self->{logger}->log_vmid("File Name (ext=%s): %s\n", $ext, $fname);
     #
     @{$pparts} = undef;
     #
@@ -363,9 +385,9 @@ sub parse_with_ext
         ($ext =~ m/^u03$/i) ||
         ($ext =~ m/^mpr$/i))
     {
-        my ($count) = scalar( @{ [ $fname =~ /\+\-\+/gi ] } );
+        my ($delimiter_count) = scalar( @{ [ $fname =~ /\+\-\+/gi ] } );
         #
-        if ($count > 0)
+        if ($delimiter_count > 0)
         {
             my @tokens = split /\+\-\+/, $fname;
             #
@@ -385,7 +407,7 @@ sub parse_with_ext
             my $pcb_id_lot_no = shift @tokens;
             my $pcb_id_serial_no = shift @tokens;
             #
-                $self->{logger}->log_vmin("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
+                $self->{logger}->log_vmid("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
                 $date,
                 $machine_order,
                 $stage_no,
@@ -432,7 +454,7 @@ sub parse_with_ext
             #
             my $pcb_id = join("-", @tokens);
             #
-            $self->{logger}->log_vmin("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
+            $self->{logger}->log_vmid("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
                 $date,
                 $machine_order,
                 $stage_no,
@@ -470,11 +492,13 @@ sub parse_without_ext
     my $self = shift;
     my ($fname, $pparts) = @_;
     #
-    $self->{logger}->log_vmin("File Name (ext=none): %s\n", $fname);
+    $self->{logger}->log_vmid("File Name (ext=none): %s\n", $fname);
     #
     @{$pparts} = undef;
     #
-    unshift @{$pparts}, $fname;
+    my $idx = -1;
+    #
+    $pparts->[++$idx] = $fname;
     #
     return SUCCESS;
 }
@@ -484,7 +508,7 @@ sub parse_filename
     my $self = shift;
     my ($fpath, $pext, $pparts) = @_;
     #
-    $self->{logger}->log_vmin("Parsing File Path: %s\n", $fpath);
+    $self->{logger}->log_vmid("Parsing File Path: %s\n", $fpath);
     #
     my $fname = basename($fpath);
     #
