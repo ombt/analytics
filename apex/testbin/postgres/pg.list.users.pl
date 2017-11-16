@@ -6,22 +6,24 @@ use DBI;
 #
 if (scalar(@ARGV) == 0)
 {
-    printf "usage: $0 host [user [passwd]]\n", ;
+    printf "usage: $0 host [port [user [passwd]]]\n", ;
     exit 0;
 }
 #
 my $host_name = undef;
+my $port = 5432;
 my $user_name = undef;
 my $password = undef;
 #
 die "missing host: $!" unless (scalar(@ARGV) >= 1);
 #
 $host_name = shift @ARGV;
+$port = shift @ARGV if (scalar(@ARGV) > 0);
 $user_name = shift @ARGV if (scalar(@ARGV) > 0);
 $password = shift @ARGV if (scalar(@ARGV) > 0);
 #
 #
-my $dsn = "dbi:Pg:dbname='';host=$host_name";
+my $dsn = "dbi:Pg:dbname='';host=$host_name;port=$port";
 #
 my $dbh = DBI->connect($dsn, $user_name, $password, { PrintError => 0, RaiseError => 0 } );
 die "Unable to connect: $DBI::errstr\n" unless (defined($dbh));
