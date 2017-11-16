@@ -5,6 +5,7 @@ package mymaihparser;
 use strict;
 use warnings;
 #
+use DateTime;
 use File::Basename;
 use FileHandle;
 use base qw( Exporter );
@@ -375,7 +376,7 @@ sub process_data
 sub parse_with_ext
 {
     my $self = shift;
-    my ($fname, $ext, $pparts) = @_;
+    my ($fname, $time_zone, $ext, $ptstamp, $pparts) = @_;
     #
     $self->{logger}->log_vmid("File Name (ext=%s): %s\n", $ext, $fname);
     #
@@ -407,7 +408,21 @@ sub parse_with_ext
             my $pcb_id_lot_no = shift @tokens;
             my $pcb_id_serial_no = shift @tokens;
             #
-                $self->{logger}->log_vmid("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
+            $date =~ m/^(....)(..)(..)(..)(..)(..).*$/;
+            #
+            my $dt = DateTime->new(
+                year => $1,
+                month => $2,
+                day => $3,
+                hour => $4,
+                minute => $5,
+                second => $6,
+                nanosecond => 0,
+                time_zone => $time_zone);
+            #
+            ${$ptstamp} = $dt->epoch();
+            #
+            $self->{logger}->log_vmid("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
                 $date,
                 $machine_order,
                 $stage_no,
@@ -454,6 +469,20 @@ sub parse_with_ext
             #
             my $pcb_id = join("-", @tokens);
             #
+            $date =~ m/^(....)(..)(..)(..)(..)(..).*$/;
+            #
+            my $dt = DateTime->new(
+                year => $1,
+                month => $2,
+                day => $3,
+                hour => $4,
+                minute => $5,
+                second => $6,
+                nanosecond => 0,
+                time_zone => $time_zone);
+            #
+            ${$ptstamp} = $dt->epoch();
+            #
             $self->{logger}->log_vmid("date: %s\nmachine order: %s\nstage: %s\nlane: %s\npcb serial: %s\npcb id: %s\noutput no: %s\npcb id lot no: %s\npcb id serial no: %s\n", 
                 $date,
                 $machine_order,
@@ -477,20 +506,120 @@ sub parse_with_ext
             $pparts->[++$idx] = $pcb_id_lot_no;
             $pparts->[++$idx] = $pcb_id_serial_no;
         }
+    }
+    elsif ($ext =~ m/^crb$/i) 
+    {
+        my @tokens = split /_/, $fname;
+        if (scalar(@tokens) < 3)
+        {
+            $self->{logger}->log_err("Incorrect number of file tokens for file: %s\n", $fname);
+            return FAIL;
+        }
         #
-        return SUCCESS;
+        my $history_id = shift @tokens;
+        my $time_stamp = shift @tokens;
+        my $crb_file_name = join("_", @tokens);
+        my $product_name = $crb_file_name;
+        #
+        $product_name =~ s/.crb$//i;
+        #
+        ${$ptstamp} = $time_stamp;
+        #
+        $self->{logger}->log_vmid("history id: %s\ntime stamp: %s\ncrb file name: %s\nproduct name: %s\n",
+                                  $history_id,
+                                  $time_stamp,
+                                  $crb_file_name,
+                                  $product_name);
+        #
+        my $idx = -1;
+        #
+        $pparts->[++$idx] = $history_id;
+        $pparts->[++$idx] = $time_stamp;
+        $pparts->[++$idx] = $crb_file_name;
+        $pparts->[++$idx] = $product_name;
+    }
+    elsif ($ext =~ m/^rst$/i) 
+    {
+        my @tokens = split /&/, $fname;
+        if (scalar(@tokens) < 6)
+        {
+            $self->{logger}->log_err("Incorrect number of file tokens for file: %s\n", $fname);
+            return FAIL;
+        }
+        #
+        my $machine = shift @tokens;
+        my $lane = shift @tokens;
+        my $date_time = shift @tokens;
+        my $serial_number = shift @tokens;
+        #
+        my $inspection_result = shift @tokens;
+        if ($inspection_result == 1)
+        {
+            $inspection_result = "OK";
+        }
+        elsif ($inspection_result == 2)
+        {
+            $inspection_result = "NG";
+        }
+        else
+        {
+            $inspection_result = "NA";
+        }
+        #
+        my $board_removed = shift @tokens;
+        if ($board_removed == 1)
+        {
+            $board_removed = "YES";
+        }
+        else
+        {
+            $board_removed = "NO";
+        }
+        #
+        $date_time =~ m/^(....)(..)(..)(..)(..)(..).*$/;
+        #
+        my $dt = DateTime->new(
+            year => $1,
+            month => $2,
+            day => $3,
+            hour => $4,
+            minute => $5,
+            second => $6,
+            nanosecond => 0,
+            time_zone => $time_zone);
+        #
+        ${$ptstamp} = $dt->epoch();
+        #
+        $self->{logger}->log_vmid("machine: %s\nlane: %s\ndate time: %s\nserial number: %s\ninspection result: %s\nboard removed: %s\n",
+                $machine,
+            $lane,
+            $date_time,
+            $serial_number,
+            $inspection_result,
+            $board_removed);
+        #
+        my $idx = -1;
+        #
+        $pparts->[++$idx] = $machine;
+        $pparts->[++$idx] = $lane;
+        $pparts->[++$idx] = $date_time;
+        $pparts->[++$idx] = $serial_number;
+        $pparts->[++$idx] = $inspection_result;
+        $pparts->[++$idx] = $board_removed;
     }
     else
     {
         $self->{logger}->log_err("Unknown ext %s for %s\n", $ext, $fname);
         return FAIL;
     }
+    #
+    return SUCCESS;
 }
 #
 sub parse_without_ext
 {
     my $self = shift;
-    my ($fname, $pparts) = @_;
+    my ($fname, $time_zone, $ptstamp, $pparts) = @_;
     #
     $self->{logger}->log_vmid("File Name (ext=none): %s\n", $fname);
     #
@@ -498,6 +627,7 @@ sub parse_without_ext
     #
     my $idx = -1;
     #
+    ${$ptstamp} = time();
     $pparts->[++$idx] = $fname;
     #
     return SUCCESS;
@@ -506,7 +636,14 @@ sub parse_without_ext
 sub parse_filename
 {
     my $self = shift;
-    my ($fpath, $pext, $pparts) = @_;
+    #
+    my $fpath = shift;
+    my $pext = shift;
+    my $ptstamp = shift;
+    my $pparts = shift;
+    #
+    my $time_zone = "America/Chicago";
+    $time_zone = shift @_ if (@_);
     #
     $self->{logger}->log_vmid("Parsing File Path: %s\n", $fpath);
     #
@@ -518,12 +655,12 @@ sub parse_filename
         #
         $fname =~ s/\.${$pext}$//;
         #
-        return $self->parse_with_ext($fname, ${$pext}, $pparts);
+        return $self->parse_with_ext($fname, $time_zone, ${$pext}, $ptstamp, $pparts);
     }
     else
     {
         ${$pext} = "";
-        return $self->parse_without_ext($fname, $pparts);
+        return $self->parse_without_ext($fname, $time_zone, $ptstamp, $pparts);
     }
 }
 #

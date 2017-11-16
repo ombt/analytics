@@ -1,0 +1,147 @@
+egrep -i '(trsmiss|tpmiss|trmiss|thmiss|tdmiss|tpickup)' Count.csv | 
+grep -v '+-+5+-+' |
+sort |
+grep -v +12+ | 
+grep '+-+1+-+2+-+' | 
+tr '	' ' ' |
+gawk 'BEGIN {
+    prev_tpmiss = 0;
+    prev_trmiss = 0;
+    prev_thmiss = 0;
+    prev_tdmiss = 0;
+    prev_trsmiss = 0;
+    #
+    occur_tpmiss = 0;
+    occur_trmiss = 0;
+    occur_thmiss = 0;
+    occur_tdmiss = 0;
+    occur_trsmiss = 0;
+    #
+    boards = 0;
+    #
+    prev_tpickup = 0;
+    #
+    running_tpickup = 0;
+    #
+    board_has_error = 0;
+    prev_pcbid = "";
+    total_boards_with_errors = 0;
+}
+{
+    if (($1 !~ prev_pcbid) && (board_has_error > 0))
+    {
+        total_boards_with_errors += 1;
+    }
+    prev_pcbid = $1;
+    board_has_error = 0;
+}
+$2 ~ /TPMiss/ {
+    tpmiss = $3 - prev_tpmiss;
+    if (tpmiss <= 0)
+    {
+        print $1 " Board TPMISS 0 TOTAL " $3;
+    }
+    else
+    {
+        print $1 " Board TPMISS " tpmiss " TOTAL " $3 " <<<<<===== BAD ";
+        occur_tpmiss += 1;
+        board_has_error += 1;
+    }
+    prev_tpmiss = $3;
+    next;
+}
+$2 ~ /TRMiss/ {
+    trmiss = $3 - prev_trmiss;
+    if (trmiss <= 0)
+    {
+        print $1 " Board TRMISS 0 TOTAL " $3;
+        
+    }
+    else
+    {
+        print $1 " Board TRMISS " trmiss " TOTAL " $3 " <<<<<===== BAD ";
+        occur_trmiss += 1;
+        board_has_error += 1;
+    }
+    prev_trmiss = $3;
+    next;
+}
+$2 ~ /THMiss/ {
+    thmiss = $3 - prev_thmiss;
+    if (thmiss <= 0)
+    {
+        print $1 " Board THMISS 0 TOTAL " $3;
+        
+    }
+    else
+    {
+        print $1 " Board THMISS " thmiss " TOTAL " $3 " <<<<<===== BAD ";
+        occur_thmiss += 1;
+        board_has_error += 1;
+    }
+    prev_thmiss = $3;
+    next;
+}
+$2 ~ /TDMiss/ {
+    tdmiss = $3 - prev_tdmiss;
+    if (tdmiss <= 0)
+    {
+        print $1 " Board TDMISS 0 TOTAL " $3;
+        
+    }
+    else
+    {
+        print $1 " Board TDMISS " tdmiss " TOTAL " $3 " <<<<<===== BAD ";
+        occur_tdmiss += 1;
+        board_has_error += 1;
+    }
+    prev_tdmiss = $3;
+    next;
+}
+$2 ~ /TRSMiss/ {
+    trsmiss = $3 - prev_trsmiss;
+    if (trsmiss <= 0)
+    {
+        print $1 " Board TRSMISS 0 TOTAL " $3;
+        
+    }
+    else
+    {
+        print $1 " Board TRSMISS " trsmiss " TOTAL " $3 " <<<<<===== BAD ";
+        occur_trsmiss += 1;
+        board_has_error += 1;
+    }
+    prev_trsmiss = $3;
+    next;
+}
+$2 ~ /TPickup/ {
+    tpickup = $3 - prev_tpickup;
+    if (tpickup <= 0)
+    {
+        print $1 " Board TPickup 0 TOTAL " $3;
+        
+    }
+    else if (tpickup != running_tpickup)
+    {
+        print $1 " Board TPickup " tpickup " TOTAL " $3 " <<<<==== PICKUP COUNT CHANGED";
+    }
+    else
+    {
+        print $1 " Board TPickup " tpickup " TOTAL " $3;
+    }
+    boards += 1;
+    running_tpickup = tpickup;
+    prev_tpickup = $3;
+    next;
+}
+END {
+    print "occur_tpmiss = " occur_tpmiss;
+    print "occur_trmiss = " occur_trmiss;
+    print "occur_thmiss = " occur_thmiss;
+    print "occur_tdmiss = " occur_tdmiss;
+    print "occur_trsmiss = " occur_trsmiss;
+    print "boards = " boards;
+    print "total boards with errors = " total_boards_with_errors;
+} '
+
+

@@ -89,7 +89,38 @@ my %columns_in_tables = ();
 # filename table data
 #
 my $fid_table_name = "filename_to_fid";
-my @fid_table_cols = ( "_filename", "_filename_id" );
+my @fid_table_cols = ( "_filename", 
+                       "_filename_type",
+                       "_filename_timestamp",
+                       "_filename_id" );
+#
+my $u0x_table_name = "u0x_filename_data";
+my @u0x_table_cols = ( "_filename_id", 
+                       "_date",
+                       "_machine_order",
+                       "_stage_no",
+                       "_lane_no",
+                       "_pcb_serial",
+                       "_pcb_id",
+                       "_output_no",
+                       "_pcb_id_lot_no",
+                       "_pcb_id_serial_no" );
+#
+my $crb_table_name = "crb_filename_data";
+my @crb_table_cols = ( "_filename_id", 
+                       "_history_id",
+                       "_time_stamp",
+                       "_crb_file_name",
+                       "_product_name" );
+#
+my $rst_table_name = "rst_filename_data";
+my @rst_table_cols = ( "_filename_id", 
+                       "_machine",
+                       "_lane",
+                       "_date_time",
+                       "_serial_number",
+                       "_inspection_result",
+                       "_board_removed" );
 #
 ######################################################################
 #
@@ -634,12 +665,12 @@ sub export_section_to_postgres
 #
 sub insert_filename_to_id
 {
-    my ($schema, $fname, $fname_id) = @_;
+    my ($schema, $fname, $fname_type, $fname_tstamp, $fname_id) = @_;
     #
-    $plog->log_vmid("Inserting %s ==>> %s into %s filename-to-id table\n",
-                    $fname, $fname_id, $schema);
+    $plog->log_vmid("Inserting %s ==>> %s,%s into %s filename-to-id table\n",
+                    $fname, $fname_type, $fname_id, $schema);
     #
-    my $sql = "insert into ${schema}.${fid_table_name} ( " .  join(",", @fid_table_cols) . " ) values ( '$fname', '$fname_id' )";
+    my $sql = "insert into ${schema}.${fid_table_name} ( " .  join(",", @fid_table_cols) . " ) values ( '$fname', '$fname_type', '$fname_tstamp', '$fname_id' )";
     #
     my $sth = $dbh->prepare($sql);
     if ( ! defined($sth))
@@ -656,6 +687,85 @@ sub insert_filename_to_id
     return SUCCESS;
 }
 #
+sub insert_ext_data
+{
+    my ($schema, $ext, $fid, $pparts) = @_;
+    #
+    $plog->log_vmid("Inserting %s, %s, %s, %s into filename data tables\n",
+                    $schema, $ext, $fid, join(",", @{$pparts}));
+    #
+    if (($ext =~ m/^u01$/i) ||
+        ($ext =~ m/^u03$/i) ||
+        ($ext =~ m/^mpr$/i))
+    {
+        my $idx = -1;
+        #
+        my $sql = "insert into ${schema}.${u0x_table_name} ( " . 
+                   join(",", @u0x_table_cols) . 
+                  " ) values ( '$fid','" . 
+                   join("','", @{$pparts}) . 
+                  "' )";
+        #
+        my $sth = $dbh->prepare($sql);
+        if ( ! defined($sth))
+        {
+            $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
+            return FAIL;
+        }
+        if ( ! defined($sth->execute()))
+        {
+            $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
+            return FAIL;
+        }
+    }
+    elsif ($ext =~ m/^crb$/i) 
+    {
+        my $idx = -1;
+        #
+        my $sql = "insert into ${schema}.${crb_table_name} ( " . 
+                   join(",", @crb_table_cols) . 
+                  " ) values ( '$fid','" . 
+                   join("','", @{$pparts}) . 
+                  "' )";
+        #
+        my $sth = $dbh->prepare($sql);
+        if ( ! defined($sth))
+        {
+            $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
+            return FAIL;
+        }
+        if ( ! defined($sth->execute()))
+        {
+            $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
+            return FAIL;
+        }
+    }
+    elsif ($ext =~ m/^rst$/i) 
+    {
+        my $idx = -1;
+        #
+        my $sql = "insert into ${schema}.${rst_table_name} ( " . 
+                   join(",", @rst_table_cols) . 
+                  " ) values ( '$fid','" . 
+                   join("','", @{$pparts}) . 
+                  "' )";
+        #
+        my $sth = $dbh->prepare($sql);
+        if ( ! defined($sth))
+        {
+            $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
+            return FAIL;
+        }
+        if ( ! defined($sth->execute()))
+        {
+            $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
+            return FAIL;
+        }
+    }
+    #
+    return SUCCESS;
+}
+#
 sub export_to_postgres
 {
     my ($prod_file, $schema, $pprod_db) = @_;
@@ -664,13 +774,32 @@ sub export_to_postgres
     #
     my $filename = basename($prod_file);
     #
+    # parse file name and get data.
+    #
+    my $tstamp = 0;
+    my $ext = "";
+    my @parts = undef;
+    if ($pmaih->parse_filename($filename, \$ext, \$tstamp, \@parts) != SUCCESS)
+    {
+        $plog->log_err("Failed to parse filename: %s\n", 
+                       $filename);
+        return FAIL;
+    }
+    #
     # add filename to filename-to-id table.
     #
     my $filename_id = $putils->crc_64($filename);
-    if (insert_filename_to_id($schema, $filename, $filename_id) != SUCCESS)
+    if (insert_filename_to_id($schema, $filename, $ext, $tstamp, $filename_id) != SUCCESS)
     {
         $plog->log_err("Failed to insert filename-to-id tuple: %s ==>> %s\n", 
                        $filename, $filename_id);
+        return FAIL;
+    }
+    #
+    if (insert_ext_data($schema, $ext, $filename_id, \@parts) != SUCCESS)
+    {
+        $plog->log_err("Failed to insert filename extension <%s> data: %s ==>> %s\n", 
+                       $ext, $filename, $filename_id);
         return FAIL;
     }
     #
@@ -744,6 +873,45 @@ sub process_file
     }
     #
     return $status;
+}
+#
+sub make_tables
+{
+    my ($schema) = @_;
+    #
+    if ((table_exists($schema_name, $fid_table_name) != TRUE) &&
+        (create_table($schema_name, $fid_table_name, \@fid_table_cols) != TRUE))
+    {
+        $plog->log_err("Unable to create table %s.%s\n", 
+                       $schema, $fid_table_name);
+        return FAIL;
+    }
+    #
+    if ((table_exists($schema_name, $u0x_table_name) != TRUE) &&
+        (create_table($schema_name, $u0x_table_name, \@u0x_table_cols) != TRUE))
+    {
+        $plog->log_err("Unable to create table %s.%s\n", 
+                       $schema, $u0x_table_name);
+        return FAIL;
+    }
+    #
+    if ((table_exists($schema_name, $crb_table_name) != TRUE) &&
+        (create_table($schema_name, $crb_table_name, \@crb_table_cols) != TRUE))
+    {
+        $plog->log_err("Unable to create table %s.%s\n", 
+                       $schema, $crb_table_name);
+        return FAIL;
+    }
+    #
+    if ((table_exists($schema_name, $rst_table_name) != TRUE) &&
+        (create_table($schema_name, $rst_table_name, \@rst_table_cols) != TRUE))
+    {
+        $plog->log_err("Unable to create table %s.%s\n", 
+                       $schema, $crb_table_name);
+        return FAIL;
+    }
+    #
+    return SUCCESS;
 }
 #
 ######################################################################
@@ -917,12 +1085,11 @@ if (open_db(\$dbh, $host_name, $port,
     exit 2;
 }
 #
-# check if filename-to-id table exists.
+# check if required tables exist.
 #
-if ((table_exists($schema_name, $fid_table_name) != TRUE) &&
-    (create_table($schema_name, $fid_table_name, \@fid_table_cols) != TRUE))
+if (make_tables($schema_name) != TRUE)
 {
-    $plog->log_err("Unable to create filename-to-id table for (host,port,db,user,pass) = (%s,%s,%s,%s,%s)", 
+    $plog->log_err("Unable to create tables for (host,port,db,user,pass) = (%s,%s,%s,%s,%s)", 
                    $host_name, $port, 
                    $database_name, 
                    (defined($user_name) ? $user_name : "undef"),
