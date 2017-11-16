@@ -95,6 +95,8 @@ my @fid_table_cols = ( "_filename",
                        "_filename_timestamp",
                        "_filename_route",
                        "_filename_id" );
+my $fid_table_index_name = "idx_filename_to_fid";
+my @fid_table_index_cols = ( "_filename_id" );
 #
 my $u0x_table_name = "u0x_filename_data";
 my @u0x_table_cols = ( "_filename_id", 
@@ -107,6 +109,8 @@ my @u0x_table_cols = ( "_filename_id",
                        "_output_no",
                        "_pcb_id_lot_no",
                        "_pcb_id_serial_no" );
+my $u0x_table_index_name = "idx_u0x_filename_data";
+my @u0x_table_index_cols = ( "_filename_id" );
 #
 my $crb_table_name = "crb_filename_data";
 my @crb_table_cols = ( "_filename_id", 
@@ -114,6 +118,8 @@ my @crb_table_cols = ( "_filename_id",
                        "_time_stamp",
                        "_crb_file_name",
                        "_product_name" );
+my $crb_table_index_name = "idx_crb_filename_data";
+my @crb_table_index_cols = ( "_filename_id" );
 #
 my $rst_table_name = "rst_filename_data";
 my @rst_table_cols = ( "_filename_id", 
@@ -123,6 +129,8 @@ my @rst_table_cols = ( "_filename_id",
                        "_serial_number",
                        "_inspection_result",
                        "_board_removed" );
+my $rst_table_index_name = "idx_rst_filename_data";
+my @rst_table_index_cols = ( "_filename_id" );
 #
 ######################################################################
 #
@@ -562,6 +570,33 @@ sub create_table_index
     return SUCCESS;
 }
 #
+sub make_table_and_index
+{
+    my ($schema_name, 
+        $table_name,
+        $ptable_cols,
+        $table_index_name,
+        $ptable_index_cols) = @_;
+    #
+    if (table_exists($schema_name, $table_name) != TRUE)
+    {
+        if ((create_table($schema_name, 
+                          $table_name, 
+                          $ptable_cols) != TRUE) ||
+            (create_table_index($schema_name, 
+                                $table_name, 
+                                $table_index_name, 
+                                $ptable_index_cols) != TRUE))
+        {
+            $plog->log_err("Unable to create table or index for %s.%s\n", 
+                           $schema_name, $table_name);
+            return FAIL;
+        }
+    }
+    #
+    return SUCCESS;
+}
+#
 sub check_table
 {
     my ($pcols, $schema, $table) = @_;
@@ -573,6 +608,24 @@ sub check_table
     else
     {
         return create_table($schema, $table, $pcols);
+    }
+}
+#
+sub check_table_and_index
+{
+    my ($pcols, $schema, $table) = @_;
+    #
+    if (table_exists($schema, $table) == TRUE)
+    {
+        return add_columns_to_table($schema, $table, $pcols);
+    }
+    else
+    {
+        return make_table_and_index($schema, 
+                                    $table, 
+                                    $pcols,
+                                    "idx_" . $table,
+                                    [ "_filename_id" ] );
     }
 }
 #
@@ -621,9 +674,9 @@ sub export_section_to_postgres
     #
     my $pcols_wo_fid = $pprod_db->{COLUMN_NAMES}->{$section};
     my $pcols_w_fid = $pprod_db->{COLUMN_NAMES_WITH_FID}->{$section};
-    if (check_table($pcols_w_fid, $schema, $table) != SUCCESS)
+    if (check_table_and_index($pcols_w_fid, $schema, $table) != SUCCESS)
     {
-        $plog->log_err("Check table failed: section %s, schema.table %s.%s\n", $section, $schema, $table);
+        $plog->log_err("Check table and index failed: section %s, schema.table %s.%s\n", $section, $schema, $table);
         return FAIL;
     }
     #
@@ -912,38 +965,46 @@ sub make_tables
 {
     my ($schema) = @_;
     #
-    if ((table_exists($schema_name, $fid_table_name) != TRUE) &&
-        (create_table($schema_name, $fid_table_name, \@fid_table_cols) != TRUE))
+    if (make_table_and_index($schema, 
+                             $fid_table_name, 
+                            \@fid_table_cols,
+                             $fid_table_index_name, 
+                            \@fid_table_index_cols) != TRUE)
     {
-        $plog->log_err("Unable to create table %s.%s\n", 
+        $plog->log_err("Unable to create table or index for %s.%s\n", 
                        $schema, $fid_table_name);
         return FAIL;
     }
-    #
-    if ((table_exists($schema_name, $u0x_table_name) != TRUE) &&
-        (create_table($schema_name, $u0x_table_name, \@u0x_table_cols) != TRUE))
+    if (make_table_and_index($schema, 
+                             $u0x_table_name, 
+                            \@u0x_table_cols,
+                             $u0x_table_index_name, 
+                            \@u0x_table_index_cols) != TRUE)
     {
-        $plog->log_err("Unable to create table %s.%s\n", 
+        $plog->log_err("Unable to create table or index for %s.%s\n", 
                        $schema, $u0x_table_name);
         return FAIL;
     }
-    #
-    if ((table_exists($schema_name, $crb_table_name) != TRUE) &&
-        (create_table($schema_name, $crb_table_name, \@crb_table_cols) != TRUE))
+    if (make_table_and_index($schema, 
+                             $crb_table_name, 
+                            \@crb_table_cols,
+                             $crb_table_index_name, 
+                            \@crb_table_index_cols) != TRUE)
     {
-        $plog->log_err("Unable to create table %s.%s\n", 
+        $plog->log_err("Unable to create table or index for %s.%s\n", 
                        $schema, $crb_table_name);
         return FAIL;
     }
-    #
-    if ((table_exists($schema_name, $rst_table_name) != TRUE) &&
-        (create_table($schema_name, $rst_table_name, \@rst_table_cols) != TRUE))
+    if (make_table_and_index($schema, 
+                             $rst_table_name, 
+                            \@rst_table_cols,
+                             $rst_table_index_name, 
+                            \@rst_table_index_cols) != TRUE)
     {
-        $plog->log_err("Unable to create table %s.%s\n", 
-                       $schema, $crb_table_name);
+        $plog->log_err("Unable to create table or index for %s.%s\n", 
+                       $schema, $rst_table_name);
         return FAIL;
     }
-    #
     return SUCCESS;
 }
 #
