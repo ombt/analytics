@@ -64,6 +64,7 @@ my $schema_name = undef; # the type of file
 my $user_name = "cim";
 my $password = undef;
 my $port = 5432;
+my $route_name = "none";
 #
 my $temp_path = "PSQL.CSV.$$";
 #
@@ -92,6 +93,7 @@ my $fid_table_name = "filename_to_fid";
 my @fid_table_cols = ( "_filename", 
                        "_filename_type",
                        "_filename_timestamp",
+                       "_filename_route",
                        "_filename_id" );
 #
 my $u0x_table_name = "u0x_filename_data";
@@ -139,6 +141,7 @@ usage: $arg0 [-?] [-h]  \\
         [-d row delimiter] \\
         [-u user name] [-p passwd] \\
         [-P port ] \\
+        [-R route ] \\
         -D db_name -S schema_name [-X]
         [maihime-file ...] or reads STDIN
 
@@ -155,6 +158,7 @@ where:
     -u user name - PostgresQL user name
     -p passwd - PostgresQL user password
     -P port - PostgreSQL port (default = 5432)
+    -R route - route name (default=none)
     -D db_name - name of PostgreSQL database (site name)
     -S schema_name - name of PostgreSQL schema (file type)
     -X - DO NOT EXPORT to PostgreSQL and KEEP CSV file.
@@ -529,6 +533,35 @@ sub create_table
     return SUCCESS;
 }
 #
+sub create_table_index
+{
+    my ($schema, $table, $index_name, $pcols) = @_;
+    #
+    my $sql = "create index $index_name on $schema.$table ( ";
+    #
+    foreach my $col (@{$pcols})
+    {
+        # $sql .= "\"$col\", ";
+        $sql .= "$col, ";
+    }
+    #
+    $sql =~ s/, *$//;
+    $sql .= " )";
+    $sql =~ tr/A-Z/a-z/;
+    #
+    $plog->log_msg("==>> SQL CREATE INDEX DB command: %s\n", $sql);
+    #
+    my $sth = $dbh->prepare($sql);
+    die "Prepare failed: $DBI::errstr\n" 
+        unless (defined($sth));
+    #
+    die "Unable to execute: " . $sth->errstr 
+        unless (defined($sth->execute()));
+    #
+    $plog->log_msg("schema.table created: %s.%s\n", $schema, $table);
+    return SUCCESS;
+}
+#
 sub check_table
 {
     my ($pcols, $schema, $table) = @_;
@@ -665,12 +698,12 @@ sub export_section_to_postgres
 #
 sub insert_filename_to_id
 {
-    my ($schema, $fname, $fname_type, $fname_tstamp, $fname_id) = @_;
+    my ($schema, $fname, $fname_type, $fname_tstamp, $route_name, $fname_id) = @_;
     #
     $plog->log_vmid("Inserting %s ==>> %s,%s into %s filename-to-id table\n",
                     $fname, $fname_type, $fname_id, $schema);
     #
-    my $sql = "insert into ${schema}.${fid_table_name} ( " .  join(",", @fid_table_cols) . " ) values ( '$fname', '$fname_type', '$fname_tstamp', '$fname_id' )";
+    my $sql = "insert into ${schema}.${fid_table_name} ( " .  join(",", @fid_table_cols) . " ) values ( '$fname', '$fname_type', '$fname_tstamp', '$route_name', '$fname_id' )";
     #
     my $sth = $dbh->prepare($sql);
     if ( ! defined($sth))
@@ -768,7 +801,7 @@ sub insert_ext_data
 #
 sub export_to_postgres
 {
-    my ($prod_file, $schema, $pprod_db) = @_;
+    my ($prod_file, $schema, $route_name, $pprod_db) = @_;
     #
     $plog->log_msg("Exporting data file to Postgres: %s\n", $prod_file);
     #
@@ -789,7 +822,7 @@ sub export_to_postgres
     # add filename to filename-to-id table.
     #
     my $filename_id = $putils->crc_64($filename);
-    if (insert_filename_to_id($schema, $filename, $ext, $tstamp, $filename_id) != SUCCESS)
+    if (insert_filename_to_id($schema, $filename, $ext, $tstamp, $route_name, $filename_id) != SUCCESS)
     {
         $plog->log_err("Failed to insert filename-to-id tuple: %s ==>> %s\n", 
                        $filename, $filename_id);
@@ -844,7 +877,7 @@ sub export_to_postgres
 #
 sub process_file
 {
-    my ($prod_file, $schema) = @_;
+    my ($prod_file, $schema, $route_name) = @_;
     #
     $plog->log_msg("Processing product File, Schema: %s,%s\n", 
                    $prod_file, $schema);
@@ -861,7 +894,7 @@ sub process_file
     {
         $plog->log_err("Processing product file: %s\n", $prod_file);
     }
-    elsif (export_to_postgres($prod_file, $schema, \%prod_db) != SUCCESS)
+    elsif (export_to_postgres($prod_file, $schema, $route_name, \%prod_db) != SUCCESS)
     {
         $plog->log_err("Exporting product file to Postgresql: %s\n", $prod_file);
     }
@@ -935,6 +968,7 @@ $alwd_opts .= 'd:'; # -d delimiter - row delimiter (new line by default)
 $alwd_opts .= 'u:'; # -u user name - PostgresQL user name
 $alwd_opts .= 'p:'; # -p passwd - PostgresQL user password
 $alwd_opts .= 'P:'; # -P port - PostgreSQL port (default = 5432)
+$alwd_opts .= 'R:'; # -R route - route name (default=none)
 $alwd_opts .= 'D:'; # -D db_name - name of PostgreSQL database (site name)
 $alwd_opts .= 'S:'; # -S schema_name - name of PostgreSQL schema (file type)
 $alwd_opts .= 'X';  # -X - DO NOT EXPORT to PostgreSQL and KEEP CSV file.
@@ -1012,6 +1046,10 @@ foreach my $opt (%opts)
     elsif ($opt eq 'X')
     {
         $export_to_postgresql = FALSE;
+    }
+    elsif ($opt eq 'R')
+    {
+        $route_name = $opts{$opt};
     }
 }
 #
@@ -1111,7 +1149,7 @@ if ( -t STDIN )
     #
     foreach my $prod_file (@ARGV)
     {
-        my $status = process_file($prod_file, $schema_name);
+        my $status = process_file($prod_file, $schema_name, $route_name);
         if ($status != SUCCESS)
         {
             $plog->log_err_exit("Failed to process %s.\n", $prod_file);
