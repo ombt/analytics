@@ -1224,7 +1224,7 @@ else
     while( defined(my $prod_file = <STDIN>) )
     {
         chomp($prod_file);
-        my $status = process_file($prod_file, $schema_name);
+        my $status = process_file($prod_file, $schema_name, $route_name);
         if ($status != SUCCESS)
         {
             $plog->log_err_exit("Failed to process %s.\n", $prod_file);
