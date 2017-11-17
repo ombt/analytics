@@ -1,0 +1,2 @@
+net stop cygserver
+net start cygserver

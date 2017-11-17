@@ -1,0 +1,5 @@
+the directory start_scripts contains scripts to start, stop and restart
+cygwin server, postgres server and mongodb daemon. the scripts
+are stored under /usr/bin in the cygwin environment.
+
+

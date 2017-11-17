@@ -1,0 +1,3 @@
+/usr/sbin/pg_ctl -D /cygdrive/g/postgres/datastore -l /cygdrive/g/postgres/logfile stop
+net stop cygserver
+net stop mongodb

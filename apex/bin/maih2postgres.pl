@@ -89,6 +89,10 @@ my %columns_in_tables = ();
 #
 # filename table data
 #
+my %special_field_types = (
+    "_filename_id" => "numeric(30,0)",
+);
+#
 my $fid_table_name = "filename_to_fid";
 my @fid_table_cols = ( "_filename", 
                        "_filename_type",
@@ -494,7 +498,14 @@ sub add_columns_to_table
         #
         foreach my $col (@file_minus_table)
         {
-            $sql .= "add column \"$col\" text, ";
+            if (exists($special_field_types{$col}))
+            {
+                $sql .= "add column \"$col\" $special_field_types{$col}, ";
+            }
+            else
+            {
+                $sql .= "add column \"$col\" text, ";
+            }
         }
         #
         $sql =~ s/, *$//;
@@ -521,7 +532,14 @@ sub create_table
     foreach my $col (@{$pcols})
     {
         # $sql .= "\"$col\" text, ";
-        $sql .= "$col text, ";
+        if (exists($special_field_types{$col}))
+        {
+            $sql .= "$col $special_field_types{$col}, ";
+        }
+        else
+        {
+            $sql .= "$col text, ";
+        }
     }
     #
     $sql =~ s/, *$//;
@@ -756,7 +774,7 @@ sub insert_filename_to_id
     $plog->log_vmid("Inserting %s ==>> %s,%s into %s filename-to-id table\n",
                     $fname, $fname_type, $fname_id, $schema);
     #
-    my $sql = "insert into ${schema}.${fid_table_name} ( " .  join(",", @fid_table_cols) . " ) values ( '$fname', '$fname_type', '$fname_tstamp', '$route_name', '$fname_id' )";
+    my $sql = "insert into ${schema}.${fid_table_name} ( " .  join(",", @fid_table_cols) . " ) values ( '$fname', '$fname_type', '$fname_tstamp', '$route_name', $fname_id )";
     #
     my $sth = $dbh->prepare($sql);
     if ( ! defined($sth))

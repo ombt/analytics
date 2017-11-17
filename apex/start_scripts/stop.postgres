@@ -1,0 +1,3 @@
+# net stop "postgresql-x64-9.6 - PostgreSQL Server 9.6"
+# net stop "postgresql-x64-9.6"
+/usr/sbin/pg_ctl -D /cygdrive/g/postgres/datastore -l /cygdrive/g/postgres/logfile stop
