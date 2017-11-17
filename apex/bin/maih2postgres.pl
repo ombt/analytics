@@ -91,6 +91,7 @@ my %columns_in_tables = ();
 #
 my %special_field_types = (
     "_filename_id" => "numeric(30,0)",
+    "_filename_timestamp" => "bigint",
 );
 #
 my $fid_table_name = "filename_to_fid";
@@ -774,7 +775,7 @@ sub insert_filename_to_id
     $plog->log_vmid("Inserting %s ==>> %s,%s into %s filename-to-id table\n",
                     $fname, $fname_type, $fname_id, $schema);
     #
-    my $sql = "insert into ${schema}.${fid_table_name} ( " .  join(",", @fid_table_cols) . " ) values ( '$fname', '$fname_type', '$fname_tstamp', '$route_name', $fname_id )";
+    my $sql = "insert into ${schema}.${fid_table_name} ( " .  join(",", @fid_table_cols) . " ) values ( '$fname', '$fname_type', $fname_tstamp, '$route_name', $fname_id )";
     #
     my $sth = $dbh->prepare($sql);
     if ( ! defined($sth))

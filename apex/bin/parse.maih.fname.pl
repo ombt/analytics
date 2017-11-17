@@ -146,14 +146,15 @@ if ( -t STDIN )
         $plog->log_msg("File Name: %s\n", $file_name);
         my $ext = "";
         my @parts = undef;
-        my $status = $pmaih->parse_filename($file_name, \$ext, \@parts);
+        my $tstamp = 0;
+        my $status = $pmaih->parse_filename($file_name, \$ext, \$tstamp, \@parts);
         if ($status != SUCCESS)
         {
             $plog->log_err("Failed to process %s.\n", $file_name);
         }
         else
         {
-            $plog->log_msg("File Name Parts (ext=<%s>): %s\n", $ext, join("\n", @parts));
+            $plog->log_msg("File Name Parts (ext=<%s>, tstamp=<%s>): %s\n", $ext, $tstamp, join("\n", @parts));
         }
     }
 }
@@ -167,14 +168,15 @@ else
         chomp($file_name);
         my $ext = "";
         my @parts = undef;
-        my $status = $pmaih->parse_filename($file_name, \$ext, \@parts);
+        my $tstamp = 0;
+        my $status = $pmaih->parse_filename($file_name, \$ext, \$tstamp, \@parts);
         if ($status != SUCCESS)
         {
             $plog->log_err("Failed to process %s.\n", $file_name);
         }
         else
         {
-            $plog->log_msg("File Name Parts (ext=<%s>): %s\n", $ext, join("\n", @parts));
+            $plog->log_msg("File Name Parts (ext=<%s>, tstamp=<%s>): %s\n", $ext, $tstamp, join("\n", @parts));
         }
     }
 }
