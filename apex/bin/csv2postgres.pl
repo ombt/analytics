@@ -638,14 +638,13 @@ sub export_to_postgres
     #
     $plog->log_msg("Table: %s, Header: %s\n", $table, $header);
     #
-    if ((table_exists($schema, $table) != TRUE) &&
-        (create_table($schema, $table, \@cols) != TRUE))
+    if (table_exists($schema, $table) != TRUE)
     {
-        $plog->log_err("Failed to create table: %s\n", $table);
-        return FAIL;
-    }
-    else
-    {
+        if (create_table($schema, $table, \@cols) != TRUE)
+        {
+            $plog->log_err("Failed to create table: %s\n", $table);
+            return FAIL;
+        }
         $plog->log_msg("Created table: %s\n", $table);
     }
     #
