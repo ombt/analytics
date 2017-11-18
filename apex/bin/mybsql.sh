@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/bash
 #
 # batch mode
 #
-: ${DB_SERVER:?"is NOT set."}
-: ${DB_PORT_NO:?"is NOT set."}
-: ${DB_NAME:?"is NOT set."}
+DB_SERVER=${DB_SERVER:-"localhost"}
+DB_PORT_NO=${DB_PORT_NO:-"5432"}
+DB_NAME=${DB_NAME:-"training_data"}
 #
 errlog="/tmp/el.$$"
 #
