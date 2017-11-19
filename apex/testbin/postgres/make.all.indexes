@@ -1,0 +1,10 @@
+for schema in aoi crb u01 u03
+do
+	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl training_data ${schema}.filename_to_fid _filename_timestamp idx_filename_to_fid_2 localhost
+	#
+	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl training_data ${schema}.filename_to_fid _filename_id:_filename_timestamp idx_filename_to_fid_3 localhost
+	#
+	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl training_data ${schema}.filename_to_fid _filename_timestamp:_filename_id idx_filename_to_fid_4 localhost
+done
+#
+exit 0

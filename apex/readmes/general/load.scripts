@@ -1,0 +1,29 @@
+the following load scripts were used to upload
+the raw training data into a postgresql database.
+
+load.all*             load.npm2.u01.files*  load.npm4.u03.files*
+load.aoi.files*       load.npm2.u03.files*  load.npm5.u01.files*
+load.crb.files*       load.npm3.u01.files*  load.npm5.u03.files*
+load.npm1.u01.files*  load.npm3.u03.files*
+load.npm1.u03.files*  load.npm4.u01.files*
+
+the following scripts were used to create additional indexes
+for each filename_to_fid table associated with each 
+schema: u01, u02, aoi and crb. schema db does not have
+this table.
+
+make.all.indexes
+pg.create.table.index.pl 
+
+make.all.indexes is shown next:
+
+for schema in aoi crb u01 u03
+do
+	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl training_data ${schema}.filename_to_fid _filename_timestamp idx_filename_to_fid_2 localhost
+	#
+	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl training_data ${schema}.filename_to_fid _filename_id:_filename_timestamp idx_filename_to_fid_3 localhost
+	#
+	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl training_data ${schema}.filename_to_fid _filename_timestamp:_filename_id idx_filename_to_fid_4 localhost
+done
+#
+exit 0

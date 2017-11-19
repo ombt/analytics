@@ -1,0 +1,8 @@
+#
+# load CRB files
+#
+find crb -type f -print |
+grep 'CRB$' |
+/home/mrumore/g/bin/maih2postgres.pl -l crb_m2p.log -R LINEA10 -D training_data -S crb
+#
+exit 0

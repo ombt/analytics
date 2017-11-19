@@ -1,0 +1,22 @@
+#!/usr/bin/bash
+
+set -x
+
+# load.aoi.files
+# load.crb.files
+
+# load.npm1.u01.files
+# load.npm1.u03.files
+
+# load.npm2.u01.files
+# load.npm2.u03.files
+
+# load.npm3.u01.files
+# load.npm3.u03.files
+
+# load.npm4.u01.files
+# load.npm4.u03.files
+
+# load.npm5.u01.files
+# load.npm5.u03.files
+

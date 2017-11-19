@@ -1,0 +1,17 @@
+#
+# crb
+# db
+# L10-AOI
+# L10-NPM-1
+# L10-NPM-2
+# L10-NPM-3
+# L10-NPM-4
+# L10-NPM-5
+# L10-OVEN
+# L10-SPD-1
+#
+find L10-NPM-1/quarantine_logs/spc_log/processed/ -type f -print |
+grep 'u01$' |
+/home/mrumore/g/bin/maih2postgres.pl -l npm1_u01_m2p.log -R LINEA10 -D training_data -S u01
+#
+exit 0
