@@ -100,8 +100,17 @@ my @fid_table_cols = ( "_filename",
                        "_filename_timestamp",
                        "_filename_route",
                        "_filename_id" );
-my $fid_table_index_name = "idx_filename_to_fid";
-my @fid_table_index_cols = ( "_filename_id" );
+my $fid_table_index1_name = "idx_filename_to_fid_1";
+my @fid_table_index1_cols = ( "_filename_id" );
+#
+my $fid_table_index2_name = "idx_filename_to_fid_2";
+my @fid_table_index2_cols = ( "_filename_timestamp" );
+#
+my $fid_table_index3_name = "idx_filename_to_fid_3";
+my @fid_table_index3_cols = ( "_filename_id", "_filename_timestamp" );
+#
+my $fid_table_index4_name = "idx_filename_to_fid_4";
+my @fid_table_index4_cols = ( "_filename_timestamp", "_filename_id" );
 #
 my $u0x_table_name = "u0x_filename_data";
 my @u0x_table_cols = ( "_filename_id", 
@@ -984,16 +993,34 @@ sub make_tables
 {
     my ($schema) = @_;
     #
-    if (make_table_and_index($schema, 
-                             $fid_table_name, 
-                            \@fid_table_cols,
-                             $fid_table_index_name, 
-                            \@fid_table_index_cols) != TRUE)
+    if (table_exists($schema_name, $fid_table_name) != TRUE)
     {
-        $plog->log_err("Unable to create table or index for %s.%s\n", 
-                       $schema, $fid_table_name);
-        return FAIL;
+        if ((create_table($schema, 
+                          $fid_table_name, 
+                         \ @fid_table_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $fid_table_name, 
+                                $fid_table_index1_name,
+                               \@fid_table_index1_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $fid_table_name, 
+                                $fid_table_index2_name,
+                               \@fid_table_index2_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $fid_table_name, 
+                                $fid_table_index3_name,
+                               \@fid_table_index3_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $fid_table_name, 
+                                $fid_table_index4_name,
+                               \@fid_table_index4_cols) != TRUE))
+        {
+            $plog->log_err("Unable to create table or index for %s.%s\n", 
+                           $schema, $fid_table_name);
+            return FAIL;
+        }
     }
+    #
     if (make_table_and_index($schema, 
                              $u0x_table_name, 
                             \@u0x_table_cols,
@@ -1004,6 +1031,7 @@ sub make_tables
                        $schema, $u0x_table_name);
         return FAIL;
     }
+    #
     if (make_table_and_index($schema, 
                              $crb_table_name, 
                             \@crb_table_cols,
@@ -1014,6 +1042,7 @@ sub make_tables
                        $schema, $crb_table_name);
         return FAIL;
     }
+    #
     if (make_table_and_index($schema, 
                              $rst_table_name, 
                             \@rst_table_cols,
@@ -1024,6 +1053,7 @@ sub make_tables
                        $schema, $rst_table_name);
         return FAIL;
     }
+    #
     return SUCCESS;
 }
 #
