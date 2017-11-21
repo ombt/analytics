@@ -997,7 +997,7 @@ sub make_tables
     {
         if ((create_table($schema, 
                           $fid_table_name, 
-                         \ @fid_table_cols) != TRUE) ||
+                         \@fid_table_cols) != TRUE) ||
             (create_table_index($schema, 
                                 $fid_table_name, 
                                 $fid_table_index1_name,
