@@ -1,2 +1,4 @@
 *.swp
 *.stackdump
+*.sql.out
+*.sql.csv
