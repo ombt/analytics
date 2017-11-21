@@ -268,7 +268,26 @@ with zcass_cte (
        mpf._mmiss as mmiss,
        mpf._hmiss as hmiss,
        mpf._trsmiss as trsmiss,
-       mpf._mount as mount
+       mpf._mount as mount,
+       row_number() over (
+           partition by
+               ufd._machine_order,
+               ufd._lane_no,
+               ufd._stage_no,
+               mpf._fadd,
+               mpf._fsadd,
+               uidx._value,
+               uinf._value,
+               mpf._reelid,
+               mpf._partsname,
+               mpf._blkserial
+           order by
+               ufd._machine_order,
+               ufd._lane_no,
+               ufd._stage_no,
+               mpf._fadd,
+               mpf._fsadd
+       ) as row
    from
        u01.mountpickupfeeder mpf
    inner join
@@ -293,11 +312,11 @@ with zcass_cte (
        uinf._name = 'LotName'
    where
        ufd._output_no in ( 3, 4, 5 )
-   order by
-       ufd._machine_order asc,
-       ufd._lane_no asc,
-       mpf._fadd asc,
-       mpf._fsadd asc,
-       fnf._filename_timestamp asc
+   -- order by
+       -- ufd._machine_order asc,
+       -- ufd._lane_no asc,
+       -- mpf._fadd asc,
+       -- mpf._fsadd asc,
+       -- fnf._filename_timestamp asc
 ) select * from zcass_cte;
 
