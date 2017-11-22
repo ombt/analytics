@@ -1,0 +1,250 @@
+Pager usage is off.
+                                Table "u01.count"
+    Column    |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------+---------------+-----------+----------+--------------+-------------
+ _filename_id | numeric(30,0) |           | main     |              | 
+ _name        | text          |           | extended |              | 
+ _value       | text          |           | extended |              | 
+Indexes:
+    "idx_count" btree (_filename_id)
+
+                           Table "u01.crb_filename_data"
+     Column     |     Type      | Modifiers | Storage  | Stats target | Description 
+----------------+---------------+-----------+----------+--------------+-------------
+ _filename_id   | numeric(30,0) |           | main     |              | 
+ _history_id    | text          |           | extended |              | 
+ _time_stamp    | text          |           | extended |              | 
+ _crb_file_name | text          |           | extended |              | 
+ _product_name  | text          |           | extended |              | 
+Indexes:
+    "idx_crb_filename_data" btree (_filename_id)
+
+                              Table "u01.cycletime"
+    Column    |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------+---------------+-----------+----------+--------------+-------------
+ _filename_id | numeric(30,0) |           | main     |              | 
+ _name        | text          |           | extended |              | 
+ _value       | text          |           | extended |              | 
+Indexes:
+    "idx_cycletime" btree (_filename_id)
+
+                              Table "u01.dispenser"
+    Column    |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------+---------------+-----------+----------+--------------+-------------
+ _filename_id | numeric(30,0) |           | main     |              | 
+ _head        | text          |           | extended |              | 
+ _nhadd       | text          |           | extended |              | 
+ _blkcode     | text          |           | extended |              | 
+ _blkserial   | text          |           | extended |              | 
+ _usen        | text          |           | extended |              | 
+ _nozzlename  | text          |           | extended |              | 
+ _bondid      | text          |           | extended |              | 
+ _useb        | text          |           | extended |              | 
+ _bondlibname | text          |           | extended |              | 
+ _dispense    | text          |           | extended |              | 
+ _priming     | text          |           | extended |              | 
+ _psrerr      | text          |           | extended |              | 
+Indexes:
+    "idx_dispenser" btree (_filename_id)
+
+                               Table "u01.filename_to_fid"
+       Column        |     Type      | Modifiers | Storage  | Stats target | Description 
+---------------------+---------------+-----------+----------+--------------+-------------
+ _filename           | text          |           | extended |              | 
+ _filename_type      | text          |           | extended |              | 
+ _filename_timestamp | bigint        |           | plain    |              | 
+ _filename_route     | text          |           | extended |              | 
+ _filename_id        | numeric(30,0) |           | main     |              | 
+Indexes:
+    "idx_filename_to_fid" btree (_filename_id)
+
+                 Index "u01.idx_count"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.count"
+
+           Index "u01.idx_crb_filename_data"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.crb_filename_data"
+
+               Index "u01.idx_cycletime"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.cycletime"
+
+               Index "u01.idx_dispenser"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.dispenser"
+
+            Index "u01.idx_filename_to_fid"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.filename_to_fid"
+
+                 Index "u01.idx_index"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.index"
+
+              Index "u01.idx_information"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.information"
+
+            Index "u01.idx_inspectiondata"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.inspectiondata"
+
+           Index "u01.idx_mountpickupfeeder"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.mountpickupfeeder"
+
+           Index "u01.idx_mountpickupnozzle"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.mountpickupnozzle"
+
+           Index "u01.idx_rst_filename_data"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.rst_filename_data"
+
+                 Index "u01.idx_time"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.time"
+
+           Index "u01.idx_u0x_filename_data"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "u01.u0x_filename_data"
+
+                                Table "u01.index"
+    Column    |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------+---------------+-----------+----------+--------------+-------------
+ _filename_id | numeric(30,0) |           | main     |              | 
+ _name        | text          |           | extended |              | 
+ _value       | text          |           | extended |              | 
+Indexes:
+    "idx_index" btree (_filename_id)
+
+                             Table "u01.information"
+    Column    |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------+---------------+-----------+----------+--------------+-------------
+ _filename_id | numeric(30,0) |           | main     |              | 
+ _name        | text          |           | extended |              | 
+ _value       | text          |           | extended |              | 
+Indexes:
+    "idx_information" btree (_filename_id)
+
+                            Table "u01.inspectiondata"
+    Column    |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------+---------------+-----------+----------+--------------+-------------
+ _filename_id | numeric(30,0) |           | main     |              | 
+ _name        | text          |           | extended |              | 
+ _value       | text          |           | extended |              | 
+Indexes:
+    "idx_inspectiondata" btree (_filename_id)
+
+                          Table "u01.mountpickupfeeder"
+    Column    |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------+---------------+-----------+----------+--------------+-------------
+ _filename_id | numeric(30,0) |           | main     |              | 
+ _blkcode     | text          |           | extended |              | 
+ _blkserial   | text          |           | extended |              | 
+ _usef        | text          |           | extended |              | 
+ _partsname   | text          |           | extended |              | 
+ _fadd        | text          |           | extended |              | 
+ _fsadd       | text          |           | extended |              | 
+ _reelid      | text          |           | extended |              | 
+ _user        | text          |           | extended |              | 
+ _pickup      | text          |           | extended |              | 
+ _pmiss       | text          |           | extended |              | 
+ _rmiss       | text          |           | extended |              | 
+ _dmiss       | text          |           | extended |              | 
+ _mmiss       | text          |           | extended |              | 
+ _hmiss       | text          |           | extended |              | 
+ _trsmiss     | text          |           | extended |              | 
+ _mount       | text          |           | extended |              | 
+ _lname       | text          |           | extended |              | 
+ _tgserial    | text          |           | extended |              | 
+Indexes:
+    "idx_mountpickupfeeder" btree (_filename_id)
+
+                          Table "u01.mountpickupnozzle"
+    Column    |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------+---------------+-----------+----------+--------------+-------------
+ _filename_id | numeric(30,0) |           | main     |              | 
+ _head        | text          |           | extended |              | 
+ _nhadd       | text          |           | extended |              | 
+ _ncadd       | text          |           | extended |              | 
+ _blkcode     | text          |           | extended |              | 
+ _blkserial   | text          |           | extended |              | 
+ _user        | text          |           | extended |              | 
+ _nozzlename  | text          |           | extended |              | 
+ _pickup      | text          |           | extended |              | 
+ _pmiss       | text          |           | extended |              | 
+ _rmiss       | text          |           | extended |              | 
+ _dmiss       | text          |           | extended |              | 
+ _mmiss       | text          |           | extended |              | 
+ _hmiss       | text          |           | extended |              | 
+ _trsmiss     | text          |           | extended |              | 
+ _mount       | text          |           | extended |              | 
+Indexes:
+    "idx_mountpickupnozzle" btree (_filename_id)
+
+                             Table "u01.rst_filename_data"
+       Column       |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------------+---------------+-----------+----------+--------------+-------------
+ _filename_id       | numeric(30,0) |           | main     |              | 
+ _machine           | text          |           | extended |              | 
+ _lane              | text          |           | extended |              | 
+ _date_time         | text          |           | extended |              | 
+ _serial_number     | text          |           | extended |              | 
+ _inspection_result | text          |           | extended |              | 
+ _board_removed     | text          |           | extended |              | 
+Indexes:
+    "idx_rst_filename_data" btree (_filename_id)
+
+                                 Table "u01.time"
+    Column    |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------+---------------+-----------+----------+--------------+-------------
+ _filename_id | numeric(30,0) |           | main     |              | 
+ _name        | text          |           | extended |              | 
+ _value       | text          |           | extended |              | 
+Indexes:
+    "idx_time" btree (_filename_id)
+
+                             Table "u01.u0x_filename_data"
+      Column       |     Type      | Modifiers | Storage  | Stats target | Description 
+-------------------+---------------+-----------+----------+--------------+-------------
+ _filename_id      | numeric(30,0) |           | main     |              | 
+ _date             | text          |           | extended |              | 
+ _machine_order    | text          |           | extended |              | 
+ _stage_no         | text          |           | extended |              | 
+ _lane_no          | text          |           | extended |              | 
+ _pcb_serial       | text          |           | extended |              | 
+ _pcb_id           | text          |           | extended |              | 
+ _output_no        | text          |           | extended |              | 
+ _pcb_id_lot_no    | text          |           | extended |              | 
+ _pcb_id_serial_no | text          |           | extended |              | 
+Indexes:
+    "idx_u0x_filename_data" btree (_filename_id)
+

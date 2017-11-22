@@ -1,0 +1,106 @@
+Pager usage is off.
+                           Table "aoi.crb_filename_data"
+     Column     |     Type      | Modifiers | Storage  | Stats target | Description 
+----------------+---------------+-----------+----------+--------------+-------------
+ _filename_id   | numeric(30,0) |           | main     |              | 
+ _history_id    | text          |           | extended |              | 
+ _time_stamp    | text          |           | extended |              | 
+ _crb_file_name | text          |           | extended |              | 
+ _product_name  | text          |           | extended |              | 
+Indexes:
+    "idx_crb_filename_data" btree (_filename_id)
+
+                               Table "aoi.filename_to_fid"
+       Column        |     Type      | Modifiers | Storage  | Stats target | Description 
+---------------------+---------------+-----------+----------+--------------+-------------
+ _filename           | text          |           | extended |              | 
+ _filename_type      | text          |           | extended |              | 
+ _filename_timestamp | bigint        |           | plain    |              | 
+ _filename_route     | text          |           | extended |              | 
+ _filename_id        | numeric(30,0) |           | main     |              | 
+Indexes:
+    "idx_filename_to_fid" btree (_filename_id)
+
+           Index "aoi.idx_crb_filename_data"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "aoi.crb_filename_data"
+
+            Index "aoi.idx_filename_to_fid"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "aoi.filename_to_fid"
+
+              Index "aoi.idx_information"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "aoi.information"
+
+            Index "aoi.idx_lotinformation"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "aoi.lotinformation"
+
+           Index "aoi.idx_rst_filename_data"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "aoi.rst_filename_data"
+
+           Index "aoi.idx_u0x_filename_data"
+    Column    |     Type      |  Definition  | Storage 
+--------------+---------------+--------------+---------
+ _filename_id | numeric(30,0) | _filename_id | main
+btree, for table "aoi.u0x_filename_data"
+
+                             Table "aoi.information"
+    Column    |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------+---------------+-----------+----------+--------------+-------------
+ _filename_id | numeric(30,0) |           | main     |              | 
+ _name        | text          |           | extended |              | 
+ _value       | text          |           | extended |              | 
+Indexes:
+    "idx_information" btree (_filename_id)
+
+                            Table "aoi.lotinformation"
+    Column    |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------+---------------+-----------+----------+--------------+-------------
+ _filename_id | numeric(30,0) |           | main     |              | 
+ _name        | text          |           | extended |              | 
+ _value       | text          |           | extended |              | 
+Indexes:
+    "idx_lotinformation" btree (_filename_id)
+
+                             Table "aoi.rst_filename_data"
+       Column       |     Type      | Modifiers | Storage  | Stats target | Description 
+--------------------+---------------+-----------+----------+--------------+-------------
+ _filename_id       | numeric(30,0) |           | main     |              | 
+ _machine           | text          |           | extended |              | 
+ _lane              | text          |           | extended |              | 
+ _date_time         | text          |           | extended |              | 
+ _serial_number     | text          |           | extended |              | 
+ _inspection_result | text          |           | extended |              | 
+ _board_removed     | text          |           | extended |              | 
+Indexes:
+    "idx_rst_filename_data" btree (_filename_id)
+
+                             Table "aoi.u0x_filename_data"
+      Column       |     Type      | Modifiers | Storage  | Stats target | Description 
+-------------------+---------------+-----------+----------+--------------+-------------
+ _filename_id      | numeric(30,0) |           | main     |              | 
+ _date             | text          |           | extended |              | 
+ _machine_order    | text          |           | extended |              | 
+ _stage_no         | text          |           | extended |              | 
+ _lane_no          | text          |           | extended |              | 
+ _pcb_serial       | text          |           | extended |              | 
+ _pcb_id           | text          |           | extended |              | 
+ _output_no        | text          |           | extended |              | 
+ _pcb_id_lot_no    | text          |           | extended |              | 
+ _pcb_id_serial_no | text          |           | extended |              | 
+Indexes:
+    "idx_u0x_filename_data" btree (_filename_id)
+
