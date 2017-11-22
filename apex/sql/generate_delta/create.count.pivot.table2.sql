@@ -776,20 +776,43 @@
 
 select *
 from
-    crosstab( 'select uc._filename_id, uc._name, uc._value from u01.count uc order by 1, 2',
-              'select distinct uc._name from u01.count uc where uc._name in ( ''TDispense'', ''TDMiss'', ''THMiss'', ''TMMiss'', ''TMount'', ''TPickup'', ''TPMiss'', ''TPriming'', ''Trbl'', ''TRMiss'', ''TRSErr'', ''TRSMiss'' ) order by uc._name ' )
+    crosstab( 'select 
+                   uc._filename_id, 
+                   uc._name, 
+                   uc._value 
+               from 
+                   u01.count uc 
+               order by 1, 2',
+              'select distinct 
+                   uc._name 
+               from 
+                   u01.count uc 
+               where 
+                   uc._name in ( ''TDispense'', 
+                                 ''TDMiss'', 
+                                 ''THMiss'', 
+                                 ''TMMiss'', 
+                                 ''TMount'', 
+                                 ''TPickup'', 
+                                 ''TPMiss'', 
+                                 ''TPriming'', 
+                                 ''Trbl'', 
+                                 ''TRMiss'', 
+                                 ''TRSErr'', 
+                                 ''TRSMiss'' ) 
+               order by uc._name ' )
 as
     final_result(fid numeric(30,0),
-                 tdispense text,
-                 tdmiss text,
-                 thmiss text,
-                 tmmiss text,
-                 tmount text,
-                 tpickup text,
-                 tpmiss text,
-                 tpriming text,
-                 trbl text,
-                 trmiss text,
-                 trserr text,
-                 trsmiss text)
+                 tdispense numeric(10,3),
+                 tdmiss numeric(10,3),
+                 thmiss numeric(10,3),
+                 tmmiss numeric(10,3),
+                 tmount numeric(10,3),
+                 tpickup numeric(10,3),
+                 tpmiss numeric(10,3),
+                 tpriming numeric(10,3),
+                 trbl numeric(10,3),
+                 trmiss numeric(10,3),
+                 trserr numeric(10,3),
+                 trsmiss numeric(10,3))
 ;
