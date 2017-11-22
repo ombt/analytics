@@ -1,5 +1,5 @@
 
-with prod_count_cte (
+with prod_time_cte (
     pcb_id,
     pcb_serial,
     machine_order,
@@ -11,7 +11,6 @@ with prod_count_cte (
     output_no,
     bndrcgstop,
     bndstop,
-    board,
     brcgstop,
     bwait,
     cderr,
@@ -25,12 +24,9 @@ with prod_count_cte (
     fwait,
     jointpasswait,
     judgestop,
-    lotboard,
-    lotmodule,
     mcfwait,
     mcrwait,
     mhrcgstop,
-    module,
     otherlstop,
     othrstop,
     pwait,
@@ -38,18 +34,8 @@ with prod_count_cte (
     scestop,
     scstop,
     swait,
-    tdispense,
-    tdmiss,
-    thmiss,
-    tmmiss,
-    tmount,
-    tpickup,
-    tpmiss,
-    tpriming,
     trbl,
-    trmiss,
     trserr,
-    trsmiss,
     row
 ) as (
     select
@@ -64,7 +50,6 @@ with prod_count_cte (
         ufd._output_no          as output_no,
         pc._bndrcgstop          as bndrcgstop,
         pc._bndstop             as bndstop,
-        pc._board               as board,
         pc._brcgstop            as brcgstop,
         pc._bwait               as bwait,
         pc._cderr               as cderr,
@@ -78,12 +63,9 @@ with prod_count_cte (
         pc._fwait               as fwait,
         pc._jointpasswait       as jointpasswait,
         pc._judgestop           as judgestop,
-        pc._lotboard            as lotboard,
-        pc._lotmodule           as lotmodule,
         pc._mcfwait             as mcfwait,
         pc._mcrwait             as mcrwait,
         pc._mhrcgstop           as mhrcgstop,
-        pc._module              as module,
         pc._otherlstop          as otherlstop,
         pc._othrstop            as othrstop,
         pc._pwait               as pwait,
@@ -91,18 +73,8 @@ with prod_count_cte (
         pc._scestop             as scestop,
         pc._scstop              as scstop,
         pc._swait               as swait,
-        pc._tdispense           as tdispense,
-        pc._tdmiss              as tdmiss,
-        pc._thmiss              as thmiss,
-        pc._tmmiss              as tmmiss,
-        pc._tmount              as tmount,
-        pc._tpickup             as tpickup,
-        pc._tpmiss              as tpmiss,
-        pc._tpriming            as tpriming,
         pc._trbl                as trbl,
-        pc._trmiss              as trmiss,
         pc._trserr              as trserr,
-        pc._trsmiss             as trsmiss,
         row_number() over (
             partition by
                 ufd._machine_order,
@@ -117,7 +89,7 @@ with prod_count_cte (
                 fnf._filename_timestamp
         ) as row
     from
-        u01.pivot_count pc
+        u01.pivot_time pc
     inner join
         u01.filename_to_fid fnf
     on
@@ -151,7 +123,6 @@ with prod_count_cte (
     curr.lotname as lotname,
     curr.bndrcgstop - prev.bndrcgstop as bndrcgstop,
     curr.bndstop - prev.bndstop as bndstop,
-    curr.board - prev.board as board,
     curr.brcgstop - prev.brcgstop as brcgstop,
     curr.bwait - prev.bwait as bwait,
     curr.cderr - prev.cderr as cderr,
@@ -165,12 +136,9 @@ with prod_count_cte (
     curr.fwait - prev.fwait as fwait,
     curr.jointpasswait - prev.jointpasswait as jointpasswait,
     curr.judgestop - prev.judgestop as judgestop,
-    curr.lotboard - prev.lotboard as lotboard,
-    curr.lotmodule - prev.lotmodule as lotmodule,
     curr.mcfwait - prev.mcfwait as mcfwait,
     curr.mcrwait - prev.mcrwait as mcrwait,
     curr.mhrcgstop - prev.mhrcgstop as mhrcgstop,
-    curr.module - prev.module as module,
     curr.otherlstop - prev.otherlstop as otherlstop,
     curr.othrstop - prev.othrstop as othrstop,
     curr.pwait - prev.pwait as pwait,
@@ -178,22 +146,12 @@ with prod_count_cte (
     curr.scestop - prev.scestop as scestop,
     curr.scstop - prev.scstop as scstop,
     curr.swait - prev.swait as swait,
-    curr.tdispense - prev.tdispense as tdispense,
-    curr.tdmiss - prev.tdmiss as tdmiss,
-    curr.thmiss - prev.thmiss as thmiss,
-    curr.tmmiss - prev.tmmiss as tmmiss,
-    curr.tmount - prev.tmount as tmount,
-    curr.tpickup - prev.tpickup as tpickup,
-    curr.tpmiss - prev.tpmiss as tpmiss,
-    curr.tpriming - prev.tpriming as tpriming,
     curr.trbl - prev.trbl as trbl,
-    curr.trmiss - prev.trmiss as trmiss,
-    curr.trserr - prev.trserr as trserr,
-    curr.trsmiss - prev.trsmiss as trsmiss
+    curr.trserr - prev.trserr as trserr
 from 
-    prod_count_cte curr
+    prod_time_cte curr
 inner join
-    prod_count_cte prev
+    prod_time_cte prev
 on
     curr.row = prev.row + 1
 and
