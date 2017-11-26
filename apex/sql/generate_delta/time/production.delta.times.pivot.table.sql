@@ -1,5 +1,6 @@
 
 with prod_time_cte (
+    filename_id,
     pcb_id,
     pcb_serial,
     machine_order,
@@ -9,6 +10,7 @@ with prod_time_cte (
     mjsid,
     lotname,
     output_no,
+    actual,
     bndrcgstop,
     bndstop,
     brcgstop,
@@ -39,6 +41,7 @@ with prod_time_cte (
     row
 ) as (
     select
+        fnf._filename_id        as filename_id,
         ufd._pcb_id             as pcb_id,
         ufd._pcb_serial         as pcb_serial,
         ufd._machine_order      as machine_order,
@@ -48,33 +51,34 @@ with prod_time_cte (
         uidx._value             as mjsid,
         uinf._value             as lotname,
         ufd._output_no          as output_no,
-        pc._bndrcgstop          as bndrcgstop,
-        pc._bndstop             as bndstop,
-        pc._brcgstop            as brcgstop,
-        pc._bwait               as bwait,
-        pc._cderr               as cderr,
-        pc._cmerr               as cmerr,
-        pc._cnvstop             as cnvstop,
-        pc._cperr               as cperr,
-        pc._crerr               as crerr,
-        pc._cterr               as cterr,
-        pc._cwait               as cwait,
-        pc._fbstop              as fbstop,
-        pc._fwait               as fwait,
-        pc._jointpasswait       as jointpasswait,
-        pc._judgestop           as judgestop,
-        pc._mcfwait             as mcfwait,
-        pc._mcrwait             as mcrwait,
-        pc._mhrcgstop           as mhrcgstop,
-        pc._otherlstop          as otherlstop,
-        pc._othrstop            as othrstop,
-        pc._pwait               as pwait,
-        pc._rwait               as rwait,
-        pc._scestop             as scestop,
-        pc._scstop              as scstop,
-        pc._swait               as swait,
-        pc._trbl                as trbl,
-        pc._trserr              as trserr,
+        pt._actual              as _actual,
+        pt._bndrcgstop          as bndrcgstop,
+        pt._bndstop             as bndstop,
+        pt._brcgstop            as brcgstop,
+        pt._bwait               as bwait,
+        pt._cderr               as cderr,
+        pt._cmerr               as cmerr,
+        pt._cnvstop             as cnvstop,
+        pt._cperr               as cperr,
+        pt._crerr               as crerr,
+        pt._cterr               as cterr,
+        pt._cwait               as cwait,
+        pt._fbstop              as fbstop,
+        pt._fwait               as fwait,
+        pt._jointpasswait       as jointpasswait,
+        pt._judgestop           as judgestop,
+        pt._mcfwait             as mcfwait,
+        pt._mcrwait             as mcrwait,
+        pt._mhrcgstop           as mhrcgstop,
+        pt._otherlstop          as otherlstop,
+        pt._othrstop            as othrstop,
+        pt._pwait               as pwait,
+        pt._rwait               as rwait,
+        pt._scestop             as scestop,
+        pt._scstop              as scstop,
+        pt._swait               as swait,
+        pt._trbl                as trbl,
+        pt._trserr              as trserr,
         row_number() over (
             partition by
                 ufd._machine_order,
@@ -89,30 +93,31 @@ with prod_time_cte (
                 fnf._filename_timestamp
         ) as row
     from
-        u01.pivot_time pc
+        u01.pivot_time pt
     inner join
         u01.filename_to_fid fnf
     on
-        fnf._filename_id = pc._filename_id
+        fnf._filename_id = pt._filename_id
     inner join
         u01.u0x_filename_data ufd
     on
-        ufd._filename_id = pc._filename_id
+        ufd._filename_id = pt._filename_id
     inner join
         u01.index uidx
     on
-        uidx._filename_id = pc._filename_id
+        uidx._filename_id = pt._filename_id
     and
         uidx._name = 'MJSID'
     inner join
         u01.information uinf
     on
-        uinf._filename_id = pc._filename_id
+        uinf._filename_id = pt._filename_id
     and
         uinf._name = 'LotName'
     where
         ufd._output_no in ( 3, 4, 5 )
 ) select
+    curr.filename_id as filename_id,
     curr.pcb_id as pcb_id,
     curr.pcb_serial as pcb_serial,
     curr.machine_order as machine_order,
@@ -121,6 +126,7 @@ with prod_time_cte (
     curr.timestamp as timestamp,
     curr.mjsid as mjsid,
     curr.lotname as lotname,
+    curr.actual - prev.actual as actual,
     curr.bndrcgstop - prev.bndrcgstop as bndrcgstop,
     curr.bndstop - prev.bndstop as bndstop,
     curr.brcgstop - prev.brcgstop as brcgstop,
