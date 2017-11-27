@@ -41,22 +41,6 @@ select
     trmiss,
     trserr,
     trsmiss
-    row_number() over (
-        partition by
-            ufd._machine_order,
-            ufd._lane_no,
-            ufd._stage_no,
-            uidx._value,
-            uinf._value
-            -- mpn._blkserial
-        order by
-            ufd._machine_order,
-            ufd._lane_no,
-            ufd._stage_no,
-            mpn._nhadd,
-            mpn._ncadd,
-            fnf._filename_timestamp
-    ) as row
 from
     crosstab( 'select 
                    uc._filename_id, 
