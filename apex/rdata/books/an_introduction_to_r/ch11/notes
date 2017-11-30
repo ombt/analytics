@@ -1,0 +1,18 @@
+statistical models -
+
+The class of generalized linear models handled by facilities supplied in R
+includes gaussian, binomial, poisson, inverse gaussian and gamma response
+distributions and also quasi-likelihood models where the response distribution
+is not explicitly specified. In the latter case the variance function must be
+specified as a function of the mean, but in other cases this function is
+implied by the response distribution.
+
+fitting linear models - lm(...)
+
+fitting generalized linear models - glm(...)
+
+> fitted.model <- glm(formula, family=family.generator, data=data.frame)
+
+
+
+

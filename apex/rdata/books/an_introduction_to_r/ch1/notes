@@ -1,0 +1,58 @@
+to get help about a function:
+
+> help(solve)
+
+or
+
+> ? solve
+
+or
+
+> help("[[")
+
+2) to run a help browser:
+
+> help.start()
+
+but options("browser") must be set ... be default it is NOT set.
+
+3) to get examples of how to use a function:
+
+> example(solve)
+
+this is VERY USEFUL !!1
+
+4) comments are given as 
+
+> # this is a comment line
+
+5) to read in a command file and write out to a file:
+
+> source("commands.R")
+
+to redirect output to a file.
+
+> sink("output.log")
+
+to reset output back to stdout:
+
+> sink()
+
+6) to list object and remove objects:
+
+> x <- 1:10
+> x
+ [1]  1  2  3  4  5  6  7  8  9 10
+> objects()
+[1] "A"       "h8"      "hilbert" "sh8"     "x"
+> ls()
+[1] "A"       "h8"      "hilbert" "sh8"     "x"
+> rm(A, h8, hilbert, sh8, x)
+> ls()
+character(0)
+
+7) 
+
+
+
+ 

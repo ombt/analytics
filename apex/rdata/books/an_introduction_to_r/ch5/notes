@@ -1,0 +1,679 @@
+
+arrays and matrices -
+
+1) how create a matrix with any dimensions, the following
+creates a matrix z by assigning to the Z-dimension attribute the sizes
+3x5x100.
+
+> z <- 1:1500
+> dim(z) <- c(3,5,100)
+
+creates a 3x5x100 matrix from the original vector of 1500 values.
+
+2) matrices in R are column-major (fortran-style). the left-most index 
+moves the fastest when assigned and becomes slower as you move to the right,
+
+3) arrays indexing and slicing -
+
+> a <- 1:24
+> a
+ [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+> dim(a) <- c(3,4,2)
+> a
+, , 1
+
+     [,1] [,2] [,3] [,4]
+[1,]    1    4    7   10
+[2,]    2    5    8   11
+[3,]    3    6    9   12
+
+, , 2
+
+     [,1] [,2] [,3] [,4]
+[1,]   13   16   19   22
+[2,]   14   17   20   23
+[3,]   15   18   21   24
+
+>
+> a[2,,]
+     [,1] [,2]
+[1,]    2   14
+[2,]    5   17
+[3,]    8   20
+[4,]   11   23
+> a[,3,]
+     [,1] [,2]
+[1,]    7   19
+[2,]    8   20
+[3,]    9   21
+> a[,,1]
+     [,1] [,2] [,3] [,4]
+[1,]    1    4    7   10
+[2,]    2    5    8   11
+[3,]    3    6    9   12
+
+4) can use am array of index values to access a matrix:
+
+create an array 4x5 array x with the values 1 to 20.
+
+> x <- array(1:20, dim=c(4,5))
+> x
+     [,1] [,2] [,3] [,4] [,5]
+[1,]    1    5    9   13   17
+[2,]    2    6   10   14   18
+[3,]    3    7   11   15   19
+[4,]    4    8   12   16   20
+
+create a 3x2 index array from the vector 1,2,3,1,2,3.
+>
+> i <- array(c(1:3,1:3), dim=c(3,2))
+> i
+     [,1] [,2]
+[1,]    1    1
+[2,]    2    2
+[3,]    3    3
+>
+> x[i]
+[1]  1  6 11
+
+
+create a 3x2 index array from the vector 1,2,3,3,2,1.
+> i <- array(c(1:3,3:1), dim=c(3,2))
+> i
+     [,1] [,2]
+[1,]    1    3
+[2,]    2    2
+[3,]    3    1
+
+pull out the values at (1,3), (2,2) and (3,1).
+> x[i]
+[1] 9 6 3
+
+assign zer0 to these index locations.
+> x[i] <- 0
+> x
+     [,1] [,2] [,3] [,4] [,5]
+[1,]    1    5    0   13   17
+[2,]    2    0   10   14   18
+[3,]    0    7   11   15   19
+[4,]    4    8   12   16   20
+
+
+4) using matrix():
+
+As a less trivial example, suppose we wish to generate an (unreduced) design
+matrix for a block design defined by factors blocks (b levels) and varieties (v
+levels). Further suppose there are n plots in the experiment. We could proceed
+as follows:
+
+> Xb <- matrix(0, n, b)
+> Xv <- matrix(0, n, v)
+> ib <- cbind(1:n, blocks)
+> iv <- cbind(1:n, varieties)
+> Xb[ib] <- 1
+> Xv[iv] <- 1
+> X <- cbind(Xb, Xv)
+
+To construct the incidence matrix, N say, we could use
+
+> N <- crossprod(Xb, Xv)
+
+However a simpler direct way of producing this matrix is to use table():
+
+> N <- table(blocks, varieties)
+
+Index matrices must be numerical: any other form of matrix (e.g. a logical or
+character matrix) supplied as a matrix is treated as an indexing vector.
+
+5) using array() to create arrays;
+
+> Z <- array(data_vector, dimensions_vector)
+
+> h <- 1:24
+> h
+ [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+> Z <- array(h, dim=c(3,4,2))
+> Z
+, , 1
+
+     [,1] [,2] [,3] [,4]
+[1,]    1    4    7   10
+[2,]    2    5    8   11
+[3,]    3    6    9   12
+
+, , 2
+
+     [,1] [,2] [,3] [,4]
+[1,]   13   16   19   22
+[2,]   14   17   20   23
+[3,]   15   18   21   24
+
+another way to do it:
+
+> h <- 1:24
+> h
+ [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+> Z <- h
+> Z
+ [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+> dim(Z) <- c(3,4,2)
+> Z
+, , 1
+
+     [,1] [,2] [,3] [,4]
+[1,]    1    4    7   10
+[2,]    2    5    8   11
+[3,]    3    6    9   12
+
+, , 2
+
+     [,1] [,2] [,3] [,4]
+[1,]   13   16   19   22
+[2,]   14   17   20   23
+[3,]   15   18   21   24
+
+the assignment below gives an error since the number of values does
+not match the arrays size. 
+
+> dim(Z) <- c(3,5,2)
+Error in dim(Z) <- c(3, 5, 2) :
+  dims [product 30] do not match the length of object [24]
+> Z
+, , 1
+
+     [,1] [,2] [,3] [,4]
+[1,]    1    4    7   10
+[2,]    2    5    8   11
+[3,]    3    6    9   12
+
+, , 2
+
+     [,1] [,2] [,3] [,4]
+[1,]   13   16   19   22
+[2,]   14   17   20   23
+[3,]   15   18   21   24
+
+6) to create an array of all zeroes:
+
+> Z <- array(0,c(3,4,2))
+> Z
+, , 1
+
+     [,1] [,2] [,3] [,4]
+[1,]    0    0    0    0
+[2,]    0    0    0    0
+[3,]    0    0    0    0
+
+, , 2
+
+     [,1] [,2] [,3] [,4]
+[1,]    0    0    0    0
+[2,]    0    0    0    0
+[3,]    0    0    0    0
+
+7) arrays can be used in arithmetic, but the dim() parameters 
+must be consistent:
+
+> A <- -(1:10)
+> A
+ [1]  -1  -2  -3  -4  -5  -6  -7  -8  -9 -10
+
+> B <- array(2,c(10))
+> B
+ [1] 2 2 2 2 2 2 2 2 2 2
+
+> C <- seq(from=10,to=28,by=2)
+> C
+ [1] 10 12 14 16 18 20 22 24 26 28
+
+> D <- 2*A*B + C +1
+> D
+ [1]   7   5   3   1  -1  -3  -5  -7  -9 -11
+>
+
+8) Mixed vector and array arithmetic. The recycling rule
+
+The precise rule affecting element by element mixed calculations with 
+vectors and arrays is somewhat quirky and hard to find in the references. 
+From experience we have found the following to be a reliable guide.
+
+- The expression is scanned from left to right.
+
+- Any short vector operands are extended by recycling their values until 
+they match the size of any other operands.
+
+- As long as short vectors and arrays only are encountered, the arrays 
+must all have the same dim attribute or an error results.
+
+- Any vector operand longer than a matrix or array operand generates an 
+error.
+
+- If array structures are present and no error or coercion to vector has 
+been precipitated, the result is an array structure with the common dim 
+attribute of its array operands.
+
+9) outer product of two arrays:
+
+An important operation on arrays is the outer product. If a and b are two
+numeric arrays, their outer product is an array whose dimension vector is
+obtained by concatenating their two dimension vectors (order is important), and
+whose data vector is got by forming all possible products of elements of the
+data vector of a with those of b. The outer product is formed by the special
+operator %o%:
+
+> ab <- a %o% b
+
+An alternative is
+
+> ab <- outer(a, b, "*")
+
+The multiplication function can be replaced by an arbitrary function of two
+variables. For example if we wished to evaluate the function f(x; y) =
+cos(y)=(1 + x2) over a regular grid of values with x- and y-coordinates defined
+by the R vectors x and y respectively, we could proceed as follows:
+
+> f <- function(x, y) cos(y)/(1 + x^2)
+> z <- outer(x, y, f)
+
+examples ...
+
+> a <- 0:9
+> b <- 0:9
+> ab <- outer(a,b)
+> ab
+      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
+ [1,]    0    0    0    0    0    0    0    0    0     0
+ [2,]    0    1    2    3    4    5    6    7    8     9
+ [3,]    0    2    4    6    8   10   12   14   16    18
+ [4,]    0    3    6    9   12   15   18   21   24    27
+ [5,]    0    4    8   12   16   20   24   28   32    36
+ [6,]    0    5   10   15   20   25   30   35   40    45
+ [7,]    0    6   12   18   24   30   36   42   48    54
+ [8,]    0    7   14   21   28   35   42   49   56    63
+ [9,]    0    8   16   24   32   40   48   56   64    72
+[10,]    0    9   18   27   36   45   54   63   72    81
+
+> ab <- outer(1,b,"+")
+> ab
+     [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
+[1,]    1    2    3    4    5    6    7    8    9    10
+
+> ab <- outer(a,b,"+")
+> ab
+      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
+ [1,]    0    1    2    3    4    5    6    7    8     9
+ [2,]    1    2    3    4    5    6    7    8    9    10
+ [3,]    2    3    4    5    6    7    8    9   10    11
+ [4,]    3    4    5    6    7    8    9   10   11    12
+ [5,]    4    5    6    7    8    9   10   11   12    13
+ [6,]    5    6    7    8    9   10   11   12   13    14
+ [7,]    6    7    8    9   10   11   12   13   14    15
+ [8,]    7    8    9   10   11   12   13   14   15    16
+ [9,]    8    9   10   11   12   13   14   15   16    17
+[10,]    9   10   11   12   13   14   15   16   17    18
+
+> f <- function(x,y) cos(y)/(1+x^2)
+> ab <- outer(a,b,f)
+> ab
+            [,1]        [,2]         [,3]        [,4]         [,5]        [,6]
+ [1,] 1.00000000 0.540302306 -0.416146837 -0.98999250 -0.653643621 0.283662185
+ [2,] 0.50000000 0.270151153 -0.208073418 -0.49499625 -0.326821810 0.141831093
+ [3,] 0.20000000 0.108060461 -0.083229367 -0.19799850 -0.130728724 0.056732437
+ [4,] 0.10000000 0.054030231 -0.041614684 -0.09899925 -0.065364362 0.028366219
+ [5,] 0.05882353 0.031782489 -0.024479226 -0.05823485 -0.038449625 0.016686011
+ [6,] 0.03846154 0.020780858 -0.016005648 -0.03807663 -0.025140139 0.010910084
+ [7,] 0.02702703 0.014602765 -0.011247212 -0.02675655 -0.017666044 0.007666546
+ [8,] 0.02000000 0.010806046 -0.008322937 -0.01979985 -0.013072872 0.005673244
+ [9,] 0.01538462 0.008312343 -0.006402259 -0.01523065 -0.010056056 0.004364034
+[10,] 0.01219512 0.006589053 -0.005074961 -0.01207308 -0.007971264 0.003459295
+            [,7]       [,8]         [,9]       [,10]
+ [1,] 0.96017029 0.75390225 -0.145500034 -0.91113026
+ [2,] 0.48008514 0.37695113 -0.072750017 -0.45556513
+ [3,] 0.19203406 0.15078045 -0.029100007 -0.18222605
+ [4,] 0.09601703 0.07539023 -0.014550003 -0.09111303
+ [5,] 0.05648061 0.04434719 -0.008558826 -0.05359590
+ [6,] 0.03692963 0.02899624 -0.005596155 -0.03504347
+ [7,] 0.02595055 0.02037574 -0.003932433 -0.02462514
+ [8,] 0.01920341 0.01507805 -0.002910001 -0.01822261
+ [9,] 0.01477185 0.01159850 -0.002238462 -0.01401739
+[10,] 0.01170939 0.00919393 -0.001774391 -0.01111134
+
+10) transpose of an array:
+
+The function aperm(a, perm) may be used to permute an array, a. The argument
+perm must be a permutation of the integers f1; : : : ; kg, where k is the
+number of subscripts in a. The result of the function is an array of the same
+size as a but with old dimension given by perm[j] becoming the new j-th
+dimension. The easiest way to think of this operation is as a generalization of
+transposition for matrices. Indeed if A is a matrix, (that is, a doubly
+subscripted array) then B given by
+
+> B <- aperm(A, c(2,1))
+
+is just the transpose of A. For this special case a simpler function t() is
+available, so we could have used B <- t(A).
+
+> A <- array(1:25, c(5,5))
+> A
+     [,1] [,2] [,3] [,4] [,5]
+[1,]    1    6   11   16   21
+[2,]    2    7   12   17   22
+[3,]    3    8   13   18   23
+[4,]    4    9   14   19   24
+[5,]    5   10   15   20   25
+> t(A)
+     [,1] [,2] [,3] [,4] [,5]
+[1,]    1    2    3    4    5
+[2,]    6    7    8    9   10
+[3,]   11   12   13   14   15
+[4,]   16   17   18   19   20
+[5,]   21   22   23   24   25
+
+aperm switches or permutes the coordinates in a vector. for this 
+example, (x,y) became (y,x), or numerically, (1,2) became (2,1).
+
+> aperm(A,c(2,1))
+     [,1] [,2] [,3] [,4] [,5]
+[1,]    1    2    3    4    5
+[2,]    6    7    8    9   10
+[3,]   11   12   13   14   15
+[4,]   16   17   18   19   20
+[5,]   21   22   23   24   25
+
+another example showing an error:
+
+> A <- array(1:27, c(3,3,3))
+> A
+, , 1
+
+     [,1] [,2] [,3]
+[1,]    1    4    7
+[2,]    2    5    8
+[3,]    3    6    9
+
+, , 2
+
+     [,1] [,2] [,3]
+[1,]   10   13   16
+[2,]   11   14   17
+[3,]   12   15   18
+
+, , 3
+
+     [,1] [,2] [,3]
+[1,]   19   22   25
+[2,]   20   23   26
+[3,]   21   24   27
+
+> aperm(A,c(1,2))
+Error in aperm.default(A, c(1, 2)) : 'perm' is of wrong length 2 (!= 3)
+> aperm(A,c(2,1,3))
+, , 1
+
+     [,1] [,2] [,3]
+[1,]    1    2    3
+[2,]    4    5    6
+[3,]    7    8    9
+
+, , 2
+
+     [,1] [,2] [,3]
+[1,]   10   11   12
+[2,]   13   14   15
+[3,]   16   17   18
+
+, , 3
+
+     [,1] [,2] [,3]
+[1,]   19   20   21
+[2,]   22   23   24
+[3,]   25   26   27
+
+11) Matrix multiplication
+
+The operator %*% is used for matrix multiplication. An n by 1 or 1 by n matrix
+may of course be used as an n-vector if in the context such is appropriate.
+Conversely, vectors which occur in matrix multiplication expressions are
+automatically promoted either to row or column vectors, whichever is
+multiplicatively coherent, if possible, (although this is not always
+unambiguously possible, as we see later).
+
+If, for example, A and B are square matrices of the same size, then
+
+> A * B
+
+is the matrix of element by element products and
+
+> A %*% B
+
+is the matrix product. If x is a vector, then
+
+> x %*% A %*% x
+
+is a quadratic form.
+
+The function crossprod() forms “crossproducts”, meaning that 
+crossprod(X, y) is the same as t(X) %*% y but the operation is more 
+efficient. If the second argument to crossprod() is omitted it is taken 
+to be the same as the first.
+
+The meaning of diag() depends on its argument. diag(v), where v is a 
+vector, gives a diagonal matrix with elements of the vector as the 
+diagonal entries. On the other hand diag(M),
+where M is a matrix, gives the vector of main diagonal entries of M. This is the same convention
+as that used for diag() in Matlab. Also, somewhat confusingly, if k is a single numeric value then diag(k) is the k by k identity matrix!
+
+12) Linear equations and inversion
+
+Solving linear equations is the inverse of matrix multiplication. When after
+
+> b <- A %*% x
+
+only A and b are given, the vector x is the solution of that linear 
+equation system. In R,
+
+> solve(A,b)
+
+solves the system, returning x (up to some accuracy loss). Note that in 
+linear algebra, formally
+
+x = A^1*b where A^-1 denotes the inverse of A, which can be computed by
+solve(A) but rarely is needed. 
+
+Numerically, it is both inefficient and potentially unstable to compute 
+
+x <- solve(A) %*% b 
+
+instead of 
+
+solve(A,b).
+
+The quadratic form x^T*A^1*x which is used in multivariate computations, 
+should be computed by something like x %*% solve(A,x), rather than 
+computing the inverse of A.
+
+13) eigenvalues and eigenvectors:
+
+The function eigen(Sm) calculates the eigenvalues and eigenvectors of a
+symmetric matrix Sm. The result of this function is a list of two components
+named values and vectors. The assignment
+
+> ev <- eigen(Sm)
+
+will assign this list to ev. Then ev$val is the vector of eigenvalues of Sm and
+ev$vec is the matrix of corresponding eigenvectors. Had we only needed the
+eigenvalues we could have used the assignment:
+
+> evals <- eigen(Sm)$values
+
+evals now holds the vector of eigenvalues and the second component is
+discarded. If the expression
+
+> eigen(Sm)
+
+is used by itself as a command the two components are printed, with their
+names. For large matrices it is better to avoid computing the eigenvectors if
+they are not needed by using the expression
+
+> evals <- eigen(Sm, only.values = TRUE)$values
+
+14) Singular value decomposition and determinants
+
+The function svd(M) takes an arbitrary matrix argument, M, and calculates the
+singular value decomposition of M. This consists of a matrix of orthonormal
+columns U with the same column space as M, a second matrix of orthonormal
+columns V whose column space is the row space of M and a diagonal matrix of
+positive entries D such that M = U %*% D %*% t(V). D is actually returned as a
+vector of the diagonal elements. The result of svd(M) is actually a list of
+three components named d, u and v, with evident meanings.
+
+If M is in fact square, then, it is not hard to see that
+
+> absdetM <- prod(svd(M)$d)
+
+calculates the absolute value of the determinant of M. If this calculation 
+were needed often with a variety of matrices it could be defined as an 
+R function
+
+> absdet <- function(M) prod(svd(M)$d)
+
+after which we could use absdet() as just another R function. As a further 
+trivial but potentially useful example, you might like to consider writing 
+a function, say tr(), to calculate the trace of a square matrix. 
+
+[Hint: You will not need to use an explicit loop. Look again at the 
+diag() function.]
+
+R has a builtin function det to calculate a determinant, including the 
+sign, and another, determinant, to give the sign and modulus (optionally 
+on log scale),
+
+15) Forming partitioned matrices, cbind() and rbind()
+
+As we have already seen informally, matrices can be built up from other 
+vectors and matrices by the functions cbind() and rbind(). Roughly 
+cbind() forms matrices by binding together matrices horizontally, or 
+column-wise, and rbind() vertically, or row-wise.
+
+In the assignment
+
+> X <- cbind(arg_1, arg_2, arg_3, ...)
+
+the arguments to cbind() must be either vectors of any length, or matrices 
+with the same column size, that is the same number of rows. The result 
+is a matrix with the concatenated arguments arg 1, arg 2, . . . 
+forming the columns.
+
+If some of the arguments to cbind() are vectors they may be shorter 
+than the column size of any matrices present, in which case they are 
+cyclically extended to match the matrix column size (or the length of 
+the longest vector if no matrices are given).
+
+The function rbind() does the corresponding operation for rows. In this 
+case any vector argument, possibly cyclically extended, are of course 
+taken as row vectors.
+
+Suppose X1 and X2 have the same number of rows. To combine these by 
+columns into a matrix X, together with an initial column of 1s we can use
+
+> X <- cbind(1, X1, X2)
+
+The result of rbind() or cbind() always has matrix status. Hence cbind(x) 
+and rbind(x) are possibly the simplest ways explicitly to allow the 
+vector x to be treated as a column or row matrix respectively.
+
+
+16) using c() with arrays:
+
+> X <- array(1:24,c(2,4,3))
+> X
+, , 1
+
+     [,1] [,2] [,3] [,4]
+[1,]    1    3    5    7
+[2,]    2    4    6    8
+
+, , 2
+
+     [,1] [,2] [,3] [,4]
+[1,]    9   11   13   15
+[2,]   10   12   14   16
+
+, , 3
+
+     [,1] [,2] [,3] [,4]
+[1,]   17   19   21   23
+[2,]   18   20   22   24
+
+> as.vector(X)
+ [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+> c(X)
+ [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+>
+17) Frequency tables from factors:
+
+Recall that a factor defines a partition into groups. Similarly a pair of
+factors defines a two way cross classification, and so on. The function table()
+allows frequency tables to be calculated from equal length factors. If there
+are k factor arguments, the result is a k-way array of frequencies.
+
+Suppose, for example, that statef is a factor giving the state code for each
+entry in a data vector. The assignment
+
+> statefr <- table(statef)
+
+gives in statefr a table of frequencies of each state in the sample. The
+frequencies are ordered and labelled by the levels attribute of the factor.
+This simple case is equivalent to, but more convenient than,
+
+> statefr <- tapply(statef, statef, length)
+
+Further suppose that incomef is a factor giving a suitably defined “income
+class” for each entry in the data vector, for example with the cut() function:
+
+> factor(cut(incomes, breaks = 35+10*(0:7))) -> incomef
+
+Then to calculate a two-way table of frequencies:
+
+> table(incomef,statef)
+
+statef
+incomef act nsw nt qld sa tas vic wa
+(35,45] 1 1 0 1 0 0 1 0
+(45,55] 1 1 1 1 2 0 1 3
+(55,65] 0 3 1 3 2 2 2 1
+(65,75] 0 1 0 0 0 0 1 0
+
+Extension to higher-way frequency tables is immediate.
+
+examples:
+
+> letters <- c('a', 'b', 'c', 'c', 'a', 'd', 'b')
+> letters
+[1] "a" "b" "c" "c" "a" "d" "b"
+> factor(letters)
+[1] a b c c a d b
+Levels: a b c d
+> letters <- c('a', 'b', 'c', 'c', 'a', 'd', 'b','a','a','b','z','y')
+> lets <- c('a', 'b', 'c', 'c', 'a', 'd', 'b','a','a','b','z','y')
+>
+> letsf <- factor(lets)
+> table(letsf)
+letsf
+a b c d y z
+4 3 2 1 1 1
+> table(letsf,letsf)
+     letsf
+letsf a b c d y z
+    a 4 0 0 0 0 0
+    b 0 3 0 0 0 0
+    c 0 0 2 0 0 0
+    d 0 0 0 1 0 0
+    y 0 0 0 0 1 0
+    z 0 0 0 0 0 1
+> tapply(letsf,letfs,length)
+Error in tapply(letsf, letfs, length) : object 'letfs' not found
+> tapply(letsf,letsf,length)
+a b c d y z
+4 3 2 1 1 1
+

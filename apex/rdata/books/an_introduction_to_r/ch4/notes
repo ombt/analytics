@@ -1,0 +1,74 @@
+1) ordered and unordered factors
+
+A factor is a vector object used to specify a discrete classification 
+(grouping) of the components of other vectors of the same length. 
+
+R provides both ordered and unordered factors.
+
+2) using factors and levels to calculate statistics for all values per
+level.
+
+create state vector:
+
+> state <- c("tas", "sa", "qld", "nsw", "nsw", "nt", "wa", "wa",
++ "qld", "vic", "nsw", "vic", "qld", "qld", "sa", "tas",
++ "sa", "nt", "wa", "vic", "qld", "nsw", "nsw", "wa",
++ "sa", "act", "nsw", "vic", "vic", "act")
+> state
+ [1] "tas" "sa"  "qld" "nsw" "nsw" "nt"  "wa"  "wa"  "qld" "vic" "nsw" "vic"
+[13] "qld" "qld" "sa"  "tas" "sa"  "nt"  "wa"  "vic" "qld" "nsw" "nsw" "wa"
+[25] "sa"  "act" "nsw" "vic" "vic" "act"
+
+create a factor for the state vector.
+
+> statef <- factor(state)
+> statef
+ [1] tas sa  qld nsw nsw nt  wa  wa  qld vic nsw vic qld qld sa  tas sa  nt  wa
+[20] vic qld nsw nsw wa  sa  act nsw vic vic act
+Levels: act nsw nt qld sa tas vic wa
+
+> levels(statef)
+[1] "act" "nsw" "nt"  "qld" "sa"  "tas" "vic" "wa"
+
+create an array of incomes per state.
+
+> incomes <- c(60, 49, 40, 61, 64, 60, 59, 54, 62, 69, 70, 42, 56,
++ 61, 61, 61, 58, 51, 48, 65, 49, 49, 41, 48, 52, 46,
++ 59, 46, 58, 43)
+
+get the mean per state of all the incomes for that state.
+
+> incmeans <- tapply(incomes, statef, mean)
+> incmeans
+     act      nsw       nt      qld       sa      tas      vic       wa
+44.50000 57.33333 55.50000 53.60000 55.00000 60.50000 56.00000 52.25000
+
+define a function to get the standard deviation and apply to 
+the same data.
+
+> stdError <- function(x) sqrt(var(x)/length(x))
+> incster <- tapply(incomes, statef, stdError)
+> incster
+     act      nsw       nt      qld       sa      tas      vic       wa
+1.500000 4.310195 4.500000 4.106093 2.738613 0.500000 5.244044 2.657536
+>
+
+3) The combination of a vector and a labelling factor is an example of 
+what is sometimes called a ragged array, since the subclass sizes 
+are possibly irregular. When the subclass sizes are all the same the 
+indexing may be done implicitly and much more efficiently, as we see 
+in the next section.
+
+4) ordered factors -
+
+The levels of factors are stored in alphabetical order, or in the order they
+were specified to factor if they were specified explicitly.
+
+Sometimes the levels will have a natural ordering that we want to record and
+want our statistical analysis to make use of. The ordered() function creates
+such ordered factors but is otherwise identical to factor. For most purposes
+the only difference between ordered and unordered factors is that the former
+are printed showing the ordering of the levels, but the contrasts generated for
+them in fitting linear models are different
+
+

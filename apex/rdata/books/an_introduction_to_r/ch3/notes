@@ -1,0 +1,131 @@
+1) R operates on objects.
+
+examples are vectors of numeric data or complex values, vectors of 
+logical values and vectors of character strings.
+
+these are known as atomic since the components are all of the same type
+or mode. the modes are: numeric, complex, logivcal, character and raw.
+
+vectors can only contain one type, other than NA for missing values.
+
+there are different types of NA:
+
+empty character string is character(0).
+empty numeric vector is numeric(0).
+
+2) R also has lists which have a mode of list. these are ordered 
+sequences of objects which individually can be of any mode.
+
+list are recursive since they can contain list as elements.
+
+3) functions and expressions are or can be recursive.
+
+4) mode of an object is a the basic type of its constituents. special 
+property of an object. length is another property of an object.
+
+> mode(object)
+
+and
+
+> length(object)
+
+to list these properties for an object.
+
+> attributes(object) is another way to list the properties of an
+object.
+
+5) modes can be converted for objects.
+
+> z <- 1:10
+> z
+ [1]  1  2  3  4  5  6  7  8  9 10
+
+> length(z)
+[1] 10
+
+> mode(z)
+[1] "numeric"
+
+> attributes(z)
+NULL
+
+> digits <- as.character(z)
+> digits
+ [1] "1"  "2"  "3"  "4"  "5"  "6"  "7"  "8"  "9"  "10"
+
+> d <- as.integer(digits)
+> d
+ [1]  1  2  3  4  5  6  7  8  9 10
+
+5) changing the length of an object.
+
+> e <- numeric(0)
+> length(e)
+[1] 0
+
+> mode(e)
+[1] "numeric"
+
+> e[4] <- 18
+> e
+[1] NA NA NA 18
+
+> x <- 1:10
+> x
+ [1]  1  2  3  4  5  6  7  8  9 10
+
+> x <- x[2 * 1:5]
+> x
+[1]  2  4  6  8 10
+
+> length(x)
+[1] 5
+
+> length(x) = 3
+> x
+[1] 2 4 6
+
+6) getting and setting attributes:
+
+The function attributes(object) returns a list of all the 
+non-intrinsic attributes currently defined for that object. The function 
+
+> attr(object, name) 
+
+can be used to select a specific attribute. These functions are rarely 
+used, except in rather special circumstances when some new attribute is 
+being created for some particular purpose, for example to associate a 
+creation date or an operator with an R object. The concept, however, is 
+very important.  Some care should be exercised when assigning or deleting 
+attributes since they are an integral part of the object system used in R.
+
+When it is used on the left hand side of an assignment it can be used 
+either to associate a new attribute with object or to change an existing 
+one. 
+For example
+
+> attr(z, "dim") <- c(10,10)
+
+allows R to treat z as if it were a 10-by-10 matrix.
+
+7) class of an object -
+
+object have a class, reported by the function class().
+
+for simple vectors, it is the same as mode():
+
+numeric, logical, character or list.
+
+but matrix, array, factor and data.frame are other possible values.
+
+the class of an object can affect how functions process the data
+contained in the object. you can remove the class temporarily and
+change how function, such as plot, treats the object.
+
+> winter <- some data frame
+
+> winter # printed as a data frame, matrix form,
+
+> unclass(winter) # printed as a list.
+
+

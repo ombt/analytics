@@ -1,0 +1,43 @@
+
+grouping, loops and conditionale execution -
+
+1) grouped expressions -
+
+ { expr1; expr2; ...; exprN }
+
+2) control statements -
+
+The language has available a conditional construction of the form
+
+> if (expr_1) expr_2 else expr_3
+
+where expr 1 must evaluate to a single logical value and the result of 
+the entire expression is then evident.
+
+The “short-circuit” operators && and || are often used as part of the 
+condition in an if statement. Whereas & and | apply element-wise to 
+vectors, && and || apply to vectors of length one, and only evaluate 
+their second argument if necessary.
+
+There is a vectorized version of the if/else construct, the ifelse function.
+This has the form ifelse(condition, a, b) and returns a vector of the same
+length as condition, with elements a[i] if condition[i] is true, otherwise 
+b[i] (where a and b are recycled as necessary).
+
+3) loops = for-loops, repeat and while
+
+ > for (name in expr_1) expr_2
+
+ > repeat expr
+
+ > while (condition) expr
+
+repeat-loops can only be broken using the "break" command.
+
+"next" can be used to skip current interation and go to next
+iteration.
+
+
+
+
+

@@ -1,0 +1,53 @@
+
+probability distributions -
+
+1) One convenient use of R is to provide a comprehensive set of statistical 
+tables. Functions are provided to evaluate the cumulative distribution 
+function P(X <= x), the probability density function and the quantile 
+function (given q, the smallest x such that P(X <= x) > q), and to
+simulate from the distribution.
+
+Distribution 	R name 			additional arguments
+
+beta 		beta			shape1, shape2, ncp
+binomial	binom			size, prob
+Cauchy 		cauchy 			location, scale
+chi-squared 	chisq 			df, ncp
+exponential exp rate
+F 		f 			df1, df2, ncp
+gamma 		gamma 			shape, scale
+geometric 	geom 			prob
+hypergeometric 	hyper 			m, n, k
+log-normal 	lnorm 			meanlog, sdlog
+logistic 	logis 			location, scale
+negative 	binomial 		nbinom size, prob
+normal 		norm 			mean, sd
+Poisson 	pois 			lambda
+signed 		rank 			signrank n
+Student’s t 	t 			df, ncp
+uniform 	unif 			min, max
+Weibull 	weibull 		shape, scale
+Wilcoxon 	wilcox 			m, n
+
+Prefix the name given here by ‘d’ for the density, ‘p’ for the CDF, ‘q’ for the
+quantile function and ‘r’ for simulation (random deviates). The first argument
+is x for dxxx, q for pxxx, p for qxxx and n for rxxx (except for rhyper,
+rsignrank and rwilcox, for which it is nn). In not quite all cases is the
+non-centrality parameter ncp currently available: see the on-line help for
+details.
+
+The pxxx and qxxx functions all have logical arguments lower.tail and 
+log.p and the dxxx ones have log. This allows, e.g., getting the 
+cumulative (or “integrated”) hazard function,
+
+H(t) = -log(1 - F(t)), by
+
+- pxxx(t, ..., lower.tail = FALSE, log.p = TRUE)
+
+or more accurate log-likelihoods (by dxxx(..., log = TRUE)), directly.
+
+2) examining the distribution of a data set -
+
+see .Rhistory
+
+
