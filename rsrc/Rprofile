@@ -3,7 +3,7 @@
 #
 # do not convert strings to factors by default
 #
-options(stringsAsFactos=FALSE)
+options(stringsAsFactors=FALSE)
 #
 # maximum number of lines to print
 #

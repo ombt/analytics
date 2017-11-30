@@ -1,4 +1,4 @@
-These notes descibe how to upload U01, U03, MPR, CRB files
+These notes describe how to upload U01, U03, MPR, CRB files
 into Postgresql.
 
 1) make sure a postgres cim user and db exists.
