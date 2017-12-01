@@ -13,13 +13,11 @@ source(paste("rlib",
              "package_utils.R",
              sep="/"))
 #
-# sqlite db utils
+# db utils
 #
 source(paste("rlib",
              "sqlite_utils.R",
              sep="/"))
-#
-# postgresql db utils
 #
 source(paste("rlib",
              "postgresql_utils.R",
@@ -35,6 +33,10 @@ source(paste("rlib",
 #
 source(paste("rlib",
              "u0x_sqlite_utils.R",
+             sep="/"))
+#
+source(paste("rlib",
+             "u0x_postgresql_utils.R",
              sep="/"))
 #
 # local loading data from db or csv
