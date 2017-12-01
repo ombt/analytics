@@ -19,6 +19,7 @@ options(max.print=100)
     library(DBI)
     library(RSQLite)
     library(RPostgreSQL)
+    library(ggplot2)
     #
     if (file.exists("source_all.R"))
     {
