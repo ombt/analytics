@@ -2,13 +2,43 @@
 echo "the script maih2postgres.sql now creates these indexes"
 echo "automatically. there is no reason to run this script anymore."
 #
+db_name=training_data
+#
 # for schema in aoi crb u01 u03
 # do
-# 	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl training_data ${schema}.filename_to_fid _filename_timestamp idx_filename_to_fid_2 localhost
+# 	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl ${db_name} ${schema}.filename_to_fid _filename_timestamp idx_filename_to_fid_2 localhost
 # 	#
-# 	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl training_data ${schema}.filename_to_fid _filename_id:_filename_timestamp idx_filename_to_fid_3 localhost
+# 	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl ${db_name} ${schema}.filename_to_fid _filename_id:_filename_timestamp idx_filename_to_fid_3 localhost
 # 	#
-# 	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl training_data ${schema}.filename_to_fid _filename_timestamp:_filename_id idx_filename_to_fid_4 localhost
+# 	/home/MRumore/g/testbin/postgres/pg.create.table.index.pl ${db_name} ${schema}.filename_to_fid _filename_timestamp:_filename_id idx_filename_to_fid_4 localhost
 # done
+#
+# /home/MRumore/g/testbin/postgres/pg.create.table.index.pl \
+# 	${db_name} \
+# 	u01.delta_pivot_count \
+# 	_filename_id:_lane_no:_stage_no \
+# 	idx_delta_pivot_count_fid_lnno_stgno \
+# 	localhost
+# #
+# /home/MRumore/g/testbin/postgres/pg.create.table.index.pl \
+# 	${db_name} \
+# 	u01.delta_feeder \
+# 	_filename_id:_lane_no:_stage_no \
+# 	idx_delta_feeder_fid_lnno_stgno \
+# 	localhost
+# #
+# /home/MRumore/g/testbin/postgres/pg.create.table.index.pl \
+# 	${db_name} \
+# 	u01.delta_nozzle \
+# 	_filename_id:_lane_no:_stage_no \
+# 	idx_delta_nozzle_fid_lnno_stgno \
+# 	localhost
+# #
+# /home/MRumore/g/testbin/postgres/pg.create.table.index.pl \
+# 	${db_name} \
+# 	u01.delta_pivot_time \
+# 	_filename_id:_lane_no:_stage_no \
+# 	idx_delta_pivot_time_fid_lnno_stgno \
+# 	localhost
 #
 exit 0

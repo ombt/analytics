@@ -5,16 +5,16 @@ pg_load_count_query <- function()
 {
     return(list(
 query="
-select 
-    ftf._filename_route, 
-    ufd._machine_order, 
-    ufd._lane_no, 
-    ufd._stage_no, 
-    ftf._filename_timestamp, 
-    ftf._filename, 
-    ftf._filename_type, 
-    ftf._filename_id, 
-    ufd._filename_id, 
+select
+    ftf._filename_route,
+    ufd._machine_order,
+    ufd._lane_no,
+    ufd._stage_no,
+    ftf._filename_timestamp,
+    ftf._filename,
+    ftf._filename_type,
+    ftf._filename_id,
+    ufd._filename_id,
     ufd._date,
     ufd._pcb_serial,
     ufd._pcb_id,
@@ -85,7 +85,22 @@ on
 and
     dpc._lane_no = ufd._lane_no
 and
-    dpc._stage_no = ufd._stage_no", 
+    dpc._stage_no = ufd._stage_no",
+from="
+from
+   u01.filename_to_fid ftf
+inner join
+   u01.u0x_filename_data ufd
+on
+   ufd._filename_id = ftf._filename_id
+inner join
+   u01.delta_pivot_count dpc
+on
+   dpc._filename_id = ftf._filename_id
+and
+   dpc._lane_no = ufd._lane_no
+and
+   dpc._stage_no = ufd._stage_no",
 order_by="
 order by
     ftf._filename_route,
@@ -151,7 +166,24 @@ on
 and
     df._lane_no = ufd._lane_no
 and
-    df._stage_no = ufd._stage_no", 
+    df._stage_no = ufd._stage_no",
+
+from="
+from
+    u01.filename_to_fid ftf
+inner join
+    u01.u0x_filename_data ufd
+on
+    ufd._filename_id = ftf._filename_id
+inner join
+    u01.delta_feeder df
+on
+    df._filename_id = ftf._filename_id
+and
+    df._lane_no = ufd._lane_no
+and
+    df._stage_no = ufd._stage_no",
+
 order_by="
 order by
     ftf._filename_route,
@@ -216,9 +248,24 @@ on
 and
     dn._lane_no = ufd._lane_no
 and
-    dn._stage_no = ufd._stage_no", 
+    dn._stage_no = ufd._stage_no",
+from="
+from
+    u01.filename_to_fid ftf
+inner join
+    u01.u0x_filename_data ufd
+on
+    ufd._filename_id = ftf._filename_id
+inner join
+    u01.delta_nozzle dn
+on
+    dn._filename_id = ftf._filename_id
+and
+    dn._lane_no = ufd._lane_no
+and
+    dn._stage_no = ufd._stage_no",
 order_by="
-order by
+    order by
     ftf._filename_route,
     ufd._machine_order,
     ufd._lane_no,
@@ -312,7 +359,22 @@ on
 and
     dpt._lane_no = ufd._lane_no
 and
-    dpt._stage_no = ufd._stage_no", 
+    dpt._stage_no = ufd._stage_no",
+from="
+from
+u01.filename_to_fid ftf
+inner join
+    u01.u0x_filename_data ufd
+on
+    ufd._filename_id = ftf._filename_id
+inner join
+    u01.delta_pivot_time dpt
+on
+    dpt._filename_id = ftf._filename_id
+and
+    dpt._lane_no = ufd._lane_no
+and
+    dpt._stage_no = ufd._stage_no",
 order_by="
 order by
     ftf._filename_route,
@@ -370,7 +432,20 @@ on
 inner join
     u03.mountexchangereel mxr
 on
-    mxr._filename_id = ftf._filename_id", 
+    mxr._filename_id = ftf._filename_id",
+
+from="
+from
+    u03.filename_to_fid ftf
+inner join
+    u03.u0x_filename_data ufd
+on
+    ufd._filename_id = ftf._filename_id
+inner join
+    u03.mountexchangereel mxr
+on
+    mxr._filename_id = ftf._filename_id",
+
 order_by="
 order by
     ftf._filename_route,
@@ -431,7 +506,18 @@ on
 inner join
     u03.mountlatestreel mlr
 on
-    mlr._filename_id = ftf._filename_id", 
+    mlr._filename_id = ftf._filename_id",
+from="
+from
+    u03.filename_to_fid ftf
+inner join
+    u03.u0x_filename_data ufd
+on
+    ufd._filename_id = ftf._filename_id
+inner join
+    u03.mountlatestreel mlr
+on
+    mlr._filename_id = ftf._filename_id",
 order_by="
 order by
     ftf._filename_route,
@@ -480,8 +566,19 @@ on
 inner join
     u03.mountnormaltrace mnt
 on
-    mnt._filename_id = ftf._filename_id", 
-order_by = "
+    mnt._filename_id = ftf._filename_id",
+from="
+from
+    u03.filename_to_fid ftf
+inner join
+    u03.u0x_filename_data ufd
+on
+    ufd._filename_id = ftf._filename_id
+inner join
+    u03.mountnormaltrace mnt
+on
+    mnt._filename_id = ftf._filename_id",
+order_by="
 order by
     ftf._filename_route,
     ufd._machine_order,
@@ -563,8 +660,19 @@ on
 inner join
     u03.mountqualitytrace mqt
 on
-    mqt._filename_id = ftf._filename_id", 
-order_by = "
+    mqt._filename_id = ftf._filename_id",
+from="
+from
+    u03.filename_to_fid ftf
+inner join
+    u03.u0x_filename_data ufd
+on
+    ufd._filename_id = ftf._filename_id
+inner join
+    u03.mountqualitytrace mqt
+on
+    mqt._filename_id = ftf._filename_id",
+order_by="
 order by
     ftf._filename_route,
     ufd._machine_order,
@@ -803,18 +911,30 @@ load_data <- function(db,
                       stages = c(),
                       times = c(),
                       barcodes = c(),
+                      fadds = c(),
+                      fsadds = c(),
+                      nhadds = c(),
+                      ncadds = c(),
                       not_routes = c(),
                       not_machines = c(),
                       not_lanes = c(),
                       not_stages = c(),
                       not_times = c(),
                       not_barcodes = c(),
+                      not_fadds = c(),
+                      not_fsadds = c(),
+                      not_nhadds = c(),
+                      not_ncadds = c(),
                       range_routes = c(),
                       range_machines = c(),
                       range_lanes = c(),
                       range_stages = c(),
                       range_times = c(),
                       range_barcodes = c(),
+                      range_fadds = c(),
+                      range_fsadds = c(),
+                      range_nhadds = c(),
+                      range_ncadds = c(),
                       matrix_return = FALSE,
                       debug = FALSE)
 {
@@ -941,16 +1061,168 @@ load_data <- function(db,
     {
         select_query = pg_load_feeder_query()$query
         order_by_clause = pg_load_feeder_query()$order_by
+        #
+        # fadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("df._fadd", 
+                                             fadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("df._fadd", 
+                                             not_fadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("df._fadd", 
+                                                range_fadds));
+        #
+        # fsadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("df._fsadd", 
+                                             fsadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("df._fsadd", 
+                                             not_fsadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("df._fsadd", 
+                                                range_fsadds));
     }
     else if (data_type == "mount_quality_trace")
     {
         select_query = pg_load_mount_quality_trace_query()$query
         order_by_clause = pg_load_mount_quality_trace_query()$order_by
+        #
+        # fadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._fadd", 
+                                             fadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._fadd", 
+                                             not_fadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mqt._fadd", 
+                                                range_fadds));
+        #
+        # fsadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._fsadd", 
+                                             fsadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._fsadd", 
+                                             not_fsadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mqt._fsadd", 
+                                                range_fsadds));
+        #
+        # nhadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._nhadd", 
+                                             nhadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._nhadd", 
+                                             not_nhadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mqt._nhadd", 
+                                                range_nhadds));
+        #
+        # ncadds
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._ncadd", 
+                                             ncadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._ncadd", 
+                                             not_ncadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mqt._ncadd", 
+                                                range_ncadds));
     }
     else if (data_type == "nozzle")
     {
         select_query = pg_load_nozzle_query()$query
         order_by_clause = pg_load_nozzle_query()$order_by
+        #
+        # nhadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("dn._nhadd", 
+                                             nhadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("dn._nhadd", 
+                                             not_nhadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("dn._nhadd", 
+                                                range_nhadds));
+        #
+        # ncadds
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("dn._ncadd", 
+                                             ncadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("dn._ncadd", 
+                                             not_ncadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("dn._ncadd", 
+                                                range_ncadds));
     }
     else if (data_type == "time")
     {
@@ -961,16 +1233,168 @@ load_data <- function(db,
     {
         select_query = pg_load_mount_exchange_reel_query()$query
         order_by_clause = pg_load_mount_exchange_reel_query()$order_by
+        #
+        # fadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mxr._fadd", 
+                                             fadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mxr._fadd", 
+                                             not_fadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mxr._fadd", 
+                                                range_fadds));
+        #
+        # fsadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mxr._fsadd", 
+                                             fsadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mxr._fsadd", 
+                                             not_fsadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mxr._fsadd", 
+                                                range_fsadds));
     }
     else if (data_type == "mount_latest_reel")
     {
         select_query = pg_load_mount_latest_reel_query()$query
         order_by_clause = pg_load_mount_latest_reel_query()$order_by
+        #
+        # fadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fadd", 
+                                             fadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fadd", 
+                                             not_fadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._fadd", 
+                                                range_fadds));
+        #
+        # fsadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fsadd", 
+                                             fsadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fsadd", 
+                                             not_fsadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._fsadd", 
+                                                range_fsadds));
     }
     else if (data_type == "mount_normal_trace")
     {
         select_query = pg_load_mount_normal_trace_query()$query
         order_by_clause = pg_load_mount_normal_trace_query()$order_by
+        #
+        # fadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fadd", 
+                                             fadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fadd", 
+                                             not_fadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._fadd", 
+                                                range_fadds));
+        #
+        # fsadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fsadd", 
+                                             fsadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fsadd", 
+                                             not_fsadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._fsadd", 
+                                                range_fsadds));
+        #
+        # nhadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._nhadd", 
+                                             nhadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._nhadd", 
+                                             not_nhadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._nhadd", 
+                                                range_nhadds));
+        #
+        # ncadds
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._ncadd", 
+                                             ncadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._ncadd", 
+                                             not_ncadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._ncadd", 
+                                                range_ncadds));
     }
     else
     {
@@ -993,4 +1417,514 @@ load_data <- function(db,
         return(pg_exec_query(db, query))
     }
 }
-
+#
+get_operation_value <- function(db,
+                                data_type,
+                                operation,
+                                routes = c(),
+                                machines = c(),
+                                lanes = c(),
+                                stages = c(),
+                                times = c(),
+                                barcodes = c(),
+                                fadds = c(),
+                                fsadds = c(),
+                                nhadds = c(),
+                                ncadds = c(),
+                                not_routes = c(),
+                                not_machines = c(),
+                                not_lanes = c(),
+                                not_stages = c(),
+                                not_times = c(),
+                                not_barcodes = c(),
+                                not_fadds = c(),
+                                not_fsadds = c(),
+                                not_nhadds = c(),
+                                not_ncadds = c(),
+                                range_routes = c(),
+                                range_machines = c(),
+                                range_lanes = c(),
+                                range_stages = c(),
+                                range_times = c(),
+                                range_barcodes = c(),
+                                range_fadds = c(),
+                                range_fsadds = c(),
+                                range_nhadds = c(),
+                                range_ncadds = c(),
+                                matrix_return = FALSE,
+                                debug = FALSE)
+{
+    from_clause = "";
+    where_clause = "";
+    #
+    # generate where-clauses for equals on in-group
+    #
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ftf._filename_route", 
+                                         routes));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ufd._machine_order", 
+                                         machines));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ufd._lane_no", 
+                                         lanes));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ufd._stage_no", 
+                                         stages));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ftf._filename_timestamp", 
+                                         times));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ufd._pcb_id", 
+                                         barcodes));
+    #
+    # generate where-clauses for not-equals on not-in-group
+    #
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ftf._filename_route", 
+                                         not_routes, 
+                                         equal_to=FALSE));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ufd._machine_order", 
+                                         not_machines, 
+                                         equal_to=FALSE));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ufd._lane_no", 
+                                         not_lanes, 
+                                         equal_to=FALSE));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ufd._stage_no", 
+                                         not_stages, 
+                                         equal_to=FALSE));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ftf._filename_timestamp", 
+                                         not_times, 
+                                         equal_to=FALSE));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_in_clause("ufd._pcb_id", 
+                                         not_barcodes, 
+                                         equal_to=FALSE));
+    #
+    # generate where-clauses for in-range
+    #
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_range_clause("ftf._filename_route", 
+                                             range_routes));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_range_clause("ufd._machine_order", 
+                                             range_machines));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_range_clause("ufd._lane_no", 
+                                             range_lanes));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_range_clause("ufd._stage_no", 
+                                             range_stages));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_range_clause("ftf._filename_timestamp", 
+                                             range_times));
+    where_clause = 
+        add_to_clause("AND",
+                      where_clause,
+                      generate_range_clause("ufd._pcb_id", 
+                                             range_barcodes));
+    #
+    if (where_clause != "")
+    {
+        where_clause = paste("where", where_clause)
+    }
+    #
+    if (data_type == "count")
+    {
+        from_clause = pg_load_count_query()$from
+    }
+    else if (data_type == "feeder")
+    {
+        from_clause = pg_load_feeder_query()$from
+        #
+        # fadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("df._fadd", 
+                                             fadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("df._fadd", 
+                                             not_fadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("df._fadd", 
+                                                range_fadds));
+        #
+        # fsadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("df._fsadd", 
+                                             fsadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("df._fsadd", 
+                                             not_fsadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("df._fsadd", 
+                                                range_fsadds));
+    }
+    else if (data_type == "mount_quality_trace")
+    {
+        from_clause = pg_load_mount_quality_trace_query()$from
+        #
+        # fadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._fadd", 
+                                             fadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._fadd", 
+                                             not_fadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mqt._fadd", 
+                                                range_fadds));
+        #
+        # fsadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._fsadd", 
+                                             fsadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._fsadd", 
+                                             not_fsadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mqt._fsadd", 
+                                                range_fsadds));
+        #
+        # nhadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._nhadd", 
+                                             nhadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._nhadd", 
+                                             not_nhadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mqt._nhadd", 
+                                                range_nhadds));
+        #
+        # ncadds
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._ncadd", 
+                                             ncadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mqt._ncadd", 
+                                             not_ncadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mqt._ncadd", 
+                                                range_ncadds));
+    }
+    else if (data_type == "nozzle")
+    {
+        from_clause = pg_load_nozzle_query()$from
+        #
+        # nhadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("dn._nhadd", 
+                                             nhadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("dn._nhadd", 
+                                             not_nhadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("dn._nhadd", 
+                                                range_nhadds));
+        #
+        # ncadds
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("dn._ncadd", 
+                                             ncadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("dn._ncadd", 
+                                             not_ncadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("dn._ncadd", 
+                                                range_ncadds));
+    }
+    else if (data_type == "time")
+    {
+        from_clause = pg_load_time_query()$from
+    }
+    else if (data_type == "mount_exchange_reel")
+    {
+        from_clause = pg_load_mount_exchange_reel_query()$from
+        #
+        # fadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mxr._fadd", 
+                                             fadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mxr._fadd", 
+                                             not_fadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mxr._fadd", 
+                                                range_fadds));
+        #
+        # fsadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mxr._fsadd", 
+                                             fsadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mxr._fsadd", 
+                                             not_fsadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mxr._fsadd", 
+                                                range_fsadds));
+    }
+    else if (data_type == "mount_latest_reel")
+    {
+        from_clause = pg_load_mount_latest_reel_query()$from
+        #
+        # fadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fadd", 
+                                             fadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fadd", 
+                                             not_fadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._fadd", 
+                                                range_fadds));
+        #
+        # fsadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fsadd", 
+                                             fsadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fsadd", 
+                                             not_fsadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._fsadd", 
+                                                range_fsadds));
+    }
+    else if (data_type == "mount_normal_trace")
+    {
+        from_clause = pg_load_mount_normal_trace_query()$from
+        #
+        # fadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fadd", 
+                                             fadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fadd", 
+                                             not_fadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._fadd", 
+                                                range_fadds));
+        #
+        # fsadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fsadd", 
+                                             fsadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._fsadd", 
+                                             not_fsadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._fsadd", 
+                                                range_fsadds));
+        #
+        # nhadds 
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._nhadd", 
+                                             nhadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._nhadd", 
+                                             not_nhadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._nhadd", 
+                                                range_nhadds));
+        #
+        # ncadds
+        #
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._ncadd", 
+                                             ncadds));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_in_clause("mlr._ncadd", 
+                                             not_ncadds, 
+                                             equal_to=FALSE));
+        where_clause = 
+            add_to_clause("AND",
+                          where_clause,
+                          generate_range_clause("mlr._ncadd", 
+                                                range_ncadds));
+    }
+    else
+    {
+        stop(sprintf("Unknown data type %s.", data_type))
+    }
+    #
+    query = sprintf("select %s %s %s", 
+                    operation, 
+                    from_clause, 
+                    where_clause);
+    #
+    if (debug == TRUE)
+    {
+        print(sprintf("query: %s", query))
+    }
+    #
+    if (matrix_return == TRUE)
+    {
+        return(pg_exec_query_return_matrix(db, query))
+    }
+    else
+    {
+        return(pg_exec_query(db, query))
+    }
+}
+#
