@@ -59,56 +59,56 @@ order_by = "order by ftf._filename_route, ufd._machine_order, ufd._lane_no, ufd.
 #
 # load all data functions
 #
-pg_load_count_q <- function(db, nrows=0)
+pg_load_count <- function(db, nrows=0)
 {
     query = paste(pg_load_count_query()$query,
                   pg_load_count_query()$order_by)
     return(pg_exec_query_return_matrix(db, query))
 }
 
-pg_load_feeder_q <- function(db, nrows=0)
+pg_load_feeder <- function(db, nrows=0)
 {
     query = paste(pg_load_feeder_query()$query,
                   pg_load_feeder_query()$order_by)
     return(pg_exec_query_return_matrix(db, query))
 }
 
-pg_load_nozzle_q <- function(db, nrows=0)
+pg_load_nozzle <- function(db, nrows=0)
 {
     query = paste(pg_load_nozzle_query()$query,
                   pg_load_nozzle_query()$order_by)
     return(pg_exec_query_return_matrix(db, query))
 }
 
-pg_load_time_q <- function(db, nrows=0)
+pg_load_time <- function(db, nrows=0)
 {
     query = paste(pg_load_time_query()$query,
                   pg_load_time_query()$order_by)
     return(pg_exec_query_return_matrix(db, query))
 }
 
-pg_load_mount_exchange_reel_q <- function(db, nrows=0)
+pg_load_mount_exchange_reel <- function(db, nrows=0)
 {
     query = paste(pg_load_mount_exchange_reel_query()$query,
                   pg_load_mount_exchange_reel_query()$order_by)
     return(pg_exec_query_return_matrix(db, query))
 }
 
-pg_load_mount_latest_reel_q <- function(db, nrows=0)
+pg_load_mount_latest_reel <- function(db, nrows=0)
 {
     query = paste(pg_load_mount_latest_reel_query()$query,
                   pg_load_mount_latest_reel_query()$order_by)
     return(pg_exec_query_return_matrix(db, query))
 }
 
-pg_load_mount_normal_trace_q <- function(db, nrows=0)
+pg_load_mount_normal_trace <- function(db, nrows=0)
 {
     query = paste(pg_load_mount_normal_trace_query()$query,
                   pg_load_mount_normal_trace_query()$order_by)
     return(pg_exec_query_return_matrix(db, query))
 }
 
-pg_load_mount_quality_trace_q <- function(db, nrows=0)
+pg_load_mount_quality_trace <- function(db, nrows=0)
 {
     query = paste(pg_load_mount_quality_trace_query()$query,
                   pg_load_mount_quality_trace_query()$order_by)
@@ -465,3 +465,4 @@ load_data <- function(db,
     #
     return(pg_exec_query_return_matrix(db, query))
 }
+
