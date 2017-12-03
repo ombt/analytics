@@ -63,7 +63,7 @@ pg_open_db <- function(db_name,
     #
     db_driver = dbDriver("PostgreSQL")
     #
-    db_con=list()
+    db_conn=list()
     #
     if (( ! is.na(db_user)) && ( ! is.na(db_password)))
     {
