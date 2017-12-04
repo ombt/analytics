@@ -20,6 +20,7 @@ options(max.print=100)
     library(RSQLite)
     library(RPostgreSQL)
     library(ggplot2)
+    library(sqldf)
     #
     if (file.exists("source_all.R"))
     {
