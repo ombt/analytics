@@ -74,14 +74,20 @@ datetime_to_tstamp <- function(datetime,
                                format = "%Y/%m/%d %H:%M:%S",
                                tz = Sys.timezone())
 {
-    return(as.numeric(strptime(datetime, format=format, tz=tz)));
+    for (dt in as.vector(datetime))
+    {
+        print(as.numeric(strptime(dt, format=format, tz=tz)));
+    }
 }
 #
 tstamp_to_datetime <- function(tstamp,
                                format = "%Y/%m/%d %H:%M:%S",
                                tz = Sys.timezone())
 {
-    return(as.POSIXct(tstamp, origin="1970-01-01", tz=tz));
+    for (ts in as.vector(tstamp))
+    {
+        print(as.POSIXct(ts, origin="1970-01-01", tz=tz));
+    }
 }
 #
 # list function which uses globs instead if regular expression
