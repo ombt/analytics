@@ -83,4 +83,12 @@ tstamp_to_datetime <- function(tstamp,
 {
     return(as.POSIXct(tstamp, origin="1970-01-01", tz=tz));
 }
-
+#
+# list function which uses globs instead if regular expression
+#
+lf <- function(globpat="*",env.pos=1)
+{
+    return(ls(pattern=glob2rx(pattern=globpat),
+              envir=as.environment(env.pos)))
+}
+#
