@@ -4,6 +4,7 @@
 pg_aoi_load_all_query <- function()
 {
     return(list(
+view_format="select %s from aoi.all_view",
 query="
 select
     ftf._filename_route,
@@ -64,10 +65,11 @@ order by
     rfd._lane,
     ftf._filename_timestamp"));
 }
-3
+#
 pg_aoi_load_information_query <- function()
 {
     return(list(
+view_format="select %s from aoi.information_view",
 query="
 select
     ftf._filename_route,
@@ -116,6 +118,7 @@ order by
 pg_aoi_load_lotinformation_query <- function()
 {
     return(list(
+view_format="select %s from aoi.lotinformation_view",
 query="
 select
     ftf._filename_route,
@@ -289,11 +292,6 @@ pg_aoi_load_data <- function(db,
                       sql_generate_range_clause("ftf._filename_timestamp", 
                                              range_times));
     #
-    if (where_clause != "")
-    {
-        where_clause = paste("where", where_clause)
-    }
-    #
     if (data_type == "all")
     {
         select_query = pg_aoi_load_all_query()$query
@@ -344,6 +342,11 @@ pg_aoi_load_data <- function(db,
     else
     {
         stop(sprintf("Unknown data type %s.", data_type))
+    }
+    #
+    if (where_clause != "")
+    {
+        where_clause = paste("where", where_clause)
     }
     #
     query = paste(select_query, where_clause, order_by_clause)
@@ -460,11 +463,6 @@ pg_aoi_get_operation_value <- function(db,
                       sql_generate_range_clause("ftf._filename_timestamp", 
                                              range_times));
     #
-    if (where_clause != "")
-    {
-        where_clause = paste("where", where_clause)
-    }
-    #
     if (data_type == "all")
     {
         from_clause = pg_aoi_load_all_query()$from
@@ -516,6 +514,11 @@ pg_aoi_get_operation_value <- function(db,
         stop(sprintf("Unknown data type %s.", data_type))
     }
     #
+    if (where_clause != "")
+    {
+        where_clause = paste("where", where_clause)
+    }
+    #
     query = sprintf("select %s %s %s", 
                     operation, 
                     from_clause, 
@@ -536,3 +539,169 @@ pg_aoi_get_operation_value <- function(db,
     }
 }
 #
+pg_aoi_load_data_view <- function(db,
+                                  data_type,
+                                  routes = c(),
+                                  machines = c(),
+                                  lanes = c(),
+                                  times = c(),
+                                  barcodes = c(),
+                                  not_routes = c(),
+                                  not_machines = c(),
+                                  not_lanes = c(),
+                                  not_times = c(),
+                                  not_barcodes = c(),
+                                  range_routes = c(),
+                                  range_machines = c(),
+                                  range_lanes = c(),
+                                  range_times = c(),
+                                  range_barcodes = c(),
+                                  matrix_return = FALSE,
+                                  debug = FALSE)
+{
+    select_query = "";
+    where_clause = "";
+    #
+    # generate where-clauses for equals on in-group
+    #
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_in_clause("_filename_route", 
+                                         routes));
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_in_clause("_machine", 
+                                         machines));
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_in_clause("_lane", 
+                                         lanes));
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_in_clause("_filename_timestamp", 
+                                         times));
+    #
+    # generate where-clauses for not-equals on not-in-group
+    #
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_in_clause("_filename_route", 
+                                         not_routes, 
+                                         equal_to=FALSE));
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_in_clause("_machine", 
+                                         not_machines, 
+                                         equal_to=FALSE));
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_in_clause("_lane", 
+                                         not_lanes, 
+                                         equal_to=FALSE));
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_in_clause("_filename_timestamp", 
+                                         not_times, 
+                                         equal_to=FALSE));
+    #
+    # generate where-clauses for in-range
+    #
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_range_clause("_filename_route", 
+                                             range_routes));
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_range_clause("_machine", 
+                                             range_machines));
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_range_clause("_lane", 
+                                             range_lanes));
+    where_clause = 
+        sql_add_to_clause("AND",
+                      where_clause,
+                      sql_generate_range_clause("_filename_timestamp", 
+                                             range_times));
+    #
+    if (data_type == "all")
+    {
+        view_format = pg_aoi_load_all_query()$view_format
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("_pcbid", 
+                                                 barcodes));
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("_pcbid", 
+                                                 not_barcodes, 
+                                                 equal_to=FALSE));
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_range_clause("_pcbid", 
+                                                     range_barcodes))
+    }
+    else if (data_type == "information")
+    {
+        view_format = pg_aoi_load_information_query()$view_format
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("_pcbid", 
+                                                 barcodes));
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("_pcbid", 
+                                                 not_barcodes, 
+                                                 equal_to=FALSE));
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_range_clause("_pcbid", 
+                                                     range_barcodes));
+    }
+    else if (data_type == "lotinformation")
+    {
+        view_format = pg_aoi_load_lotinformation_query()$view_format
+    }
+    else
+    {
+        stop(sprintf("Unknown data type %s.", data_type))
+    }
+    #
+    if (where_clause != "")
+    {
+        where_clause = paste("where", where_clause)
+    }
+    #
+    query = paste(sprintf(view_format, "*"),  where_clause)
+    #
+    if (debug == TRUE)
+    {
+        print(sprintf("query: %s", query))
+    }
+    #
+    if (matrix_return == TRUE)
+    {
+        return(pg_exec_query_return_matrix(db, query))
+    }
+    else
+    {
+        return(pg_exec_query(db, query))
+    }
+}
