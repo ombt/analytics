@@ -338,8 +338,8 @@ pg_aoi_load_data <- function(db,
     }
     else if (data_type == "lotinformation")
     {
-        select_query = pg_aoi_load_information_query()$query
-        order_by_clause = pg_aoi_load_information_query()$order_by
+        select_query = pg_aoi_load_lotinformation_query()$query
+        order_by_clause = pg_aoi_load_lotinformation_query()$order_by
     }
     else
     {
