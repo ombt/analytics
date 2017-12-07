@@ -55,7 +55,7 @@ sub usage
 
 usage: $arg0 [-?] [-h] \\ 
         [-w | -W |-v level] \\ 
-        [-l logfile] \\ 
+        [-llogfile] [-T ] \\ 
         [-O] \\
         XML-file [tag_name [tag_name2 ...]]
 
@@ -65,6 +65,7 @@ where:
     -W - enable warning and trace (level=mid=2)
     -v - verbose level: 0=off,1=min,2=mid,3=max
     -l logfile - log file path
+    -T - turn on trace
     -O - use old XML parser
 
 EOF
@@ -91,12 +92,12 @@ sub process_file
         $plog->log_err("Parsing failed for XML file: %s\n", $xml_file);
         return FAIL;
     }
-    $plog->log_vmin("Dumper: %s\n", Dumper($pxml->booklist()));
     #
-    $plog->log_msg("Deparsed XML: %s\n", $pxml->deparse());
+    $plog->log_vmin("Deparsed XML: %s\n", $pxml->deparse());
     #
     if (scalar(@tag_names) > 0)
     {
+        $plog->log_msg("Dumper: %s\n", Dumper($pxml->booklist()));
         my $tag_value = $pxml->names_to_value(@tag_names);
         if (defined($tag_value))
         {
@@ -125,7 +126,7 @@ sub process_file
 $plog->disable_stdout_buffering();
 #
 my %opts;
-if (getopts('?hwWv:l:O', \%opts) != 1)
+if (getopts('?hwWv:l:OT', \%opts) != 1)
 {
     usage($cmd);
     exit 2;
@@ -154,6 +155,10 @@ foreach my $opt (%opts)
             usage($cmd);
             exit 2;
         }
+    }
+    elsif ($opt eq 'T')
+    {
+        $plog->trace(TRUE);
     }
     elsif ($opt eq 'l')
     {

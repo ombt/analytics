@@ -761,37 +761,48 @@ sub new_multi_search_booklist
     my $self = shift;
     my ($proot, $tag_name, $ptag_names, $ptag_value) = @_;
     #
-    $self->{logger}->log_err("Tag nameis %s.\n", $tag_name);
-    $self->{logger}->log_err("XML root buffer is %s.\n", $proot);
+    # $self->{logger}->log_msg("Tag name is %s.\n", $tag_name);
+    # $self->{logger}->log_msg("XML root buffer is %s.\n", ref($proot));
+    #
     if (defined($proot) && (ref($proot) eq "HASH"))
     {
+# $self->{logger}->wxp();
         if (exists($proot->{$tag_name}))
         {
+# $self->{logger}->wxp();
             if (scalar(@{$ptag_names}) > 0)
             {
+# $self->{logger}->wxp();
                 if (ref($proot->{$tag_name}) eq "ARRAY")
                 {
+# $self->{logger}->wxp();
                     my $i = 0;
                     my $next_tag_name = shift @{$ptag_names};
                     #
                     while ($tag_name eq $next_tag_name)
                     {
+# $self->{logger}->wxp();
                         $i += 1;
                         if (scalar(@{$ptag_names}) == 0)
                         {
+# $self->{logger}->wxp();
                             if ($i < scalar(@{$proot->{$tag_name}}))
                             {
+# $self->{logger}->wxp();
                                 $$ptag_value = $proot->{$tag_name}->[$i];
                                 return TRUE;
                             }
                             else
                             {
+# $self->{logger}->wxp();
                                 $$ptag_value = undef;
                                 return FALSE;
                             }
                         } 
+# $self->{logger}->wxp();
                         $next_tag_name = shift @{$ptag_names};
                     }
+# $self->{logger}->wxp();
                     #
                     return $self->new_multi_search_booklist(
                                       $proot->{$tag_name}->[$i],
@@ -801,6 +812,7 @@ sub new_multi_search_booklist
                 }
                 else
                 {
+# $self->{logger}->wxp();
                     my $next_tag_name = shift @{$ptag_names};
                     return $self->new_multi_search_booklist($proot->{$tag_name}, 
                                                             $next_tag_name, 
@@ -810,28 +822,36 @@ sub new_multi_search_booklist
             }
             else
             {
+# $self->{logger}->wxp();
                 $$ptag_value = $proot->{$tag_name};
                 return TRUE;
             }
         }
         else
         {
+# $self->{logger}->wxp();
             foreach my $key (keys %{$proot})
             {
+# $self->{logger}->wxp();
                 if ($self->new_multi_search_booklist($proot->{$key}, 
                                                      $tag_name, 
                                                      $ptag_names, 
                                                      $ptag_value) == TRUE)
                 {
+# $self->{logger}->wxp();
                     return TRUE;
                 }
+# $self->{logger}->wxp();
             }
+# $self->{logger}->wxp();
         }
+# $self->{logger}->wxp();
     }
     else
     {
         $self->{logger}->log_err("XML root buffer type id %s.\n", ref($proot));
     }
+# $self->{logger}->wxp();
     #
     $$ptag_value = undef;
     return FALSE;
@@ -844,12 +864,15 @@ sub names_to_value
     my @tag_names = @_;
     my $tag_value = undef;
     #
+# $self->{logger}->wxp();
     if (defined($self->{booklist}) && (scalar(@tag_names) > 0))
     {
+# $self->{logger}->wxp();
         my $status = FAIL;
         my $tag_name = shift @tag_names;
         if ($self->{use_new_parser} == TRUE)
         {
+# $self->{logger}->wxp();
             $status = $self->new_multi_search_booklist($self->{booklist}, 
                                                       $tag_name, 
                                                      \@tag_names, 
@@ -857,17 +880,22 @@ sub names_to_value
         }
         else
         {
+# $self->{logger}->wxp();
             $status = $self->multi_search_booklist($self->{booklist}, 
                                                    $tag_name, 
                                                   \@tag_names, 
                                                   \$tag_value);
         }
+# $self->{logger}->wxp();
         #
         if ($status != TRUE)
         {
+# $self->{logger}->wxp();
             $tag_value = undef;
         }
+# $self->{logger}->wxp();
     }
+# $self->{logger}->wxp();
     #
     return($tag_value);
 }
