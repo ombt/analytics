@@ -19,6 +19,7 @@ sub new
     $self->{errors} = 0;
     $self->{tokenizer} = { };
     $self->{use_new_parser} = TRUE();
+    $self->{skip_xml_header} = FALSE();
     #
     if (scalar(@_) == 1)
     {
@@ -39,6 +40,17 @@ sub new
     bless $self, $class;
     #
     return($self);
+}
+#
+sub skip_xml_header
+{
+    my $self = shift;
+    #
+    $self->{skip_xml_header} = shift if (@_);
+    $self->{skip_xml_header} = FALSE() 
+        unless($self->{skip_xml_header} == TRUE());
+    #
+    return $self->{skip_xml_header};
 }
 #
 sub booklist
@@ -329,6 +341,11 @@ sub new_element_xml
                 return FAIL;
             }
         }
+        elsif ($token =~ m/^<[A-Za-z0-9_]+ +\/>$/)
+        {
+            # do nothing for now with this
+            $self->accept_token();
+        }
         else
         {
             $self->{errors} += 1;
@@ -355,11 +372,16 @@ sub parse_xml
     }
     #
     my $token = $self->current_token();
-    if (defined($token) &&
-        ($token =~ m/<.xml\s+version="1.0"\s+encoding="UTF-8".>/))
+    #
+    if ($self->{skip_xml_header} == TRUE())
     {
         my $status = undef;
-        $self->accept_token();
+        #
+        if (defined($token) &&
+            ($token =~ m/<.xml\s+version="1.0"\s+encoding="UTF-8".>/))
+        {
+            $self->accept_token();
+        }
         if ($self->{use_new_parser} == TRUE)
         {
             $self->{booklist} = undef;
@@ -382,10 +404,38 @@ sub parse_xml
     }
     else
     {
-        $self->{booklist} = undef;
-        $self->{errors} += 1;
-        $self->{logger}->log_err("NOT XML 1.0 DOC: <%s>\n", $token);
-        return FAIL;
+        if (defined($token) &&
+            ($token =~ m/<.xml\s+version="1.0"\s+encoding="UTF-8".>/))
+        {
+            my $status = undef;
+            $self->accept_token();
+            if ($self->{use_new_parser} == TRUE)
+            {
+                $self->{booklist} = undef;
+                $status = $self->new_element_xml(\$self->{booklist});
+            }
+            else
+            {
+                $self->{booklist} = [];
+                $status = $self->element_xml($self->{booklist});
+            }
+            #
+            if ($status != SUCCESS)
+            {
+                $self->{booklist} = undef;
+                $self->{errors} += 1;
+                return FAIL;
+            }
+            #
+            return SUCCESS;
+        }
+        else
+        {
+            $self->{booklist} = undef;
+            $self->{errors} += 1;
+            $self->{logger}->log_err("NOT XML 1.0 DOC: <%s>\n", $token);
+            return FAIL;
+        }
     }
 }
 #
@@ -711,6 +761,8 @@ sub new_multi_search_booklist
     my $self = shift;
     my ($proot, $tag_name, $ptag_names, $ptag_value) = @_;
     #
+    $self->{logger}->log_err("Tag nameis %s.\n", $tag_name);
+    $self->{logger}->log_err("XML root buffer is %s.\n", $proot);
     if (defined($proot) && (ref($proot) eq "HASH"))
     {
         if (exists($proot->{$tag_name}))
@@ -775,6 +827,10 @@ sub new_multi_search_booklist
                 }
             }
         }
+    }
+    else
+    {
+        $self->{logger}->log_err("XML root buffer type id %s.\n", ref($proot));
     }
     #
     $$ptag_value = undef;
