@@ -192,10 +192,10 @@ my @aoi_p_table_cols =
 my @insert_aoi_p_table_cols =
 (
     "_sc",
-    "_pid".
+    "_pid",
     "_fc"
 );
-my @default_insert_aoi_p_table_values = 
+my %default_insert_aoi_p_table_values = 
 (
     "_sc" => '',
     "_pid" => '',
@@ -229,7 +229,7 @@ my @insert_aoi_cmp_table_cols =
     "_ref",
     "_type"
 );
-my @default_insert_aoi_cmp_table_values = 
+my %default_insert_aoi_cmp_table_values = 
 (
     "_cc" => '',
     "_ref" => '',
@@ -260,7 +260,7 @@ my @insert_aoi_defect_table_cols =
     "_insp_type",
     "_lead_id"
 );
-my @default_insert_aoi_defect_table_values =
+my %default_insert_aoi_defect_table_values =
 (
     "_insp_type" => '',
     "_lead_id" => ''
@@ -1354,13 +1354,12 @@ sub export_to_postgres
     #
     $plog->log_msg("Exporting data file to Postgres: %s\n", $prod_file);
     #
-    my $filename = basename($prod_file);
-    #
     # parse file name and get data.
     #
     my $tstamp = 0;
     my $ext = "";
     my @parts = undef;
+    my $filename = basename($prod_file);
     if (parse_filename($filename, \$ext, \$tstamp, \@parts) != SUCCESS)
     {
         $plog->log_err("Failed to parse filename: %s\n", 
@@ -1378,12 +1377,16 @@ sub export_to_postgres
         return FAIL;
     }
     #
+    # save any data associated with the file name.
+    #
     if (insert_ext_data($schema, $ext, $filename_id, \@parts) != SUCCESS)
     {
         $plog->log_err("Failed to insert filename extension <%s> data: %s ==>> %s\n", 
                        $ext, $filename, $filename_id);
         return FAIL;
     }
+    #
+    # debug dump ...
     #
     my $prod_name = basename($prod_file);
     $prod_name =~ tr/a-z/A-Z/;
@@ -1429,57 +1432,7 @@ sub export_to_postgres
     ## my @insert_aoi_defect_table_cols = ( "_insp_type",
     ##                                      "_lead_id" );
     #
-die("start here !!!");
-    join("','", @{$pprod_db}{@{insert_aoi_insp_table_cols}}) . 
-    %seen = ();
-    my @unique_cols_from_table = grep { ! $seen{$_}++ } @cols_from_table;
-    $plog->log_vmid("unique-cols-from-table %s\n", 
-                     join(";", @unique_cols_from_table));
-    #
-    # difference between file and table schema
-    #
-    my %counts = ();
-    #
-    foreach my $col (@unique_cols_from_file)
-    {
-        $counts{$col} = 1;
-    }
-    foreach my $col (@unique_cols_from_table)
-    {
-        if (exists($counts{$col}))
-        {
-            $counts{$col} += 2;
-        }
-        else
-        {
-            $counts{$col} = 2;
-        }
-    }
-    #
-    my @union = keys %counts;
-    #
-    my @intersection = ();
-    my @file_minus_table = ();
-    my @table_minus_file = ();
-    my @symmetric_diff = ();
-    #
-    foreach my $col (keys %counts)
-    {
-        if ($counts{$col} == 1)
-        {
-            push @file_minus_table, $col;
-            push @symmetric_diff, $col;
-        }
-        elsif ($counts{$col} == 2)
-        {
-            push @table_minus_file, $col;
-            push @symmetric_diff, $col;
-        }
-        else
-        {
-            push @intersection, $col;
-        }
-    }
+    # start inserting the data
     #
     my $p = 1;
     my $sql = "insert into ${schema}.${aoi_insp_table_name} ( " . 
@@ -1501,14 +1454,32 @@ die("start here !!!");
         return FAIL;
     }
     #
+    # check if there is any component data. usually the NG or failure
+    # cases have a list of components which failed inspection.
+    #
     if ((exists(($pprod_db->{_p}->{_cmp}))) &&
         (ref($pprod_db->{_p}->{_cmp}) eq "ARRAY"))
     {
+        #
+        # we have a failed inspection. init any missing
+        # fields so we have some sane values.
+        #
+        foreach my $col (@{insert_aoi_p_table_cols})
+        {
+            if ( ! exists($pprod_db->{_p}->{$col}))
+            {
+                $pprod_db->{_p}->{$col} = 
+                    $default_insert_aoi_p_table_values{$col};
+            }
+        }
+        #
+        # insert records and pointer to first component data.
+        #
         my $cmp = 1;
         $sql = "insert into ${schema}.${aoi_p_table_name} ( " . 
                join(",", @aoi_p_table_cols) . 
                " ) values ( $filename_id,$p,$cmp,'" . 
-               join("','", @{$pprod_db}{@{insert_aoi_p_table_cols}}) . 
+               join("','", @{$pprod_db->{_p}}{@{insert_aoi_p_table_cols}}) . 
                "' )";
         $plog->log_msg("SQL Insert: %s\n", $sql);
         #
@@ -1523,13 +1494,113 @@ die("start here !!!");
             $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
             return FAIL;
         }
+        #
+        # now handle list of failed components.
+        #
+        my $pcmps = $pprod_db->{_p}->{_cmp};
+        my $maxicmp = scalar(@{$pcmps});
+        for (my $icmp = 0; 
+                $icmp<$maxicmp; 
+                $icmp++, $cmp++)
+        {
+            $plog->log_msg("%02d: Component Dumper: %s\n", 
+                           $icmp, Dumper($pcmps->[$icmp]));
+            if ((exists(($pcmps->[$icmp]->{_defect}))) &&
+                (ref($pcmps->[$icmp]->{_defect}) eq "ARRAY"))
+            {
+                my $defect = 1;
+                #
+                $sql = "insert into ${schema}.${aoi_cmp_table_name} ( " . 
+                       join(",", @aoi_cmp_table_cols) . 
+                       " ) values ( $filename_id,$cmp,$defect,'" . 
+                       join("','", @{$pcmps->[$icmp]}{@{insert_aoi_cmp_table_cols}}) . 
+                       "' )";
+                $plog->log_msg("SQL Insert: %s\n", $sql);
+                #
+                my $sth = $dbh->prepare($sql);
+                if ( ! defined($sth))
+                {
+                    $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
+                    return FAIL;
+                }
+                if ( ! defined($sth->execute()))
+                {
+                    $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
+                    return FAIL;
+                }
+                #
+                my $pdefects = $pcmps->[$icmp]->{_defect};
+                my $maxidefects = scalar(@{$pdefects});
+                for (my $idefect = 0; 
+                        $idefect<$maxidefects; 
+                        $idefect++, $defect++)
+                {
+                    $plog->log_msg("%02d: Defect Dumper: %s\n", 
+                                   $idefect, Dumper($pdefects->[$idefect]));
+                    $sql = "insert into ${schema}.${aoi_defect_table_name} ( " . 
+                           join(",", @aoi_defect_table_cols) . 
+                           " ) values ( $filename_id,$defect,'" . 
+                           join("','", @{$pdefects->[$idefect]}{@{insert_aoi_defect_table_cols}}) . 
+                           "' )";
+                    $plog->log_msg("SQL Insert: %s\n", $sql);
+                    #
+                    my $sth = $dbh->prepare($sql);
+                    if ( ! defined($sth))
+                    {
+                        $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
+                        return FAIL;
+                    }
+                    if ( ! defined($sth->execute()))
+                    {
+                        $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
+                        return FAIL;
+                    }
+                }
+            }
+            else
+            {
+                $sql = "insert into ${schema}.${aoi_cmp_table_name} ( " . 
+                       join(",", @aoi_cmp_table_cols) . 
+                       " ) values ( $filename_id,$cmp,-1,'" . 
+                       join("','", @{$pcmps->[$icmp]}{@{insert_aoi_cmp_table_cols}}) . 
+                       "' )";
+                $plog->log_msg("SQL Insert: %s\n", $sql);
+                #
+                my $sth = $dbh->prepare($sql);
+                if ( ! defined($sth))
+                {
+                    $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
+                    return FAIL;
+                }
+                if ( ! defined($sth->execute()))
+                {
+                    $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
+                    return FAIL;
+                }
+            }
+        }
     }
     else
     {
+        #
+        # we have an OK inspection. init any missing
+        # fields so we have some sane values.
+        #
+        foreach my $col (@{insert_aoi_p_table_cols})
+        {
+            if ( ! exists($pprod_db->{_p}->{$col}))
+            {
+                $pprod_db->{_p}->{$col} = 
+                    $default_insert_aoi_p_table_values{$col};
+            }
+        }
+        #
+        # insert data and we have NO components list.
+        #
         $sql = "insert into ${schema}.${aoi_p_table_name} ( " . 
                join(",", @aoi_p_table_cols) . 
                " ) values ( $filename_id,$p,-1,'" . 
-               join("','", @{$pprod_db}{@{insert_aoi_p_table_cols}}) . 
+               join("','", @{$pprod_db->{_p}}{@{insert_aoi_p_table_cols}}) . 
                "' )";
         $plog->log_msg("SQL Insert: %s\n", $sql);
         #
