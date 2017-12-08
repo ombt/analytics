@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 ######################################################################
 #
-# process a maihime file, create a temp CSV file, and 
+# process an AOI XML file, create a temp CSV file, and 
 # import into PostgreSQL.
 #
 ######################################################################
@@ -25,6 +25,7 @@ use File::Path qw(mkpath);
 use File::Path 'rmtree';
 use Data::Dumper;
 use DBI;
+use DateTime;
 #
 # my mods
 #
@@ -34,7 +35,6 @@ use lib "$binpath/myutils";
 use myconstants;
 use mylogger;
 use myutils;
-use mymaihparser;
 #
 ######################################################################
 #
@@ -47,9 +47,6 @@ die "Unable to create logger: $!" unless (defined($plog));
 #
 my $putils = myutils->new($plog);
 die "Unable to create utils: $!" unless (defined($putils));
-#
-my $pmaih = mymaihparser->new($plog);
-die "Unable to create maih parser: $!" unless (defined($pmaih));
 #
 # cmd line options
 #
@@ -89,62 +86,196 @@ my %columns_in_tables = ();
 #
 # filename table data
 #
-my %special_field_types = (
-    "_filename_id" => "numeric(30,0)",
+my %special_field_types =
+(
+    "_filename_id"        => "numeric(30,0)",
     "_filename_timestamp" => "bigint",
+    "_p"                  => "integer",
+    "_cmp"                => "integer",
+    "_defect"             => "integer"
 );
 #
 my $fid_table_name = "filename_to_fid";
-my @fid_table_cols = ( "_filename", 
-                       "_filename_type",
-                       "_filename_timestamp",
-                       "_filename_route",
-                       "_filename_id" );
+my @fid_table_cols =
+(
+    "_filename", 
+    "_filename_type",
+    "_filename_timestamp",
+    "_filename_route",
+    "_filename_id"
+);
 my $fid_table_index1_name = "idx_filename_to_fid_1";
-my @fid_table_index1_cols = ( "_filename_id" );
+my @fid_table_index1_cols =
+(
+    "_filename_id"
+);
 #
 my $fid_table_index2_name = "idx_filename_to_fid_2";
-my @fid_table_index2_cols = ( "_filename_timestamp" );
+my @fid_table_index2_cols =
+(
+    "_filename_timestamp"
+);
 #
 my $fid_table_index3_name = "idx_filename_to_fid_3";
-my @fid_table_index3_cols = ( "_filename_id", "_filename_timestamp" );
+my @fid_table_index3_cols =
+(
+    "_filename_id",
+    "_filename_timestamp"
+);
 #
 my $fid_table_index4_name = "idx_filename_to_fid_4";
-my @fid_table_index4_cols = ( "_filename_timestamp", "_filename_id" );
+my @fid_table_index4_cols =
+(
+    "_filename_timestamp",
+    "_filename_id"
+);
 #
-my $u0x_table_name = "u0x_filename_data";
-my @u0x_table_cols = ( "_filename_id", 
-                       "_date",
-                       "_machine_order",
-                       "_stage_no",
-                       "_lane_no",
-                       "_pcb_serial",
-                       "_pcb_id",
-                       "_output_no",
-                       "_pcb_id_lot_no",
-                       "_pcb_id_serial_no" );
-my $u0x_table_index_name = "idx_u0x_filename_data";
-my @u0x_table_index_cols = ( "_filename_id" );
+my $aoi_table_name = "aoi_filename_data";
+my @aoi_table_cols =
+(
+    "_filename_id",
+    "_aoi_pcbid",
+    "_date_time"
+);
+my $aoi_table_index_name = "idx_aoi_filename_data";
+my @aoi_table_index_cols = 
+(
+    "_filename_id"
+);
 #
-my $crb_table_name = "crb_filename_data";
-my @crb_table_cols = ( "_filename_id", 
-                       "_history_id",
-                       "_time_stamp",
-                       "_crb_file_name",
-                       "_product_name" );
-my $crb_table_index_name = "idx_crb_filename_data";
-my @crb_table_index_cols = ( "_filename_id" );
+my $aoi_insp_table_name = "insp";
+my @aoi_insp_table_cols =
+(
+    "_filename_id", 
+    "_p",
+    "_cid",
+    "_timestamp",
+    "_crc",
+    "_c2d",
+    "_recipename",
+    "_mid"
+);
+my @insert_aoi_insp_table_cols =
+(
+    "_cid",
+    "_timestamp",
+    "_crc",
+    "_c2d",
+    "_recipename",
+    "_mid"
+);
+my %default_insert_aoi_insp_table_values =
+(
+    "_cid" => '',
+    "_timestamp" => '',
+    "_crc" => '',
+    "_c2d" => '',
+    "_recipename" => '',
+    "_mid" => ''
+);
+my $aoi_insp_table_index_name = "idx_insp_fid";
+my @aoi_insp_table_index_cols =
+(
+    "_filename_id"
+);
 #
-my $rst_table_name = "rst_filename_data";
-my @rst_table_cols = ( "_filename_id", 
-                       "_machine",
-                       "_lane",
-                       "_date_time",
-                       "_serial_number",
-                       "_inspection_result",
-                       "_board_removed" );
-my $rst_table_index_name = "idx_rst_filename_data";
-my @rst_table_index_cols = ( "_filename_id" );
+my $aoi_p_table_name = "p";
+my @aoi_p_table_cols =
+(
+    "_filename_id", 
+    "_p",
+    "_cmp",
+    "_sc",
+    "_pid",
+    "_fc"
+);
+my @insert_aoi_p_table_cols =
+(
+    "_sc",
+    "_pid".
+    "_fc"
+);
+my @default_insert_aoi_p_table_values = 
+(
+    "_sc" => '',
+    "_pid" => '',
+    "_fc" => ''
+);
+my $aoi_p_table_index_name = "idx_p_fid";
+my @aoi_p_table_index_cols =
+(
+    "_filename_id"
+);
+my $aoi_p_table_index2_name = "idx_p_fid_p";
+my @aoi_p_table_index2_cols =
+(
+    "_filename_id",
+    "_p"
+);
+#
+my $aoi_cmp_table_name = "cmp";
+my @aoi_cmp_table_cols =
+(
+    "_filename_id", 
+    "_cmp",
+    "_defect",
+    "_cc",
+    "_ref",
+    "_type"
+);
+my @insert_aoi_cmp_table_cols =
+(
+    "_cc",
+    "_ref",
+    "_type"
+);
+my @default_insert_aoi_cmp_table_values = 
+(
+    "_cc" => '',
+    "_ref" => '',
+    "_type" => ''
+);
+my $aoi_cmp_table_index_name = "idx_cmp_fid";
+my @aoi_cmp_table_index_cols =
+(
+    "_filename_id"
+);
+my $aoi_cmp_table_index2_name = "idx_cmp_fid_cmp";
+my @aoi_cmp_table_index2_cols =
+(
+    "_filename_id",
+    "_cmp"
+);
+#
+my $aoi_defect_table_name = "defect";
+my @aoi_defect_table_cols =
+(
+    "_filename_id",
+    "_defect",
+    "_insp_type",
+    "_lead_id"
+);
+my @insert_aoi_defect_table_cols =
+(
+    "_insp_type",
+    "_lead_id"
+);
+my @default_insert_aoi_defect_table_values =
+(
+    "_insp_type" => '',
+    "_lead_id" => ''
+);
+my $aoi_defect_table_index_name = "idx_defect_fid";
+my @aoi_defect_table_index_cols =
+(
+    "_filename_id"
+);
+my $aoi_defect_table_index2_name = "idx_defect_fid_cmp";
+my @aoi_defect_table_index2_cols =
+(
+    "_filename_id",
+    "_defect"
+);
 #
 ######################################################################
 #
@@ -165,7 +296,7 @@ usage: $arg0 [-?] [-h]  \\
         [-P port ] \\
         [-R route ] \\
         -D db_name -S schema_name [-X]
-        [maihime-file ...] or reads STDIN
+        [AOI-XML-file ...] or reads STDIN
 
 where:
 
@@ -686,6 +817,307 @@ sub close_db
 #
 ######################################################################
 #
+sub process_defect
+{
+    my ($aoi_file, 
+        $praw_data, 
+        $paoi_db, 
+        $maxi, 
+        $pi, 
+        $pcmpi, 
+        $pdefecti) = @_;
+    #
+    my $status = FAIL;
+    #
+    for ( ; $$pi<$maxi; )
+    {
+        my $line = $praw_data->[$$pi];
+        #
+        $line =~ s/^\s+//;
+        $line =~ s/\s+$//;
+        #
+        $plog->log_vmid("Line(%d): %s\n", ($$pi+1), $line);
+        #
+        if ($line =~ m/^<\/defect>$/i)
+        {
+            $$pi += 1;
+            $$pdefecti += 1;
+            $status = SUCCESS;
+            last;
+        }
+        elsif ($line =~ m/^<lead_id>(.*)<\/lead_id>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_p}->{_cmp}->[$$pcmpi]->{_defect}->[$$pdefecti]->{_lead_id} = $1;
+        }
+        elsif ($line =~ m/^<insp_type>(.*)<\/insp_type>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_p}->{_cmp}->[$$pcmpi]->{_defect}->[$$pdefecti]->{_insp_type} = $1;
+        }
+        else
+        {
+            $$pi += 1;
+        }
+    }
+    #
+    return $status;
+}
+#
+sub process_cmp
+{
+    my ($aoi_file, $praw_data, $paoi_db, $maxi, $pi, $pcmpi) = @_;
+    #
+    my $status = FAIL;
+    #
+    my $defecti = 0;
+    #
+    for ( ; $$pi<$maxi; )
+    {
+        my $line = $praw_data->[$$pi];
+        #
+        $line =~ s/^\s+//;
+        $line =~ s/\s+$//;
+        #
+        $plog->log_vmid("Line(%d): %s\n", ($$pi+1), $line);
+        #
+        if ($line =~ m/^<\/cmp>$/i)
+        {
+            $$pi += 1;
+            $$pcmpi += 1;
+            $status = SUCCESS;
+            last;
+        }
+        elsif ($line =~ m/^<type>(.*)<\/type>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_p}->{_cmp}->[$$pcmpi]->{_type} = $1;
+        }
+        elsif ($line =~ m/^<ref>(.*)<\/ref>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_p}->{_cmp}->[$$pcmpi]->{_ref} = $1;
+        }
+        elsif ($line =~ m/^<cc>(.*)<\/cc>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_p}->{_cmp}->[$$pcmpi]->{_cc} = $1;
+        }
+        elsif ($line =~ m/^<defect>$/i)
+        {
+            $$pi += 1;
+            #
+            $status = process_defect($aoi_file, 
+                                     $praw_data, 
+                                     $paoi_db, 
+                                     $maxi, 
+                                     $pi,
+                                     $pcmpi,
+                                    \$defecti);
+            if ($status != SUCCESS)
+            {
+                $plog->log_err("Processing DEFECT for %s failed.\n", 
+                               $aoi_file);
+                last;
+            }
+        }
+        else
+        {
+            $$pi += 1;
+        }
+    }
+    #
+    return $status;
+}
+#
+sub process_p
+{
+    my ($aoi_file, $praw_data, $paoi_db, $maxi, $pi) = @_;
+    #
+    my $status = FAIL;
+    #
+    my $cmpi = 0;
+    #
+    for ( ; $$pi<$maxi; )
+    {
+        my $line = $praw_data->[$$pi];
+        #
+        $line =~ s/^\s+//;
+        $line =~ s/\s+$//;
+        #
+        $plog->log_vmid("Line(%d): %s\n", ($$pi+1), $line);
+        #
+        if ($line =~ m/^<\/p>$/i)
+        {
+            $$pi += 1;
+            $status = SUCCESS;
+            last;
+        }
+        elsif ($line =~ m/^<fc>(.*)<\/fc>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_p}->{_fc} = $1;
+        }
+        elsif ($line =~ m/^<pid>(.*)<\/pid>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_p}->{_pid} = $1;
+        }
+        elsif ($line =~ m/^<sc>(.*)<\/sc>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_p}->{_sc} = $1;
+        }
+        elsif ($line =~ m/^<cmp>$/i)
+        {
+            $$pi += 1;
+            #
+            $status = process_cmp($aoi_file, 
+                                  $praw_data, 
+                                  $paoi_db, 
+                                  $maxi, 
+                                  $pi, 
+                                 \$cmpi);
+            if ($status != SUCCESS)
+            {
+                $plog->log_err("Processing CMP for %s failed.\n", 
+                               $aoi_file);
+                last;
+            }
+        }
+        else
+        {
+            $$pi += 1;
+        }
+    }
+    #
+    return $status;
+}
+#
+sub process_insp
+{
+    my ($aoi_file, $praw_data, $paoi_db, $maxi, $pi) = @_;
+    #
+    my $status = FAIL;
+    #
+    for ( ; $$pi<$maxi; )
+    {
+        my $line = $praw_data->[$$pi];
+        #
+        $line =~ s/^\s+//;
+        $line =~ s/\s+$//;
+        #
+        $plog->log_vmid("Line(%d): %s\n", ($$pi+1), $line);
+        #
+        if ($line =~ m/^<\/insp>$/i)
+        {
+            $$pi += 1;
+            $status = SUCCESS;
+            last;
+        }
+        elsif ($line =~ m/^<P>$/i)
+        {
+            $$pi += 1;
+            #
+            $status = process_p($aoi_file, 
+                                $praw_data, 
+                                $paoi_db, 
+                                $maxi, 
+                                $pi);
+            if ($status != SUCCESS)
+            {
+                $plog->log_err("Processing P for %s failed.\n", 
+                               $aoi_file);
+                last;
+            }
+        }
+        elsif ($line =~ m/^<recipename>(.*)<\/recipename>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_recipename} = $1;
+        }
+        elsif ($line =~ m/^<timestamp>(.*)<\/timestamp>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_timestamp} = $1;
+        }
+        elsif ($line =~ m/^<mid>(.*)<\/mid>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_mid} = $1;
+        }
+        elsif ($line =~ m/^<cid>(.*)<\/cid>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_cid} = $1;
+        }
+        elsif ($line =~ m/^<c2d>(.*)<\/c2d>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_c2d} = $1;
+        }
+        elsif ($line =~ m/^<pid>(.*)<\/pid>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_pid} = $1;
+        }
+        elsif ($line =~ m/^<crc>(.*)<\/crc>$/i)
+        {
+            $$pi += 1;
+            $paoi_db->{_crc} = $1;
+        }
+        else
+        {
+            $$pi += 1;
+        }
+    }
+    #
+    return $status;
+}
+#
+sub process_data
+{
+    my ($aoi_file, $praw_data, $paoi_db) = @_;
+    #
+    my $status = FAIL;
+    my $maxi = scalar(@{$praw_data});
+    #
+    for (my $i=0; $i<$maxi; )
+    {
+        my $line = $praw_data->[$i];
+        #
+        $line =~ s/^\s+//;
+        $line =~ s/\s+$//;
+        #
+        $plog->log_vmid("Line(%d): %s\n", ($i+1), $line);
+        #
+        if ($line =~ m/^<INSP>$/i)
+        {
+            $i += 1;
+            #
+            $status = process_insp($aoi_file, 
+                                   $praw_data, 
+                                   $paoi_db, 
+                                   $maxi, 
+                                  \$i);
+            if ($status != SUCCESS)
+            {
+                $plog->log_err("Processing INSP for %s failed.\n", 
+                               $aoi_file);
+                last;
+            }
+        }
+        else
+        {
+            $i += 1;
+        }
+    }
+    #
+    return $status;
+}
+#
+######################################################################
+#
 sub export_section_to_postgres
 {
     my ($fname_id, $pprod_db, $schema, $section) = @_;
@@ -808,14 +1240,10 @@ sub insert_ext_data
     $plog->log_vmid("Inserting %s, %s, %s, %s into filename data tables\n",
                     $schema, $ext, $fid, join(",", @{$pparts}));
     #
-    if (($ext =~ m/^u01$/i) ||
-        ($ext =~ m/^u03$/i) ||
-        ($ext =~ m/^mpr$/i))
+    if ($ext =~ m/^xml$/i) 
     {
-        my $idx = -1;
-        #
-        my $sql = "insert into ${schema}.${u0x_table_name} ( " . 
-                   join(",", @u0x_table_cols) . 
+        my $sql = "insert into ${schema}.${aoi_table_name} ( " . 
+                   join(",", @aoi_table_cols) . 
                   " ) values ( '$fid','" . 
                    join("','", @{$pparts}) . 
                   "' )";
@@ -831,53 +1259,93 @@ sub insert_ext_data
             $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
             return FAIL;
         }
+        #
+        return SUCCESS;
     }
-    elsif ($ext =~ m/^crb$/i) 
+    else
     {
-        my $idx = -1;
-        #
-        my $sql = "insert into ${schema}.${crb_table_name} ( " . 
-                   join(",", @crb_table_cols) . 
-                  " ) values ( '$fid','" . 
-                   join("','", @{$pparts}) . 
-                  "' )";
-        #
-        my $sth = $dbh->prepare($sql);
-        if ( ! defined($sth))
-        {
-            $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
-            return FAIL;
-        }
-        if ( ! defined($sth->execute()))
-        {
-            $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
-            return FAIL;
-        }
+        $plog->log_err("Unknown file extension: %s\n", $ext);
+        return FAIL;
     }
-    elsif ($ext =~ m/^rst$/i) 
+}
+#
+sub parse_with_ext
+{
+    my ($fname, $time_zone, $ext, $ptstamp, $pparts) = @_;
+    #
+    $plog->log_vmid("File Name (ext=%s): %s\n", $ext, $fname);
+    #
+    @{$pparts} = undef;
+    #
+    if ($ext =~ m/^xml$/i) 
     {
+        my @tokens = split /_/, $fname;
+        if (scalar(@tokens) < 2)
+        {
+            $plog->log_err("Incorrect number of file tokens for file: %s\n", $fname);
+            return FAIL;
+        }
+        #
+        my $date_time = pop @tokens;
+        my $pcbid = join("_", @tokens);
+        #
+        $date_time =~ m/^(....)(..)(..)(..)(..)(..).*$/;
+        #
+        my $dt = DateTime->new(
+            year => $1,
+            month => $2,
+            day => $3,
+            hour => $4,
+            minute => $5,
+            second => $6,
+            nanosecond => 0,
+            time_zone => $time_zone);
+        #
+        ${$ptstamp} = $dt->epoch();
+        #
+        $plog->log_vmid("PCBID: %s\ndate time: %s\n", $pcbid, $date_time);
+        #
         my $idx = -1;
         #
-        my $sql = "insert into ${schema}.${rst_table_name} ( " . 
-                   join(",", @rst_table_cols) . 
-                  " ) values ( '$fid','" . 
-                   join("','", @{$pparts}) . 
-                  "' )";
-        #
-        my $sth = $dbh->prepare($sql);
-        if ( ! defined($sth))
-        {
-            $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
-            return FAIL;
-        }
-        if ( ! defined($sth->execute()))
-        {
-            $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
-            return FAIL;
-        }
+        $pparts->[++$idx] = $pcbid;
+        $pparts->[++$idx] = $date_time;
+    }
+    else
+    {
+        $plog->log_err("Unknown ext %s for %s\n", $ext, $fname);
+        return FAIL;
     }
     #
     return SUCCESS;
+}
+#
+sub parse_filename
+{
+    my $fpath = shift;
+    my $pext = shift;
+    my $ptstamp = shift;
+    my $pparts = shift;
+    #
+    my $time_zone = "America/Chicago";
+    $time_zone = shift @_ if (@_);
+    #
+    $plog->log_vmid("Parsing File Path: %s\n", $fpath);
+    #
+    my $fname = basename($fpath);
+    #
+    if ($fname =~ m/\.([^\.]+)$/)
+    {
+        ${$pext} = ${1};
+        #
+        $fname =~ s/\.${$pext}$//;
+        #
+        return parse_with_ext($fname, $time_zone, ${$pext}, $ptstamp, $pparts);
+    }
+    else
+    {
+        $plog->log_err("No extension for file: %s\n", $fname);
+        return FAIL;
+    }
 }
 #
 sub export_to_postgres
@@ -893,7 +1361,7 @@ sub export_to_postgres
     my $tstamp = 0;
     my $ext = "";
     my @parts = undef;
-    if ($pmaih->parse_filename($filename, \$ext, \$tstamp, \@parts) != SUCCESS)
+    if (parse_filename($filename, \$ext, \$tstamp, \@parts) != SUCCESS)
     {
         $plog->log_err("Failed to parse filename: %s\n", 
                        $filename);
@@ -921,39 +1389,164 @@ sub export_to_postgres
     $prod_name =~ tr/a-z/A-Z/;
     #
     $plog->log_vmid("Schema, Product Name: %s, %s\n", $schema, $prod_name);
+    $plog->log_vmid("Dumper: %s\n", Dumper($pprod_db));
     #
-    my $status = FAIL;
+    ## my @aoi_insp_table_cols = ( "_filename_id", 
+    ##                             "_p",
+    ##                             "_cid",
+    ##                             "_timestamp",
+    ##                             "_crc",
+    ##                             "_c2d",
+    ##                             "_recipename",
+    ##                             "_mid" );
+    ## my @insert_aoi_insp_table_cols = ( "_cid",
+    ##                                    "_timestamp",
+    ##                                    "_crc",
+    ##                                    "_c2d",
+    ##                                    "_recipename",
+    ##                                    "_mid" );
+    ## my @aoi_p_table_cols = ( "_filename_id", 
+    ##                          "_p",
+    ##                          "_cmp",
+    ##                          "_sc",
+    ##                          "_fc" );
+    ## my @insert_aoi_p_table_cols = ( "_sc",
+    ##                                 "_fc" );
+    ## my @aoi_cmp_table_cols = ( "_filename_id", 
+    ##                            "_cmp",
+    ##                            "_defect",
+    ##                            "_cc",
+    ##                            "_ref",
+    ##                            "_type" );
+    ## my @insert_aoi_cmp_table_cols = ( "_cc",
+    ##                                   "_ref",
+    ##                                   "_type" );
+    ## my $aoi_defect_table_name = "defect";
+    ## my @aoi_defect_table_cols = ( "_filename_id", 
+    ##                               "_defect",
+    ##                               "_insp_type",
+    ##                               "_lead_id" );
+    ## my @insert_aoi_defect_table_cols = ( "_insp_type",
+    ##                                      "_lead_id" );
     #
-    my $max_isec = scalar(@{$pprod_db->{ORDER}});
-    for (my $isec = 0; $isec<$max_isec; ++$isec)
+die("start here !!!");
+    join("','", @{$pprod_db}{@{insert_aoi_insp_table_cols}}) . 
+    %seen = ();
+    my @unique_cols_from_table = grep { ! $seen{$_}++ } @cols_from_table;
+    $plog->log_vmid("unique-cols-from-table %s\n", 
+                     join(";", @unique_cols_from_table));
+    #
+    # difference between file and table schema
+    #
+    my %counts = ();
+    #
+    foreach my $col (@unique_cols_from_file)
     {
-        my $section = $pprod_db->{ORDER}->[$isec];
-        #
-        $plog->log_vmid("writing section: %s\n", $section);
-        #
-        if ($pprod_db->{TYPE}->{$section} == SECTION_NAME_VALUE)
+        $counts{$col} = 1;
+    }
+    foreach my $col (@unique_cols_from_table)
+    {
+        if (exists($counts{$col}))
         {
-            $plog->log_vmid("Name-Value Section: %s\n", $section);
-            $status = export_section_to_postgres($filename_id,
-                                                 $pprod_db,
-                                                 $schema,
-                                                 $section);
-        }
-        elsif ($pprod_db->{TYPE}->{$section} == SECTION_LIST)
-        {
-            $plog->log_vmid("List Section: %s\n", $section);
-            $status = export_section_to_postgres($filename_id,
-                                                 $pprod_db,
-                                                 $schema,
-                                                 $section);
+            $counts{$col} += 2;
         }
         else
         {
-            $plog->log_err("Unknown type Section: %s\n", $section);
+            $counts{$col} = 2;
         }
     }
     #
-    return $status;
+    my @union = keys %counts;
+    #
+    my @intersection = ();
+    my @file_minus_table = ();
+    my @table_minus_file = ();
+    my @symmetric_diff = ();
+    #
+    foreach my $col (keys %counts)
+    {
+        if ($counts{$col} == 1)
+        {
+            push @file_minus_table, $col;
+            push @symmetric_diff, $col;
+        }
+        elsif ($counts{$col} == 2)
+        {
+            push @table_minus_file, $col;
+            push @symmetric_diff, $col;
+        }
+        else
+        {
+            push @intersection, $col;
+        }
+    }
+    #
+    my $p = 1;
+    my $sql = "insert into ${schema}.${aoi_insp_table_name} ( " . 
+               join(",", @aoi_insp_table_cols) . 
+              " ) values ( $filename_id,$p,'" . 
+               join("','", @{$pprod_db}{@{insert_aoi_insp_table_cols}}) . 
+              "' )";
+    $plog->log_msg("SQL Insert: %s\n", $sql);
+    #
+    my $sth = $dbh->prepare($sql);
+    if ( ! defined($sth))
+    {
+        $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
+        return FAIL;
+    }
+    if ( ! defined($sth->execute()))
+    {
+        $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
+        return FAIL;
+    }
+    #
+    if ((exists(($pprod_db->{_p}->{_cmp}))) &&
+        (ref($pprod_db->{_p}->{_cmp}) eq "ARRAY"))
+    {
+        my $cmp = 1;
+        $sql = "insert into ${schema}.${aoi_p_table_name} ( " . 
+               join(",", @aoi_p_table_cols) . 
+               " ) values ( $filename_id,$p,$cmp,'" . 
+               join("','", @{$pprod_db}{@{insert_aoi_p_table_cols}}) . 
+               "' )";
+        $plog->log_msg("SQL Insert: %s\n", $sql);
+        #
+        my $sth = $dbh->prepare($sql);
+        if ( ! defined($sth))
+        {
+            $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
+            return FAIL;
+        }
+        if ( ! defined($sth->execute()))
+        {
+            $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
+            return FAIL;
+        }
+    }
+    else
+    {
+        $sql = "insert into ${schema}.${aoi_p_table_name} ( " . 
+               join(",", @aoi_p_table_cols) . 
+               " ) values ( $filename_id,$p,-1,'" . 
+               join("','", @{$pprod_db}{@{insert_aoi_p_table_cols}}) . 
+               "' )";
+        $plog->log_msg("SQL Insert: %s\n", $sql);
+        #
+        my $sth = $dbh->prepare($sql);
+        if ( ! defined($sth))
+        {
+            $plog->log_err("DB prepare failed: %s\n", $DBI::errstr);
+            return FAIL;
+        }
+        if ( ! defined($sth->execute()))
+        {
+            $plog->log_err("DB Execute failed: %s\n", $DBI::errstr);
+            return FAIL;
+        }
+    }
+    #
+    return SUCCESS;
 }
 #
 sub process_file
@@ -971,7 +1564,7 @@ sub process_file
     {
         $plog->log_err("Reading product file: %s\n", $prod_file);
     }
-    elsif ($pmaih->process_data($prod_file, \@raw_data, \%prod_db) != SUCCESS)
+    elsif (process_data($prod_file, \@raw_data, \%prod_db) != SUCCESS)
     {
         $plog->log_err("Processing product file: %s\n", $prod_file);
     }
@@ -1021,37 +1614,96 @@ sub make_tables
         }
     }
     #
-    if (make_table_and_index($schema, 
-                             $u0x_table_name, 
-                            \@u0x_table_cols,
-                             $u0x_table_index_name, 
-                            \@u0x_table_index_cols) != TRUE)
+    if (table_exists($schema_name, $aoi_table_name) != TRUE)
     {
-        $plog->log_err("Unable to create table or index for %s.%s\n", 
-                       $schema, $u0x_table_name);
-        return FAIL;
+        if ((create_table($schema, 
+                          $aoi_table_name, 
+                         \@aoi_table_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_table_name, 
+                                $aoi_table_index_name,
+                               \@aoi_table_index_cols) != TRUE))
+        {
+            $plog->log_err("Unable to create table or index for %s.%s\n", 
+                           $schema, $aoi_table_name);
+            return FAIL;
+        }
     }
     #
-    if (make_table_and_index($schema, 
-                             $crb_table_name, 
-                            \@crb_table_cols,
-                             $crb_table_index_name, 
-                            \@crb_table_index_cols) != TRUE)
+    if (table_exists($schema_name, $aoi_insp_table_name) != TRUE)
     {
-        $plog->log_err("Unable to create table or index for %s.%s\n", 
-                       $schema, $crb_table_name);
-        return FAIL;
+        if ((create_table($schema, 
+                          $aoi_insp_table_name, 
+                         \@aoi_insp_table_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_insp_table_name, 
+                                $aoi_insp_table_index_name,
+                               \@aoi_insp_table_index_cols) != TRUE))
+        {
+            $plog->log_err("Unable to create table or index for %s.%s\n", 
+                           $schema, $aoi_insp_table_name);
+            return FAIL;
+        }
     }
     #
-    if (make_table_and_index($schema, 
-                             $rst_table_name, 
-                            \@rst_table_cols,
-                             $rst_table_index_name, 
-                            \@rst_table_index_cols) != TRUE)
+    if (table_exists($schema_name, $aoi_p_table_name) != TRUE)
     {
-        $plog->log_err("Unable to create table or index for %s.%s\n", 
-                       $schema, $rst_table_name);
-        return FAIL;
+        if ((create_table($schema, 
+                          $aoi_p_table_name, 
+                         \@aoi_p_table_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_p_table_name, 
+                                $aoi_p_table_index_name,
+                               \@aoi_p_table_index_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_p_table_name, 
+                                $aoi_p_table_index2_name,
+                               \@aoi_p_table_index2_cols) != TRUE))
+        {
+            $plog->log_err("Unable to create table or index for %s.%s\n", 
+                           $schema, $aoi_p_table_name);
+            return FAIL;
+        }
+    }
+    #
+    if (table_exists($schema_name, $aoi_cmp_table_name) != TRUE)
+    {
+        if ((create_table($schema, 
+                          $aoi_cmp_table_name, 
+                         \@aoi_cmp_table_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_cmp_table_name, 
+                                $aoi_cmp_table_index_name,
+                               \@aoi_cmp_table_index_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_cmp_table_name, 
+                                $aoi_cmp_table_index2_name,
+                               \@aoi_cmp_table_index2_cols) != TRUE))
+        {
+            $plog->log_err("Unable to create table or index for %s.%s\n", 
+                           $schema, $aoi_cmp_table_name);
+            return FAIL;
+        }
+    }
+    #
+    if (table_exists($schema_name, $aoi_defect_table_name) != TRUE)
+    {
+        if ((create_table($schema, 
+                          $aoi_defect_table_name, 
+                         \@aoi_defect_table_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_defect_table_name, 
+                                $aoi_defect_table_index_name,
+                               \@aoi_defect_table_index_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_defect_table_name, 
+                                $aoi_defect_table_index2_name,
+                               \@aoi_defect_table_index2_cols) != TRUE))
+        {
+            $plog->log_err("Unable to create table or index for %s.%s\n", 
+                           $schema, $aoi_defect_table_name);
+            return FAIL;
+        }
     }
     #
     return SUCCESS;
