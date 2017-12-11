@@ -208,7 +208,7 @@ select
     i._mid,
     -- p._filename_id,
     p._p,
-    -- p._cmp,
+    p._cmp,
     p._sc,
     p._pid,
     p._fc
