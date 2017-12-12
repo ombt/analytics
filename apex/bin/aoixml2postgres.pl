@@ -147,7 +147,6 @@ my $aoi_insp_table_name = "insp";
 my @aoi_insp_table_cols =
 (
     "_filename_id", 
-    "_p",
     "_cid",
     "_timestamp",
     "_crc",
@@ -201,8 +200,8 @@ my %default_insert_aoi_p_table_values =
     "_pid" => '',
     "_fc" => ''
 );
-my $aoi_p_table_index_name = "idx_p_fid";
-my @aoi_p_table_index_cols =
+my $aoi_p_table_index1_name = "idx_p_fid";
+my @aoi_p_table_index1_cols =
 (
     "_filename_id"
 );
@@ -212,13 +211,26 @@ my @aoi_p_table_index2_cols =
     "_filename_id",
     "_p"
 );
+my $aoi_p_table_index3_name = "idx_p_fid_p_cmp";
+my @aoi_p_table_index3_cols =
+(
+    "_filename_id",
+    "_p",
+    "_cmp"
+);
+my $aoi_p_table_index4_name = "idx_p_fid_cmp";
+my @aoi_p_table_index4_cols =
+(
+    "_filename_id",
+    "_cmp"
+);
 #
 my $aoi_cmp_table_name = "cmp";
 my @aoi_cmp_table_cols =
 (
     "_filename_id", 
+    "_p",
     "_cmp",
-    "_defect",
     "_cc",
     "_ref",
     "_type"
@@ -235,8 +247,8 @@ my %default_insert_aoi_cmp_table_values =
     "_ref" => '',
     "_type" => ''
 );
-my $aoi_cmp_table_index_name = "idx_cmp_fid";
-my @aoi_cmp_table_index_cols =
+my $aoi_cmp_table_index1_name = "idx_cmp_fid";
+my @aoi_cmp_table_index1_cols =
 (
     "_filename_id"
 );
@@ -246,11 +258,25 @@ my @aoi_cmp_table_index2_cols =
     "_filename_id",
     "_cmp"
 );
+my $aoi_cmp_table_index3_name = "idx_cmp_fid_p";
+my @aoi_cmp_table_index3_cols =
+(
+    "_filename_id",
+    "_p"
+);
+my $aoi_cmp_table_index4_name = "idx_cmp_fid_p_cmp";
+my @aoi_cmp_table_index4_cols =
+(
+    "_filename_id",
+    "_p",
+    "_cmp"
+);
 #
 my $aoi_defect_table_name = "defect";
 my @aoi_defect_table_cols =
 (
     "_filename_id",
+    "_cmp",
     "_defect",
     "_insp_type",
     "_lead_id"
@@ -265,15 +291,28 @@ my %default_insert_aoi_defect_table_values =
     "_insp_type" => '',
     "_lead_id" => ''
 );
-my $aoi_defect_table_index_name = "idx_defect_fid";
-my @aoi_defect_table_index_cols =
+my $aoi_defect_table_index1_name = "idx_defect_fid";
+my @aoi_defect_table_index1_cols =
 (
     "_filename_id"
 );
-my $aoi_defect_table_index2_name = "idx_defect_fid_cmp";
+my $aoi_defect_table_index2_name = "idx_defect_fid_defect";
 my @aoi_defect_table_index2_cols =
 (
     "_filename_id",
+    "_defect"
+);
+my $aoi_defect_table_index3_name = "idx_defect_fid_cmp";
+my @aoi_defect_table_index3_cols =
+(
+    "_filename_id",
+    "_cmp"
+);
+my $aoi_defect_table_index4_name = "idx_defect_fid_cmp_defect";
+my @aoi_defect_table_index4_cols =
+(
+    "_filename_id",
+    "_cmp",
     "_defect"
 );
 #
@@ -1295,6 +1334,74 @@ sub export_to_postgres
         return FAIL;
     }
     #
+    # my $aoi_insp_table_name = "insp";
+    # my @aoi_insp_table_cols =
+    # (
+    #     "_filename_id", 
+    #     "_cid",
+    #     "_timestamp",
+    #     "_crc",
+    #     "_c2d",
+    #     "_recipename",
+    #     "_mid"
+    # );
+    # my @insert_aoi_insp_table_cols =
+    # (
+    #     "_cid",
+    #     "_timestamp",
+    #     "_crc",
+    #     "_c2d",
+    #     "_recipename",
+    #     "_mid"
+    # );
+    # my $aoi_p_table_name = "p";
+    # my @aoi_p_table_cols =
+    # (
+    #     "_filename_id", 
+    #     "_p",
+    #     "_sc",
+    #     "_pid",
+    #     "_fc"
+    # );
+    # my @insert_aoi_p_table_cols =
+    # (
+    #     "_sc",
+    #     "_pid",
+    #     "_fc"
+    # );
+    # #
+    # my $aoi_cmp_table_name = "cmp";
+    # my @aoi_cmp_table_cols =
+    # (
+    #     "_filename_id", 
+    #     "_p",
+    #     "_cmp",
+    #     "_cc",
+    #     "_ref",
+    #     "_type"
+    # );
+    # my @insert_aoi_cmp_table_cols =
+    # (
+    #     "_cc",
+    #     "_ref",
+    #     "_type"
+    # );
+    # #
+    # my $aoi_defect_table_name = "defect";
+    # my @aoi_defect_table_cols =
+    # (
+    #     "_filename_id",
+    #     "_cmp",
+    #     "_defect",
+    #     "_insp_type",
+    #     "_lead_id"
+    # );
+    # my @insert_aoi_defect_table_cols =
+    # (
+    #     "_insp_type",
+    #     "_lead_id"
+    # );
+    #
     # debug dump ...
     #
     my $prod_name = basename($prod_file);
@@ -1303,50 +1410,11 @@ sub export_to_postgres
     $plog->log_vmid("Schema, Product Name: %s, %s\n", $schema, $prod_name);
     $plog->log_vmid("Dumper: %s\n", Dumper($pprod_db));
     #
-    ## my @aoi_insp_table_cols = ( "_filename_id", 
-    ##                             "_p",
-    ##                             "_cid",
-    ##                             "_timestamp",
-    ##                             "_crc",
-    ##                             "_c2d",
-    ##                             "_recipename",
-    ##                             "_mid" );
-    ## my @insert_aoi_insp_table_cols = ( "_cid",
-    ##                                    "_timestamp",
-    ##                                    "_crc",
-    ##                                    "_c2d",
-    ##                                    "_recipename",
-    ##                                    "_mid" );
-    ## my @aoi_p_table_cols = ( "_filename_id", 
-    ##                          "_p",
-    ##                          "_cmp",
-    ##                          "_sc",
-    ##                          "_fc" );
-    ## my @insert_aoi_p_table_cols = ( "_sc",
-    ##                                 "_fc" );
-    ## my @aoi_cmp_table_cols = ( "_filename_id", 
-    ##                            "_cmp",
-    ##                            "_defect",
-    ##                            "_cc",
-    ##                            "_ref",
-    ##                            "_type" );
-    ## my @insert_aoi_cmp_table_cols = ( "_cc",
-    ##                                   "_ref",
-    ##                                   "_type" );
-    ## my $aoi_defect_table_name = "defect";
-    ## my @aoi_defect_table_cols = ( "_filename_id", 
-    ##                               "_defect",
-    ##                               "_insp_type",
-    ##                               "_lead_id" );
-    ## my @insert_aoi_defect_table_cols = ( "_insp_type",
-    ##                                      "_lead_id" );
-    #
     # start inserting the data
     #
-    my $p = 1;
     my $sql = "insert into ${schema}.${aoi_insp_table_name} ( " . 
                join(",", @aoi_insp_table_cols) . 
-              " ) values ( $filename_id,$p,'" . 
+              " ) values ( $filename_id,'" . 
                join("','", @{$pprod_db}{@{insert_aoi_insp_table_cols}}) . 
               "' )";
     $plog->log_msg("SQL Insert: %s\n", $sql);
@@ -1384,10 +1452,10 @@ sub export_to_postgres
         #
         # insert records and pointer to first component data.
         #
-        my $cmp = 1;
+        my $p = 1;
         $sql = "insert into ${schema}.${aoi_p_table_name} ( " . 
                join(",", @aoi_p_table_cols) . 
-               " ) values ( $filename_id,$p,$cmp,'" . 
+               " ) values ( $filename_id,$p,1,'" . 
                join("','", @{$pprod_db->{_p}}{@{insert_aoi_p_table_cols}}) . 
                "' )";
         $plog->log_msg("SQL Insert: %s\n", $sql);
@@ -1410,18 +1478,16 @@ sub export_to_postgres
         my $maxicmp = scalar(@{$pcmps});
         for (my $icmp = 0; 
                 $icmp<$maxicmp; 
-                $icmp++, $cmp++)
+                $icmp++)
         {
             $plog->log_msg("%02d: Component Dumper: %s\n", 
                            $icmp, Dumper($pcmps->[$icmp]));
             if ((exists(($pcmps->[$icmp]->{_defect}))) &&
                 (ref($pcmps->[$icmp]->{_defect}) eq "ARRAY"))
             {
-                my $defect = 1;
-                #
                 $sql = "insert into ${schema}.${aoi_cmp_table_name} ( " . 
                        join(",", @aoi_cmp_table_cols) . 
-                       " ) values ( $filename_id,$cmp,$defect,'" . 
+                       " ) values ( $filename_id,$p,$icmp,'" . 
                        join("','", @{$pcmps->[$icmp]}{@{insert_aoi_cmp_table_cols}}) . 
                        "' )";
                 $plog->log_msg("SQL Insert: %s\n", $sql);
@@ -1442,13 +1508,13 @@ sub export_to_postgres
                 my $maxidefects = scalar(@{$pdefects});
                 for (my $idefect = 0; 
                         $idefect<$maxidefects; 
-                        $idefect++, $defect++)
+                        $idefect++)
                 {
                     $plog->log_msg("%02d: Defect Dumper: %s\n", 
                                    $idefect, Dumper($pdefects->[$idefect]));
                     $sql = "insert into ${schema}.${aoi_defect_table_name} ( " . 
                            join(",", @aoi_defect_table_cols) . 
-                           " ) values ( $filename_id,$defect,'" . 
+                           " ) values ( $filename_id,$icmp,$idefect,'" . 
                            join("','", @{$pdefects->[$idefect]}{@{insert_aoi_defect_table_cols}}) . 
                            "' )";
                     $plog->log_msg("SQL Insert: %s\n", $sql);
@@ -1470,7 +1536,7 @@ sub export_to_postgres
             {
                 $sql = "insert into ${schema}.${aoi_cmp_table_name} ( " . 
                        join(",", @aoi_cmp_table_cols) . 
-                       " ) values ( $filename_id,$cmp,-1,'" . 
+                       " ) values ( $filename_id,$p,$icmp,'" . 
                        join("','", @{$pcmps->[$icmp]}{@{insert_aoi_cmp_table_cols}}) . 
                        "' )";
                 $plog->log_msg("SQL Insert: %s\n", $sql);
@@ -1506,6 +1572,7 @@ sub export_to_postgres
         #
         # insert data and we have NO components list.
         #
+        my $p = 1;
         $sql = "insert into ${schema}.${aoi_p_table_name} ( " . 
                join(",", @aoi_p_table_cols) . 
                " ) values ( $filename_id,$p,-1,'" . 
@@ -1633,12 +1700,20 @@ sub make_tables
                          \@aoi_p_table_cols) != TRUE) ||
             (create_table_index($schema, 
                                 $aoi_p_table_name, 
-                                $aoi_p_table_index_name,
-                               \@aoi_p_table_index_cols) != TRUE) ||
+                                $aoi_p_table_index1_name,
+                               \@aoi_p_table_index1_cols) != TRUE) ||
             (create_table_index($schema, 
                                 $aoi_p_table_name, 
                                 $aoi_p_table_index2_name,
-                               \@aoi_p_table_index2_cols) != TRUE))
+                               \@aoi_p_table_index2_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_p_table_name, 
+                                $aoi_p_table_index3_name,
+                               \@aoi_p_table_index3_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_p_table_name, 
+                                $aoi_p_table_index4_name,
+                               \@aoi_p_table_index4_cols) != TRUE))
         {
             $plog->log_err("Unable to create table or index for %s.%s\n", 
                            $schema, $aoi_p_table_name);
@@ -1653,12 +1728,20 @@ sub make_tables
                          \@aoi_cmp_table_cols) != TRUE) ||
             (create_table_index($schema, 
                                 $aoi_cmp_table_name, 
-                                $aoi_cmp_table_index_name,
-                               \@aoi_cmp_table_index_cols) != TRUE) ||
+                                $aoi_cmp_table_index1_name,
+                               \@aoi_cmp_table_index1_cols) != TRUE) ||
             (create_table_index($schema, 
                                 $aoi_cmp_table_name, 
                                 $aoi_cmp_table_index2_name,
-                               \@aoi_cmp_table_index2_cols) != TRUE))
+                               \@aoi_cmp_table_index2_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_cmp_table_name, 
+                                $aoi_cmp_table_index3_name,
+                               \@aoi_cmp_table_index3_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_cmp_table_name, 
+                                $aoi_cmp_table_index4_name,
+                               \@aoi_cmp_table_index4_cols) != TRUE))
         {
             $plog->log_err("Unable to create table or index for %s.%s\n", 
                            $schema, $aoi_cmp_table_name);
@@ -1673,12 +1756,20 @@ sub make_tables
                          \@aoi_defect_table_cols) != TRUE) ||
             (create_table_index($schema, 
                                 $aoi_defect_table_name, 
-                                $aoi_defect_table_index_name,
-                               \@aoi_defect_table_index_cols) != TRUE) ||
+                                $aoi_defect_table_index1_name,
+                               \@aoi_defect_table_index1_cols) != TRUE) ||
             (create_table_index($schema, 
                                 $aoi_defect_table_name, 
                                 $aoi_defect_table_index2_name,
-                               \@aoi_defect_table_index2_cols) != TRUE))
+                               \@aoi_defect_table_index2_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_defect_table_name, 
+                                $aoi_defect_table_index3_name,
+                               \@aoi_defect_table_index3_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $aoi_defect_table_name, 
+                                $aoi_defect_table_index4_name,
+                               \@aoi_defect_table_index4_cols) != TRUE))
         {
             $plog->log_err("Unable to create table or index for %s.%s\n", 
                            $schema, $aoi_defect_table_name);

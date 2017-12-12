@@ -57,7 +57,6 @@ select
     afd._aoi_pcbid,
     afd._date_time,
     -- i._filename_id,
-    -- i._p,
     i._cid,
     i._timestamp,
     i._crc,
@@ -66,17 +65,18 @@ select
     i._mid,
     -- p._filename_id,
     p._p,
-    -- p._cmp,
+    p._cmp as cmp_idx,
     p._sc,
     p._pid,
     p._fc,
     -- c._filename_id,
+    -- c._p,
     c._cmp,
-    -- c._defect,
     c._cc,
     c._ref,
     c._type,
     -- d._filename_id,
+    -- d._cmp,
     d._defect,
     d._insp_type,
     d._lead_id
@@ -94,24 +94,18 @@ inner join
     aoi.p p
 on
     p._filename_id = ftf._filename_id
-and
-    p._p = i._p
 left join
     aoi.cmp c
 on
     c._filename_id = ftf._filename_id
 and
-    p._cmp > 0
-and
-    c._cmp = p._cmp
+    c._p = p._p
 left join
     aoi.defect d
 on
     d._filename_id = ftf._filename_id
 and
-    c._defect > 0
-and
-    d._defect = c._defect
+    d._cmp = c._cmp
 order by
     ftf._filename_timestamp asc
 ;
@@ -128,7 +122,6 @@ select
     afd._aoi_pcbid,
     afd._date_time,
     -- i._filename_id,
-    -- i._p,
     i._cid,
     i._timestamp,
     i._crc,
@@ -137,17 +130,17 @@ select
     i._mid,
     -- p._filename_id,
     p._p,
-    -- p._cmp,
+    p._cmp as cmp_idx,
     p._sc,
     p._pid,
     p._fc,
     -- c._filename_id,
+    -- c._p,
     c._cmp,
-    -- c._defect,
     c._cc,
     c._ref,
-    c._type,
     -- d._filename_id,
+    -- d._cmp,
     d._defect,
     d._insp_type,
     d._lead_id
@@ -166,23 +159,19 @@ inner join
 on
     p._filename_id = ftf._filename_id
 and
-    p._p = i._p
+    p._cmp > 0
 inner join
     aoi.cmp c
 on
     c._filename_id = ftf._filename_id
 and
-    p._cmp > 0
-and
-    c._cmp = p._cmp
+    c._p = p._p
 inner join
     aoi.defect d
 on
     d._filename_id = ftf._filename_id
 and
-    c._defect > 0
-and
-    d._defect = c._defect
+    d._cmp = c._cmp
 order by
     ftf._filename_timestamp asc
 ;
@@ -199,7 +188,6 @@ select
     afd._aoi_pcbid,
     afd._date_time,
     -- i._filename_id,
-    -- i._p,
     i._cid,
     i._timestamp,
     i._crc,
@@ -208,7 +196,7 @@ select
     i._mid,
     -- p._filename_id,
     p._p,
-    p._cmp,
+    p._cmp as cmp_idx,
     p._sc,
     p._pid,
     p._fc
@@ -227,9 +215,7 @@ inner join
 on
     p._filename_id = ftf._filename_id
 and
-    p._p = i._p
-and
-    p._cmp <= 0
+    p._cmp < 0
 order by
     ftf._filename_timestamp asc
 ;
