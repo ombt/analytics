@@ -115,6 +115,11 @@ sub load_name_value
         @{$pprod_db->{COLUMN_NAMES}->{$section}};
     unshift @{$pprod_db->{COLUMN_NAMES_WITH_FID}->{$section}}, '_filename_id';
     #
+    @{$pprod_db->{COLUMN_NAMES_WITH_FID_AND_LOT}->{$section}} = 
+        @{$pprod_db->{COLUMN_NAMES}->{$section}};
+    unshift @{$pprod_db->{COLUMN_NAMES_WITH_FID_AND_LOT}->{$section}}, '_lot_number';
+    unshift @{$pprod_db->{COLUMN_NAMES_WITH_FID_AND_LOT}->{$section}}, '_filename_id';
+    #
     my $number_columns = scalar(@{$pprod_db->{COLUMN_NAMES}->{$section}});
     #
     $self->{logger}->log_vmid("Number of Columns: %d\n", $number_columns);
@@ -281,6 +286,10 @@ sub load_list
     @{$pprod_db->{COLUMN_NAMES_WITH_FID}->{$section}} = 
         @{$pprod_db->{COLUMN_NAMES}->{$section}};
     unshift @{$pprod_db->{COLUMN_NAMES_WITH_FID}->{$section}}, '_filename_id';
+    @{$pprod_db->{COLUMN_NAMES_WITH_FID_AND_LOT}->{$section}} = 
+        @{$pprod_db->{COLUMN_NAMES}->{$section}};
+    unshift @{$pprod_db->{COLUMN_NAMES_WITH_FID_AND_LOT}->{$section}}, '_lot_number';
+    unshift @{$pprod_db->{COLUMN_NAMES_WITH_FID_AND_LOT}->{$section}}, '_filename_id';
     #
     my $number_columns = scalar(@{$pprod_db->{COLUMN_NAMES}->{$section}});
     #

@@ -65,6 +65,7 @@ my $user_name = "cim";
 my $password = undef;
 my $port = 5432;
 my $route_name = "none";
+my $combine_lot_files = FALSE;
 #
 my $temp_path = "PSQL.CSV.$$";
 #
@@ -92,6 +93,7 @@ my %columns_in_tables = ();
 my %special_field_types = (
     "_filename_id" => "numeric(30,0)",
     "_filename_timestamp" => "bigint",
+    "_lot_number" => "integer",
 );
 #
 my $fid_table_name = "filename_to_fid";
@@ -163,7 +165,7 @@ usage: $arg0 [-?] [-h]  \\
         [-d row delimiter] \\
         [-u user name] [-p passwd] \\
         [-P port ] \\
-        [-R route ] \\
+        [-R route ] [-L] \\
         -D db_name -S schema_name [-X]
         [maihime-file ...] or reads STDIN
 
@@ -181,6 +183,8 @@ where:
     -p passwd - PostgresQL user password
     -P port - PostgreSQL port (default = 5432)
     -R route - route name (default=none)
+    -L - combine separate LOT files into one file keyed by LOT. 
+         default is off.
     -D db_name - name of PostgreSQL database (site name)
     -S schema_name - name of PostgreSQL schema (file type)
     -X - DO NOT EXPORT to PostgreSQL and KEEP CSV file.
@@ -690,10 +694,23 @@ sub export_section_to_postgres
 {
     my ($fname_id, $pprod_db, $schema, $section) = @_;
     #
+    my $combine_lot_file = FALSE;
+    $combine_lot_file = TRUE if (($section =~ m/<([0-9]+)>/) &&
+                                 ($combine_lot_files == TRUE));
+    #
+    my $lotno = -1;
     my $table = $section;
     $table =~ tr/A-Z/a-z/;
     $table =~ s/[\[\]]//g;
-    $table =~ s/<([0-9]+)>/_$1/g;
+    if ($combine_lot_file == TRUE)
+    {
+        $table =~ s/<([0-9]+)>//g;
+        $lotno = $1;
+    }
+    else
+    {
+        $table =~ s/<([0-9]+)>/_$1/g;
+    }
     #
     $plog->log_vmid("Export section %s to schema.table %s.%s\n", 
                    $section, $schema, $table);
@@ -702,6 +719,9 @@ sub export_section_to_postgres
     #
     my $pcols_wo_fid = $pprod_db->{COLUMN_NAMES}->{$section};
     my $pcols_w_fid = $pprod_db->{COLUMN_NAMES_WITH_FID}->{$section};
+    $pcols_w_fid = $pprod_db->{COLUMN_NAMES_WITH_FID_AND_LOT}->{$section} if ($combine_lot_file == TRUE);
+    $plog->log_vmid("COLS-WITH-FID: %s\n", join(",", @{$pcols_w_fid}));
+    #
     if (check_table_and_index($pcols_w_fid, $schema, $table) != SUCCESS)
     {
         $plog->log_err("Check table and index failed: section %s, schema.table %s.%s\n", $section, $schema, $table);
@@ -749,6 +769,7 @@ sub export_section_to_postgres
         foreach my $prow (@{$pprod_db->{DATA}->{$section}})
         {
             my $local_delimiter = "${fname_id}${delimiter}";
+            $local_delimiter = "${fname_id}${delimiter}${lotno}${delimiter}" if ($combine_lot_file == TRUE);
             foreach my $col (@{$pcols_wo_fid})
             {
                 printf $outfh "%s%s", $local_delimiter, $prow->{$col};
@@ -1079,6 +1100,7 @@ $alwd_opts .= 'u:'; # -u user name - PostgresQL user name
 $alwd_opts .= 'p:'; # -p passwd - PostgresQL user password
 $alwd_opts .= 'P:'; # -P port - PostgreSQL port (default = 5432)
 $alwd_opts .= 'R:'; # -R route - route name (default=none)
+$alwd_opts .= 'L';  # -L - combine separate LOT tables into one table keyed by LOT. 
 $alwd_opts .= 'D:'; # -D db_name - name of PostgreSQL database (site name)
 $alwd_opts .= 'S:'; # -S schema_name - name of PostgreSQL schema (file type)
 $alwd_opts .= 'X';  # -X - DO NOT EXPORT to PostgreSQL and KEEP CSV file.
@@ -1160,6 +1182,10 @@ foreach my $opt (%opts)
     elsif ($opt eq 'R')
     {
         $route_name = $opts{$opt};
+    }
+    elsif ($opt eq 'L')
+    {
+        $combine_lot_files = TRUE;
     }
 }
 #
