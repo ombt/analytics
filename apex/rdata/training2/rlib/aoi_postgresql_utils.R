@@ -7,167 +7,258 @@ pg_aoi_load_all_query <- function()
 view_format="select %s from aoi.all_view",
 query="
 select
-    ftf._filename_route,
-    rfd._machine,
-    rfd._lane,
-    ftf._filename_timestamp,
     ftf._filename,
     ftf._filename_type,
+    ftf._filename_timestamp,
+    ftf._filename_route,
     ftf._filename_id,
-    rfd._filename_id,
-    rfd._date_time,
-    rfd._serial_number,
-    rfd._inspection_result,
-    rfd._board_removed,
-    pi._filename_id,
-    pi._pcbid,
-    pli._filename_id,
-    pli._comment1,
-    pli._comment2,
-    pli._comment3,
-    pli._lot,
-    pli._modelid,
-    pli._productdata,
-    pli._side
+    -- afd._filename_id,
+    afd._aoi_pcbid,
+    afd._date_time,
+    -- i._filename_id,
+    i._cid,
+    i._timestamp,
+    i._crc,
+    i._c2d,
+    i._recipename,
+    i._mid,
+    -- p._filename_id,
+    p._p,
+    p._cmp as cmp_idx,
+    p._sc,
+    p._pid,
+    p._fc,
+    -- c._filename_id,
+    -- c._p,
+    c._cmp,
+    c._cc,
+    c._ref,
+    c._type,
+    -- d._filename_id,
+    -- d._cmp,
+    d._defect,
+    d._insp_type,
+    d._lead_id
 from
     aoi.filename_to_fid ftf
 inner join
-    aoi.rst_filename_data rfd
+    aoi.aoi_filename_data afd
 on
-    rfd._filename_id = ftf._filename_id
+    afd._filename_id = ftf._filename_id
 inner join
-    aoi.pivot_information pi
+    aoi.insp i
 on
-    pi._filename_id = ftf._filename_id
+    i._filename_id = ftf._filename_id
 inner join
-    aoi.pivot_lotinformation pli
+    aoi.p p
 on
-    pli._filename_id = ftf._filename_id",
+    p._filename_id = ftf._filename_id
+left join
+    aoi.cmp c
+on
+    c._filename_id = ftf._filename_id
+and
+    c._p = p._p
+left join
+    aoi.defect d
+on
+    d._filename_id = ftf._filename_id
+and
+    d._cmp = c._cmp",
 from="
 from
     aoi.filename_to_fid ftf
 inner join
-    aoi.rst_filename_data rfd
+    aoi.aoi_filename_data afd
 on
-    rfd._filename_id = ftf._filename_id
+    afd._filename_id = ftf._filename_id
 inner join
-    aoi.pivot_information pi
+    aoi.insp i
 on
-    pi._filename_id = ftf._filename_id
+    i._filename_id = ftf._filename_id
 inner join
-    aoi.pivot_lotinformation pli
+    aoi.p p
 on
-    pli._filename_id = ftf._filename_id",
+    p._filename_id = ftf._filename_id
+left join
+    aoi.cmp c
+on
+    c._filename_id = ftf._filename_id
+and
+    c._p = p._p
+left join
+    aoi.defect d
+on
+    d._filename_id = ftf._filename_id
+and
+    d._cmp = c._cmp",
 order_by="
 order by
-    ftf._filename_route,
-    rfd._machine,
-    rfd._lane,
-    ftf._filename_timestamp"));
+    ftf._filename_timestamp asc"));
 }
 #
-pg_aoi_load_information_query <- function()
+pg_aoi_load_no_good_query <- function()
 {
     return(list(
-view_format="select %s from aoi.information_view",
+view_format="select %s from aoi.no_good_view",
 query="
 select
-    ftf._filename_route,
-    rfd._machine,
-    rfd._lane,
-    ftf._filename_timestamp,
     ftf._filename,
     ftf._filename_type,
+    ftf._filename_timestamp,
+    ftf._filename_route,
     ftf._filename_id,
-    rfd._filename_id,
-    rfd._date_time,
-    rfd._serial_number,
-    rfd._inspection_result,
-    rfd._board_removed,
-    pi._filename_id,
-    pi._pcbid
+    -- afd._filename_id,
+    afd._aoi_pcbid,
+    afd._date_time,
+    -- i._filename_id,
+    i._cid,
+    i._timestamp,
+    i._crc,
+    i._c2d,
+    i._recipename,
+    i._mid,
+    -- p._filename_id,
+    p._p,
+    p._cmp as cmp_idx,
+    p._sc,
+    p._pid,
+    p._fc,
+    -- c._filename_id,
+    -- c._p,
+    c._cmp,
+    c._cc,
+    c._ref,
+    -- d._filename_id,
+    -- d._cmp,
+    d._defect,
+    d._insp_type,
+    d._lead_id
 from
     aoi.filename_to_fid ftf
 inner join
-    aoi.rst_filename_data rfd
+    aoi.aoi_filename_data afd
 on
-    rfd._filename_id = ftf._filename_id
+    afd._filename_id = ftf._filename_id
 inner join
-    aoi.pivot_information pi
+    aoi.insp i
 on
-    pi._filename_id = ftf._filename_id",
+    i._filename_id = ftf._filename_id
+inner join
+    aoi.p p
+on
+    p._filename_id = ftf._filename_id
+and
+    p._cmp > 0
+inner join
+    aoi.cmp c
+on
+    c._filename_id = ftf._filename_id
+and
+    c._p = p._p
+inner join
+    aoi.defect d
+on
+    d._filename_id = ftf._filename_id
+and
+    d._cmp = c._cmp",
 from="
 from
     aoi.filename_to_fid ftf
 inner join
-    aoi.rst_filename_data rfd
+    aoi.aoi_filename_data afd
 on
-    rfd._filename_id = ftf._filename_id
+    afd._filename_id = ftf._filename_id
 inner join
-    aoi.pivot_information pi
+    aoi.insp i
 on
-    pi._filename_id = ftf._filename_id",
+    i._filename_id = ftf._filename_id
+inner join
+    aoi.p p
+on
+    p._filename_id = ftf._filename_id
+and
+    p._cmp > 0
+inner join
+    aoi.cmp c
+on
+    c._filename_id = ftf._filename_id
+and
+    c._p = p._p
+inner join
+    aoi.defect d
+on
+    d._filename_id = ftf._filename_id
+and
+    d._cmp = c._cmp",
 order_by="
 order by
-    ftf._filename_route,
-    rfd._machine,
-    rfd._lane,
-    ftf._filename_timestamp"));
+    ftf._filename_timestamp asc"));
 }
-
-pg_aoi_load_lotinformation_query <- function()
+#
+pg_aoi_load_good_query <- function()
 {
     return(list(
-view_format="select %s from aoi.lotinformation_view",
+view_format="select %s from aoi.good_view",
 query="
 select
-    ftf._filename_route,
-    rfd._machine,
-    rfd._lane,
-    ftf._filename_timestamp,
     ftf._filename,
     ftf._filename_type,
+    ftf._filename_timestamp,
+    ftf._filename_route,
     ftf._filename_id,
-    rfd._filename_id,
-    rfd._date_time,
-    rfd._serial_number,
-    rfd._inspection_result,
-    rfd._board_removed,
-    pli._filename_id,
-    pli._comment1,
-    pli._comment2,
-    pli._comment3,
-    pli._lot,
-    pli._modelid,
-    pli._productdata,
-    pli._side
+    -- afd._filename_id,
+    afd._aoi_pcbid,
+    afd._date_time,
+    -- i._filename_id,
+    i._cid,
+    i._timestamp,
+    i._crc,
+    i._c2d,
+    i._recipename,
+    i._mid,
+    -- p._filename_id,
+    p._p,
+    p._cmp as cmp_idx,
+    p._sc,
+    p._pid,
+    p._fc
 from
     aoi.filename_to_fid ftf
 inner join
-    aoi.rst_filename_data rfd
+    aoi.aoi_filename_data afd
 on
-    rfd._filename_id = ftf._filename_id
+    afd._filename_id = ftf._filename_id
 inner join
-    aoi.pivot_lotinformation pli
+    aoi.insp i
 on
-    pli._filename_id = ftf._filename_id",
+    i._filename_id = ftf._filename_id
+inner join
+    aoi.p p
+on
+    p._filename_id = ftf._filename_id
+and
+    p._cmp < 0",
 from="
 from
     aoi.filename_to_fid ftf
 inner join
-    aoi.rst_filename_data rfd
+    aoi.aoi_filename_data afd
 on
-    rfd._filename_id = ftf._filename_id
+    afd._filename_id = ftf._filename_id
 inner join
-    aoi.pivot_lotinformation pli
+    aoi.insp i
 on
-    pli._filename_id = ftf._filename_id",
+    i._filename_id = ftf._filename_id
+inner join
+    aoi.p p
+on
+    p._filename_id = ftf._filename_id
+and
+    p._cmp < 0",
 order_by="
 order by
-    ftf._filename_route,
-    rfd._machine,
-    rfd._lane,
-    ftf._filename_timestamp"));
+    ftf._filename_timestamp asc"));
 }
 #
 # load all data functions
@@ -179,17 +270,17 @@ pg_aoi_load_all <- function(db, nrows=0)
     return(pg_exec_query_return_matrix(db, query))
 }
 #
-pg_aoi_load_information <- function(db, nrows=0)
+pg_aoi_load_no_good <- function(db, nrows=0)
 {
-    query = paste(pg_aoi_load_information_query()$query,
-                  pg_aoi_load_information_query()$order_by)
+    query = paste(pg_aoi_load_no_good_query()$query,
+                  pg_aoi_load_no_good_query()$order_by)
     return(pg_exec_query_return_matrix(db, query))
 }
 #
-pg_aoi_load_lotinformation <- function(db, nrows=0)
+pg_aoi_load_good <- function(db, nrows=0)
 {
-    query = paste(pg_aoi_load_lotinformation_query()$query,
-                  pg_aoi_load_lotinformation_query()$order_by)
+    query = paste(pg_aoi_load_good_query()$query,
+                  pg_aoi_load_good_query()$order_by)
     return(pg_exec_query_return_matrix(db, query))
 }
 #
@@ -198,18 +289,12 @@ pg_aoi_load_lotinformation <- function(db, nrows=0)
 pg_aoi_load_data <- function(db,
                       data_type,
                       routes = c(),
-                      machines = c(),
-                      lanes = c(),
                       times = c(),
                       barcodes = c(),
                       not_routes = c(),
-                      not_machines = c(),
-                      not_lanes = c(),
                       not_times = c(),
                       not_barcodes = c(),
                       range_routes = c(),
-                      range_machines = c(),
-                      range_lanes = c(),
                       range_times = c(),
                       range_barcodes = c(),
                       matrix_return = FALSE,
@@ -229,16 +314,6 @@ pg_aoi_load_data <- function(db,
     where_clause = 
         sql_add_to_clause("AND",
                       where_clause,
-                      sql_generate_in_clause("rfd._machine", 
-                                         machines));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_in_clause("rfd._lane", 
-                                         lanes));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
                       sql_generate_in_clause("ftf._filename_timestamp", 
                                          times));
     #
@@ -249,18 +324,6 @@ pg_aoi_load_data <- function(db,
                       where_clause,
                       sql_generate_in_clause("ftf._filename_route", 
                                          not_routes, 
-                                         equal_to=FALSE));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_in_clause("rfd._machine", 
-                                         not_machines, 
-                                         equal_to=FALSE));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_in_clause("rfd._lane", 
-                                         not_lanes, 
                                          equal_to=FALSE));
     where_clause = 
         sql_add_to_clause("AND",
@@ -279,16 +342,6 @@ pg_aoi_load_data <- function(db,
     where_clause = 
         sql_add_to_clause("AND",
                       where_clause,
-                      sql_generate_range_clause("rfd._machine", 
-                                             range_machines));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_range_clause("rfd._lane", 
-                                             range_lanes));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
                       sql_generate_range_clause("ftf._filename_timestamp", 
                                              range_times));
     #
@@ -299,45 +352,61 @@ pg_aoi_load_data <- function(db,
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("pi._pcbid", 
+                          sql_generate_in_clause("i._c2d", 
                                                  barcodes));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("pi._pcbid", 
+                          sql_generate_in_clause("i._c2d", 
                                                  not_barcodes, 
                                                  equal_to=FALSE));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_range_clause("pi._pcbid", 
+                          sql_generate_range_clause("i._c2d", 
                                                      range_barcodes))
     }
-    else if (data_type == "information")
+    else if (data_type == "no_good")
     {
-        select_query = pg_aoi_load_information_query()$query
-        order_by_clause = pg_aoi_load_information_query()$order_by
+        select_query = pg_aoi_load_no_good_query()$query
+        order_by_clause = pg_aoi_load_no_good_query()$order_by
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("pi._pcbid", 
+                          sql_generate_in_clause("i._c2d", 
                                                  barcodes));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("pi._pcbid", 
+                          sql_generate_in_clause("i._c2d", 
                                                  not_barcodes, 
                                                  equal_to=FALSE));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_range_clause("pi._pcbid", 
-                                                     range_barcodes));
+                          sql_generate_range_clause("i._c2d", 
+                                                     range_barcodes))
     }
-    else if (data_type == "lotinformation")
+    else if (data_type == "good")
     {
-        select_query = pg_aoi_load_lotinformation_query()$query
-        order_by_clause = pg_aoi_load_lotinformation_query()$order_by
+        select_query = pg_aoi_load_good_query()$query
+        order_by_clause = pg_aoi_load_good_query()$order_by
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("i._c2d", 
+                                                 barcodes));
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("i._c2d", 
+                                                 not_barcodes, 
+                                                 equal_to=FALSE));
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_range_clause("i._c2d", 
+                                                     range_barcodes))
     }
     else
     {
@@ -370,18 +439,12 @@ pg_aoi_get_operation_value <- function(db,
                                 data_type,
                                 operation,
                                 routes = c(),
-                                machines = c(),
-                                lanes = c(),
                                 times = c(),
                                 barcodes = c(),
                                 not_routes = c(),
-                                not_machines = c(),
-                                not_lanes = c(),
                                 not_times = c(),
                                 not_barcodes = c(),
                                 range_routes = c(),
-                                range_machines = c(),
-                                range_lanes = c(),
                                 range_times = c(),
                                 range_barcodes = c(),
                                 matrix_return = FALSE,
@@ -400,16 +463,6 @@ pg_aoi_get_operation_value <- function(db,
     where_clause = 
         sql_add_to_clause("AND",
                       where_clause,
-                      sql_generate_in_clause("rfd._machine", 
-                                         machines));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_in_clause("rfd._lane", 
-                                         lanes));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
                       sql_generate_in_clause("ftf._filename_timestamp", 
                                          times));
     #
@@ -420,18 +473,6 @@ pg_aoi_get_operation_value <- function(db,
                       where_clause,
                       sql_generate_in_clause("ftf._filename_route", 
                                          not_routes, 
-                                         equal_to=FALSE));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_in_clause("rfd._machine", 
-                                         not_machines, 
-                                         equal_to=FALSE));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_in_clause("rfd._lane", 
-                                         not_lanes, 
                                          equal_to=FALSE));
     where_clause = 
         sql_add_to_clause("AND",
@@ -450,16 +491,6 @@ pg_aoi_get_operation_value <- function(db,
     where_clause = 
         sql_add_to_clause("AND",
                       where_clause,
-                      sql_generate_range_clause("rfd._machine", 
-                                             range_machines));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_range_clause("rfd._lane", 
-                                             range_lanes));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
                       sql_generate_range_clause("ftf._filename_timestamp", 
                                              range_times));
     #
@@ -470,44 +501,61 @@ pg_aoi_get_operation_value <- function(db,
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("pi._pcbid", 
+                          sql_generate_in_clause("i._c2d", 
                                                  barcodes));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("pi._pcbid", 
+                          sql_generate_in_clause("i._c2d", 
                                                  not_barcodes, 
                                                  equal_to=FALSE));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_range_clause("pi._pcbid", 
+                          sql_generate_range_clause("i._c2d", 
                                                      range_barcodes));
     }
-    else if (data_type == "information")
+    else if (data_type == "no_good")
     {
-        from_clause = pg_aoi_load_information_query()$from
+        from_clause = pg_aoi_load_no_good_query()$from
         #
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("pi._pcbid", 
+                          sql_generate_in_clause("i._c2d", 
                                                  barcodes));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("pi._pcbid", 
+                          sql_generate_in_clause("i._c2d", 
                                                  not_barcodes, 
                                                  equal_to=FALSE));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_range_clause("pi._pcbid", 
+                          sql_generate_range_clause("i._c2d", 
                                                      range_barcodes));
     }
-    else if (data_type == "lotinformation")
+    else if (data_type == "good")
     {
-        from_clause = pg_aoi_load_information_query()$from
+        from_clause = pg_aoi_load_good_query()$from
+        #
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("i._c2d", 
+                                                 barcodes));
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("i._c2d", 
+                                                 not_barcodes, 
+                                                 equal_to=FALSE));
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_range_clause("i._c2d", 
+                                                     range_barcodes));
     }
     else
     {
@@ -542,18 +590,12 @@ pg_aoi_get_operation_value <- function(db,
 pg_aoi_load_data_view <- function(db,
                                   data_type,
                                   routes = c(),
-                                  machines = c(),
-                                  lanes = c(),
                                   times = c(),
                                   barcodes = c(),
                                   not_routes = c(),
-                                  not_machines = c(),
-                                  not_lanes = c(),
                                   not_times = c(),
                                   not_barcodes = c(),
                                   range_routes = c(),
-                                  range_machines = c(),
-                                  range_lanes = c(),
                                   range_times = c(),
                                   range_barcodes = c(),
                                   matrix_return = FALSE,
@@ -572,16 +614,6 @@ pg_aoi_load_data_view <- function(db,
     where_clause = 
         sql_add_to_clause("AND",
                       where_clause,
-                      sql_generate_in_clause("_machine", 
-                                         machines));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_in_clause("_lane", 
-                                         lanes));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
                       sql_generate_in_clause("_filename_timestamp", 
                                          times));
     #
@@ -592,18 +624,6 @@ pg_aoi_load_data_view <- function(db,
                       where_clause,
                       sql_generate_in_clause("_filename_route", 
                                          not_routes, 
-                                         equal_to=FALSE));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_in_clause("_machine", 
-                                         not_machines, 
-                                         equal_to=FALSE));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_in_clause("_lane", 
-                                         not_lanes, 
                                          equal_to=FALSE));
     where_clause = 
         sql_add_to_clause("AND",
@@ -622,16 +642,6 @@ pg_aoi_load_data_view <- function(db,
     where_clause = 
         sql_add_to_clause("AND",
                       where_clause,
-                      sql_generate_range_clause("_machine", 
-                                             range_machines));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
-                      sql_generate_range_clause("_lane", 
-                                             range_lanes));
-    where_clause = 
-        sql_add_to_clause("AND",
-                      where_clause,
                       sql_generate_range_clause("_filename_timestamp", 
                                              range_times));
     #
@@ -641,43 +651,59 @@ pg_aoi_load_data_view <- function(db,
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("_pcbid", 
+                          sql_generate_in_clause("_c2d", 
                                                  barcodes));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("_pcbid", 
+                          sql_generate_in_clause("_c2d", 
                                                  not_barcodes, 
                                                  equal_to=FALSE));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_range_clause("_pcbid", 
+                          sql_generate_range_clause("_c2d", 
                                                      range_barcodes))
     }
-    else if (data_type == "information")
+    else if (data_type == "no_good")
     {
-        view_format = pg_aoi_load_information_query()$view_format
+        view_format = pg_aoi_load_no_good_query()$view_format
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("_pcbid", 
+                          sql_generate_in_clause("_c2d", 
                                                  barcodes));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_in_clause("_pcbid", 
+                          sql_generate_in_clause("_c2d", 
                                                  not_barcodes, 
                                                  equal_to=FALSE));
         where_clause = 
             sql_add_to_clause("AND",
                           where_clause,
-                          sql_generate_range_clause("_pcbid", 
+                          sql_generate_range_clause("_c2d", 
                                                      range_barcodes));
     }
-    else if (data_type == "lotinformation")
+    else if (data_type == "good")
     {
-        view_format = pg_aoi_load_lotinformation_query()$view_format
+        view_format = pg_aoi_load_good_query()$view_format
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("_c2d", 
+                                                 barcodes));
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("_c2d", 
+                                                 not_barcodes, 
+                                                 equal_to=FALSE));
+        where_clause = 
+            sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_range_clause("_c2d", 
+                                                     range_barcodes));
     }
     else
     {

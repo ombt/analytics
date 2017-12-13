@@ -1,0 +1,1615 @@
+--                View "aoi.all_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_timestamp | bigint        | 
+--  _filename_route     | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _aoi_pcbid          | text          | 
+--  _date_time          | text          | 
+--  _cid                | text          | 
+--  _timestamp          | text          | 
+--  _crc                | text          | 
+--  _c2d                | text          | 
+--  _recipename         | text          | 
+--  _mid                | text          | 
+--  _p                  | integer       | 
+--  cmp_idx             | integer       | 
+--  _sc                 | text          | 
+--  _pid                | text          | 
+--  _fc                 | text          | 
+--  _cmp                | integer       | 
+--  _cc                 | text          | 
+--  _ref                | text          | 
+--  _type               | text          | 
+--  _defect             | integer       | 
+--  _insp_type          | text          | 
+--  _lead_id            | text          | 
+-- 
+--       Table "aoi.aoi_filename_data"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _aoi_pcbid   | text          | 
+--  _date_time   | text          | 
+-- Indexes:
+--     "idx_aoi_filename_data" btree (_filename_id)
+-- 
+--              Table "aoi.cmp"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _p           | integer       | 
+--  _cmp         | integer       | 
+--  _cc          | text          | 
+--  _ref         | text          | 
+--  _type        | text          | 
+-- Indexes:
+--     "idx_cmp_fid" btree (_filename_id)
+--     "idx_cmp_fid_cmp" btree (_filename_id, _cmp)
+--     "idx_cmp_fid_p" btree (_filename_id, _p)
+--     "idx_cmp_fid_p_cmp" btree (_filename_id, _p, _cmp)
+-- 
+--             Table "aoi.defect"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _cmp         | integer       | 
+--  _defect      | integer       | 
+--  _insp_type   | text          | 
+--  _lead_id     | text          | 
+-- Indexes:
+--     "idx_defect_fid" btree (_filename_id)
+--     "idx_defect_fid_cmp" btree (_filename_id, _cmp)
+--     "idx_defect_fid_cmp_defect" btree (_filename_id, _cmp, _defect)
+--     "idx_defect_fid_defect" btree (_filename_id, _defect)
+-- 
+--             View "aoi.file_data_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_timestamp | bigint        | 
+--  _filename_route     | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _aoi_pcbid          | text          | 
+--  _date_time          | text          | 
+-- 
+--            Table "aoi.filename_to_fid"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_timestamp | bigint        | 
+--  _filename_route     | text          | 
+--  _filename_id        | numeric(30,0) | 
+-- Indexes:
+--     "idx_filename_to_fid_1" btree (_filename_id)
+--     "idx_filename_to_fid_2" btree (_filename_timestamp)
+--     "idx_filename_to_fid_3" btree (_filename_id, _filename_timestamp)
+--     "idx_filename_to_fid_4" btree (_filename_timestamp, _filename_id)
+-- 
+--               View "aoi.good_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_timestamp | bigint        | 
+--  _filename_route     | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _aoi_pcbid          | text          | 
+--  _date_time          | text          | 
+--  _cid                | text          | 
+--  _timestamp          | text          | 
+--  _crc                | text          | 
+--  _c2d                | text          | 
+--  _recipename         | text          | 
+--  _mid                | text          | 
+--  _p                  | integer       | 
+--  cmp_idx             | integer       | 
+--  _sc                 | text          | 
+--  _pid                | text          | 
+--  _fc                 | text          | 
+-- 
+--       Index "aoi.idx_aoi_filename_data"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "aoi.aoi_filename_data"
+-- 
+--            Index "aoi.idx_cmp_fid"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "aoi.cmp"
+-- 
+--          Index "aoi.idx_cmp_fid_cmp"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+--  _cmp         | integer       | _cmp
+-- btree, for table "aoi.cmp"
+-- 
+--           Index "aoi.idx_cmp_fid_p"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+--  _p           | integer       | _p
+-- btree, for table "aoi.cmp"
+-- 
+--         Index "aoi.idx_cmp_fid_p_cmp"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+--  _p           | integer       | _p
+--  _cmp         | integer       | _cmp
+-- btree, for table "aoi.cmp"
+-- 
+--          Index "aoi.idx_defect_fid"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "aoi.defect"
+-- 
+--        Index "aoi.idx_defect_fid_cmp"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+--  _cmp         | integer       | _cmp
+-- btree, for table "aoi.defect"
+-- 
+--     Index "aoi.idx_defect_fid_cmp_defect"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+--  _cmp         | integer       | _cmp
+--  _defect      | integer       | _defect
+-- btree, for table "aoi.defect"
+-- 
+--       Index "aoi.idx_defect_fid_defect"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+--  _defect      | integer       | _defect
+-- btree, for table "aoi.defect"
+-- 
+--       Index "aoi.idx_filename_to_fid_1"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "aoi.filename_to_fid"
+-- 
+--          Index "aoi.idx_filename_to_fid_2"
+--        Column        |  Type  |     Definition      
+-- ---------------------+--------+---------------------
+--  _filename_timestamp | bigint | _filename_timestamp
+-- btree, for table "aoi.filename_to_fid"
+-- 
+--              Index "aoi.idx_filename_to_fid_3"
+--        Column        |     Type      |     Definition      
+-- ---------------------+---------------+---------------------
+--  _filename_id        | numeric(30,0) | _filename_id
+--  _filename_timestamp | bigint        | _filename_timestamp
+-- btree, for table "aoi.filename_to_fid"
+-- 
+--              Index "aoi.idx_filename_to_fid_4"
+--        Column        |     Type      |     Definition      
+-- ---------------------+---------------+---------------------
+--  _filename_timestamp | bigint        | _filename_timestamp
+--  _filename_id        | numeric(30,0) | _filename_id
+-- btree, for table "aoi.filename_to_fid"
+-- 
+--           Index "aoi.idx_insp_fid"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "aoi.insp"
+-- 
+--             Index "aoi.idx_p_fid"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "aoi.p"
+-- 
+--           Index "aoi.idx_p_fid_cmp"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+--  _cmp         | integer       | _cmp
+-- btree, for table "aoi.p"
+-- 
+--            Index "aoi.idx_p_fid_p"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+--  _p           | integer       | _p
+-- btree, for table "aoi.p"
+-- 
+--          Index "aoi.idx_p_fid_p_cmp"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+--  _p           | integer       | _p
+--  _cmp         | integer       | _cmp
+-- btree, for table "aoi.p"
+-- 
+--              Table "aoi.insp"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _cid         | text          | 
+--  _timestamp   | text          | 
+--  _crc         | text          | 
+--  _c2d         | text          | 
+--  _recipename  | text          | 
+--  _mid         | text          | 
+-- Indexes:
+--     "idx_insp_fid" btree (_filename_id)
+-- 
+--              View "aoi.no_good_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_timestamp | bigint        | 
+--  _filename_route     | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _aoi_pcbid          | text          | 
+--  _date_time          | text          | 
+--  _cid                | text          | 
+--  _timestamp          | text          | 
+--  _crc                | text          | 
+--  _c2d                | text          | 
+--  _recipename         | text          | 
+--  _mid                | text          | 
+--  _p                  | integer       | 
+--  cmp_idx             | integer       | 
+--  _sc                 | text          | 
+--  _pid                | text          | 
+--  _fc                 | text          | 
+--  _cmp                | integer       | 
+--  _cc                 | text          | 
+--  _ref                | text          | 
+--  _defect             | integer       | 
+--  _insp_type          | text          | 
+--  _lead_id            | text          | 
+-- 
+--               Table "aoi.p"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _p           | integer       | 
+--  _cmp         | integer       | 
+--  _sc          | text          | 
+--  _pid         | text          | 
+--  _fc          | text          | 
+-- Indexes:
+--     "idx_p_fid" btree (_filename_id)
+--     "idx_p_fid_cmp" btree (_filename_id, _cmp)
+--     "idx_p_fid_p" btree (_filename_id, _p)
+--     "idx_p_fid_p_cmp" btree (_filename_id, _p, _cmp)
+-- 
+--             Table "u01.count"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _name        | text          | 
+--  _value       | text          | 
+-- Indexes:
+--     "idx_count" btree (_filename_id)
+-- 
+--               View "u01.count_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename_route     | text          | 
+--  _machine_order      | integer       | 
+--  _lane_no            | integer       | 
+--  _stage_no           | integer       | 
+--  _filename_timestamp | bigint        | 
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _date               | text          | 
+--  _pcb_serial         | text          | 
+--  _pcb_id             | text          | 
+--  _output_no          | integer       | 
+--  _pcb_id_lot_no      | text          | 
+--  _pcb_id_serial_no   | text          | 
+--  _timestamp          | bigint        | 
+--  _mjsid              | text          | 
+--  _lotname            | text          | 
+--  _bndrcgstop         | numeric(10,3) | 
+--  _bndstop            | numeric(10,3) | 
+--  _board              | numeric(10,3) | 
+--  _brcgstop           | numeric(10,3) | 
+--  _bwait              | numeric(10,3) | 
+--  _cderr              | numeric(10,3) | 
+--  _cmerr              | numeric(10,3) | 
+--  _cnvstop            | numeric(10,3) | 
+--  _cperr              | numeric(10,3) | 
+--  _crerr              | numeric(10,3) | 
+--  _cterr              | numeric(10,3) | 
+--  _cwait              | numeric(10,3) | 
+--  _fbstop             | numeric(10,3) | 
+--  _fwait              | numeric(10,3) | 
+--  _jointpasswait      | numeric(10,3) | 
+--  _judgestop          | numeric(10,3) | 
+--  _lotboard           | numeric(10,3) | 
+--  _lotmodule          | numeric(10,3) | 
+--  _mcfwait            | numeric(10,3) | 
+--  _mcrwait            | numeric(10,3) | 
+--  _mhrcgstop          | numeric(10,3) | 
+--  _module             | numeric(10,3) | 
+--  _otherlstop         | numeric(10,3) | 
+--  _othrstop           | numeric(10,3) | 
+--  _pwait              | numeric(10,3) | 
+--  _rwait              | numeric(10,3) | 
+--  _scestop            | numeric(10,3) | 
+--  _scstop             | numeric(10,3) | 
+--  _swait              | numeric(10,3) | 
+--  _tdispense          | numeric(10,3) | 
+--  _tdmiss             | numeric(10,3) | 
+--  _thmiss             | numeric(10,3) | 
+--  _tmmiss             | numeric(10,3) | 
+--  _tmount             | numeric(10,3) | 
+--  _tpickup            | numeric(10,3) | 
+--  _tpmiss             | numeric(10,3) | 
+--  _tpriming           | numeric(10,3) | 
+--  _trbl               | numeric(10,3) | 
+--  _trmiss             | numeric(10,3) | 
+--  _trserr             | numeric(10,3) | 
+--  _trsmiss            | numeric(10,3) | 
+-- 
+--        Table "u01.crb_filename_data"
+--      Column     |     Type      | Modifiers 
+-- ----------------+---------------+-----------
+--  _filename_id   | numeric(30,0) | 
+--  _history_id    | text          | 
+--  _time_stamp    | text          | 
+--  _crb_file_name | text          | 
+--  _product_name  | text          | 
+-- Indexes:
+--     "idx_crb_filename_data" btree (_filename_id)
+-- 
+--           Table "u01.cycletime"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _name        | text          | 
+--  _value       | text          | 
+-- Indexes:
+--     "idx_cycletime" btree (_filename_id)
+-- 
+--           Table "u01.delta_feeder"
+--      Column     |     Type      | Modifiers 
+-- ----------------+---------------+-----------
+--  _filename_id   | numeric(30,0) | 
+--  _pcb_id        | text          | 
+--  _pcb_serial    | text          | 
+--  _machine_order | integer       | 
+--  _lane_no       | integer       | 
+--  _stage_no      | integer       | 
+--  _timestamp     | bigint        | 
+--  _fadd          | integer       | 
+--  _fsadd         | integer       | 
+--  _mjsid         | text          | 
+--  _lotname       | text          | 
+--  _reelid        | text          | 
+--  _partsname     | text          | 
+--  _output_no     | integer       | 
+--  _blkserial     | text          | 
+--  _pickup        | integer       | 
+--  _pmiss         | integer       | 
+--  _rmiss         | integer       | 
+--  _dmiss         | integer       | 
+--  _mmiss         | integer       | 
+--  _hmiss         | integer       | 
+--  _trsmiss       | integer       | 
+--  _mount         | integer       | 
+-- Indexes:
+--     "idx_delta_feeder" btree (_filename_id)
+-- 
+--           Table "u01.delta_nozzle"
+--      Column     |     Type      | Modifiers 
+-- ----------------+---------------+-----------
+--  _filename_id   | numeric(30,0) | 
+--  _pcb_id        | text          | 
+--  _pcb_serial    | text          | 
+--  _machine_order | integer       | 
+--  _lane_no       | integer       | 
+--  _stage_no      | integer       | 
+--  _timestamp     | bigint        | 
+--  _nhadd         | integer       | 
+--  _ncadd         | integer       | 
+--  _mjsid         | text          | 
+--  _lotname       | text          | 
+--  _output_no     | integer       | 
+--  _pickup        | integer       | 
+--  _pmiss         | integer       | 
+--  _rmiss         | integer       | 
+--  _dmiss         | integer       | 
+--  _mmiss         | integer       | 
+--  _hmiss         | integer       | 
+--  _trsmiss       | integer       | 
+--  _mount         | integer       | 
+-- Indexes:
+--     "idx_delta_nozzle" btree (_filename_id)
+-- 
+--        Table "u01.delta_pivot_count"
+--      Column     |     Type      | Modifiers 
+-- ----------------+---------------+-----------
+--  _filename_id   | numeric(30,0) | 
+--  _pcb_id        | text          | 
+--  _pcb_serial    | text          | 
+--  _machine_order | integer       | 
+--  _lane_no       | integer       | 
+--  _stage_no      | integer       | 
+--  _timestamp     | bigint        | 
+--  _mjsid         | text          | 
+--  _lotname       | text          | 
+--  _output_no     | integer       | 
+--  _bndrcgstop    | numeric(10,3) | 
+--  _bndstop       | numeric(10,3) | 
+--  _board         | numeric(10,3) | 
+--  _brcgstop      | numeric(10,3) | 
+--  _bwait         | numeric(10,3) | 
+--  _cderr         | numeric(10,3) | 
+--  _cmerr         | numeric(10,3) | 
+--  _cnvstop       | numeric(10,3) | 
+--  _cperr         | numeric(10,3) | 
+--  _crerr         | numeric(10,3) | 
+--  _cterr         | numeric(10,3) | 
+--  _cwait         | numeric(10,3) | 
+--  _fbstop        | numeric(10,3) | 
+--  _fwait         | numeric(10,3) | 
+--  _jointpasswait | numeric(10,3) | 
+--  _judgestop     | numeric(10,3) | 
+--  _lotboard      | numeric(10,3) | 
+--  _lotmodule     | numeric(10,3) | 
+--  _mcfwait       | numeric(10,3) | 
+--  _mcrwait       | numeric(10,3) | 
+--  _mhrcgstop     | numeric(10,3) | 
+--  _module        | numeric(10,3) | 
+--  _otherlstop    | numeric(10,3) | 
+--  _othrstop      | numeric(10,3) | 
+--  _pwait         | numeric(10,3) | 
+--  _rwait         | numeric(10,3) | 
+--  _scestop       | numeric(10,3) | 
+--  _scstop        | numeric(10,3) | 
+--  _swait         | numeric(10,3) | 
+--  _tdispense     | numeric(10,3) | 
+--  _tdmiss        | numeric(10,3) | 
+--  _thmiss        | numeric(10,3) | 
+--  _tmmiss        | numeric(10,3) | 
+--  _tmount        | numeric(10,3) | 
+--  _tpickup       | numeric(10,3) | 
+--  _tpmiss        | numeric(10,3) | 
+--  _tpriming      | numeric(10,3) | 
+--  _trbl          | numeric(10,3) | 
+--  _trmiss        | numeric(10,3) | 
+--  _trserr        | numeric(10,3) | 
+--  _trsmiss       | numeric(10,3) | 
+-- Indexes:
+--     "idx_delta_pivot_count" btree (_filename_id)
+-- 
+--         Table "u01.delta_pivot_time"
+--      Column     |     Type      | Modifiers 
+-- ----------------+---------------+-----------
+--  _filename_id   | numeric(30,0) | 
+--  _pcb_id        | text          | 
+--  _pcb_serial    | text          | 
+--  _machine_order | integer       | 
+--  _lane_no       | integer       | 
+--  _stage_no      | integer       | 
+--  _timestamp     | bigint        | 
+--  _mjsid         | text          | 
+--  _lotname       | text          | 
+--  _output_no     | integer       | 
+--  _actual        | numeric(10,3) | 
+--  _bndrcgstop    | numeric(10,3) | 
+--  _bndstop       | numeric(10,3) | 
+--  _brcg          | numeric(10,3) | 
+--  _brcgstop      | numeric(10,3) | 
+--  _bwait         | numeric(10,3) | 
+--  _cderr         | numeric(10,3) | 
+--  _change        | numeric(10,3) | 
+--  _cmerr         | numeric(10,3) | 
+--  _cnvstop       | numeric(10,3) | 
+--  _cperr         | numeric(10,3) | 
+--  _crerr         | numeric(10,3) | 
+--  _cterr         | numeric(10,3) | 
+--  _cwait         | numeric(10,3) | 
+--  _dataedit      | numeric(10,3) | 
+--  _fbstop        | numeric(10,3) | 
+--  _fwait         | numeric(10,3) | 
+--  _idle          | numeric(10,3) | 
+--  _jointpasswait | numeric(10,3) | 
+--  _judgestop     | numeric(10,3) | 
+--  _load          | numeric(10,3) | 
+--  _mcfwait       | numeric(10,3) | 
+--  _mcrwait       | numeric(10,3) | 
+--  _mente         | numeric(10,3) | 
+--  _mhrcgstop     | numeric(10,3) | 
+--  _mount         | numeric(10,3) | 
+--  _otherlstop    | numeric(10,3) | 
+--  _othrstop      | numeric(10,3) | 
+--  _poweron       | numeric(10,3) | 
+--  _prdstop       | numeric(10,3) | 
+--  _prod          | numeric(10,3) | 
+--  _prodview      | numeric(10,3) | 
+--  _pwait         | numeric(10,3) | 
+--  _rwait         | numeric(10,3) | 
+--  _scestop       | numeric(10,3) | 
+--  _scstop        | numeric(10,3) | 
+--  _swait         | numeric(10,3) | 
+--  _totalstop     | numeric(10,3) | 
+--  _trbl          | numeric(10,3) | 
+--  _trserr        | numeric(10,3) | 
+--  _unitadjust    | numeric(10,3) | 
+-- Indexes:
+--     "idx_delta_pivot_time" btree (_filename_id)
+-- 
+--           Table "u01.dispenser"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _head        | text          | 
+--  _nhadd       | text          | 
+--  _blkcode     | text          | 
+--  _blkserial   | text          | 
+--  _usen        | text          | 
+--  _nozzlename  | text          | 
+--  _bondid      | text          | 
+--  _useb        | text          | 
+--  _bondlibname | text          | 
+--  _dispense    | text          | 
+--  _priming     | text          | 
+--  _psrerr      | text          | 
+-- Indexes:
+--     "idx_dispenser" btree (_filename_id)
+-- 
+--              View "u01.feeder_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename_route     | text          | 
+--  _machine_order      | integer       | 
+--  _lane_no            | integer       | 
+--  _stage_no           | integer       | 
+--  _filename_timestamp | bigint        | 
+--  _fadd               | integer       | 
+--  _fsadd              | integer       | 
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _date               | text          | 
+--  _pcb_serial         | text          | 
+--  _pcb_id             | text          | 
+--  _output_no          | integer       | 
+--  _pcb_id_lot_no      | text          | 
+--  _pcb_id_serial_no   | text          | 
+--  _timestamp          | bigint        | 
+--  _mjsid              | text          | 
+--  _lotname            | text          | 
+--  _reelid             | text          | 
+--  _partsname          | text          | 
+--  _blkserial          | text          | 
+--  _pickup             | integer       | 
+--  _pmiss              | integer       | 
+--  _rmiss              | integer       | 
+--  _dmiss              | integer       | 
+--  _mmiss              | integer       | 
+--  _hmiss              | integer       | 
+--  _trsmiss            | integer       | 
+--  _mount              | integer       | 
+-- 
+--            Table "u01.filename_to_fid"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_timestamp | bigint        | 
+--  _filename_route     | text          | 
+--  _filename_id        | numeric(30,0) | 
+-- Indexes:
+--     "idx_filename_to_fid_1" btree (_filename_id)
+--     "idx_filename_to_fid_2" btree (_filename_timestamp)
+--     "idx_filename_to_fid_3" btree (_filename_id, _filename_timestamp)
+--     "idx_filename_to_fid_4" btree (_filename_timestamp, _filename_id)
+-- 
+--             Index "u01.idx_count"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.count"
+-- 
+--       Index "u01.idx_crb_filename_data"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.crb_filename_data"
+-- 
+--           Index "u01.idx_cycletime"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.cycletime"
+-- 
+--         Index "u01.idx_delta_feeder"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.delta_feeder"
+-- 
+--         Index "u01.idx_delta_nozzle"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.delta_nozzle"
+-- 
+--       Index "u01.idx_delta_pivot_count"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.delta_pivot_count"
+-- 
+--       Index "u01.idx_delta_pivot_time"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.delta_pivot_time"
+-- 
+--           Index "u01.idx_dispenser"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.dispenser"
+-- 
+--       Index "u01.idx_filename_to_fid_1"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.filename_to_fid"
+-- 
+--          Index "u01.idx_filename_to_fid_2"
+--        Column        |  Type  |     Definition      
+-- ---------------------+--------+---------------------
+--  _filename_timestamp | bigint | _filename_timestamp
+-- btree, for table "u01.filename_to_fid"
+-- 
+--              Index "u01.idx_filename_to_fid_3"
+--        Column        |     Type      |     Definition      
+-- ---------------------+---------------+---------------------
+--  _filename_id        | numeric(30,0) | _filename_id
+--  _filename_timestamp | bigint        | _filename_timestamp
+-- btree, for table "u01.filename_to_fid"
+-- 
+--              Index "u01.idx_filename_to_fid_4"
+--        Column        |     Type      |     Definition      
+-- ---------------------+---------------+---------------------
+--  _filename_timestamp | bigint        | _filename_timestamp
+--  _filename_id        | numeric(30,0) | _filename_id
+-- btree, for table "u01.filename_to_fid"
+-- 
+--             Index "u01.idx_index"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.index"
+-- 
+--          Index "u01.idx_information"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.information"
+-- 
+--        Index "u01.idx_inspectiondata"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.inspectiondata"
+-- 
+--       Index "u01.idx_mountpickupfeeder"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.mountpickupfeeder"
+-- 
+--       Index "u01.idx_mountpickupnozzle"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.mountpickupnozzle"
+-- 
+--          Index "u01.idx_pivot_count"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.pivot_count"
+-- 
+--          Index "u01.idx_pivot_time"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.pivot_time"
+-- 
+--       Index "u01.idx_rst_filename_data"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.rst_filename_data"
+-- 
+--             Index "u01.idx_time"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.time"
+-- 
+--       Index "u01.idx_u0x_filename_data"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u01.u0x_filename_data"
+-- 
+--             Table "u01.index"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _name        | text          | 
+--  _value       | text          | 
+-- Indexes:
+--     "idx_index" btree (_filename_id)
+-- 
+--          Table "u01.information"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _name        | text          | 
+--  _value       | text          | 
+-- Indexes:
+--     "idx_information" btree (_filename_id)
+-- 
+--         Table "u01.inspectiondata"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _name        | text          | 
+--  _value       | text          | 
+-- Indexes:
+--     "idx_inspectiondata" btree (_filename_id)
+-- 
+--       Table "u01.mountpickupfeeder"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _blkcode     | text          | 
+--  _blkserial   | text          | 
+--  _usef        | integer       | 
+--  _partsname   | text          | 
+--  _fadd        | integer       | 
+--  _fsadd       | integer       | 
+--  _reelid      | text          | 
+--  _user        | integer       | 
+--  _pickup      | integer       | 
+--  _pmiss       | integer       | 
+--  _rmiss       | integer       | 
+--  _dmiss       | integer       | 
+--  _mmiss       | integer       | 
+--  _hmiss       | integer       | 
+--  _trsmiss     | integer       | 
+--  _mount       | integer       | 
+--  _lname       | text          | 
+--  _tgserial    | text          | 
+-- Indexes:
+--     "idx_mountpickupfeeder" btree (_filename_id)
+-- 
+--       Table "u01.mountpickupnozzle"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _head        | integer       | 
+--  _nhadd       | integer       | 
+--  _ncadd       | integer       | 
+--  _blkcode     | text          | 
+--  _blkserial   | text          | 
+--  _user        | integer       | 
+--  _nozzlename  | integer       | 
+--  _pickup      | integer       | 
+--  _pmiss       | integer       | 
+--  _rmiss       | integer       | 
+--  _dmiss       | integer       | 
+--  _mmiss       | integer       | 
+--  _hmiss       | integer       | 
+--  _trsmiss     | integer       | 
+--  _mount       | integer       | 
+-- Indexes:
+--     "idx_mountpickupnozzle" btree (_filename_id)
+-- 
+--              View "u01.nozzle_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename_route     | text          | 
+--  _machine_order      | integer       | 
+--  _lane_no            | integer       | 
+--  _stage_no           | integer       | 
+--  _filename_timestamp | bigint        | 
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _date               | text          | 
+--  _pcb_serial         | text          | 
+--  _pcb_id             | text          | 
+--  _output_no          | integer       | 
+--  _pcb_id_lot_no      | text          | 
+--  _pcb_id_serial_no   | text          | 
+--  _timestamp          | bigint        | 
+--  _nhadd              | integer       | 
+--  _ncadd              | integer       | 
+--  _mjsid              | text          | 
+--  _lotname            | text          | 
+--  _pickup             | integer       | 
+--  _pmiss              | integer       | 
+--  _rmiss              | integer       | 
+--  _dmiss              | integer       | 
+--  _mmiss              | integer       | 
+--  _hmiss              | integer       | 
+--  _trsmiss            | integer       | 
+--  _mount              | integer       | 
+-- 
+--           Table "u01.pivot_count"
+--      Column     |     Type      | Modifiers 
+-- ----------------+---------------+-----------
+--  _filename_id   | numeric(30,0) | 
+--  _bndrcgstop    | numeric(10,3) | 
+--  _bndstop       | numeric(10,3) | 
+--  _board         | numeric(10,3) | 
+--  _brcgstop      | numeric(10,3) | 
+--  _bwait         | numeric(10,3) | 
+--  _cderr         | numeric(10,3) | 
+--  _cmerr         | numeric(10,3) | 
+--  _cnvstop       | numeric(10,3) | 
+--  _cperr         | numeric(10,3) | 
+--  _crerr         | numeric(10,3) | 
+--  _cterr         | numeric(10,3) | 
+--  _cwait         | numeric(10,3) | 
+--  _fbstop        | numeric(10,3) | 
+--  _fwait         | numeric(10,3) | 
+--  _jointpasswait | numeric(10,3) | 
+--  _judgestop     | numeric(10,3) | 
+--  _lotboard      | numeric(10,3) | 
+--  _lotmodule     | numeric(10,3) | 
+--  _mcfwait       | numeric(10,3) | 
+--  _mcrwait       | numeric(10,3) | 
+--  _mhrcgstop     | numeric(10,3) | 
+--  _module        | numeric(10,3) | 
+--  _otherlstop    | numeric(10,3) | 
+--  _othrstop      | numeric(10,3) | 
+--  _pwait         | numeric(10,3) | 
+--  _rwait         | numeric(10,3) | 
+--  _scestop       | numeric(10,3) | 
+--  _scstop        | numeric(10,3) | 
+--  _swait         | numeric(10,3) | 
+--  _tdispense     | numeric(10,3) | 
+--  _tdmiss        | numeric(10,3) | 
+--  _thmiss        | numeric(10,3) | 
+--  _tmmiss        | numeric(10,3) | 
+--  _tmount        | numeric(10,3) | 
+--  _tpickup       | numeric(10,3) | 
+--  _tpmiss        | numeric(10,3) | 
+--  _tpriming      | numeric(10,3) | 
+--  _trbl          | numeric(10,3) | 
+--  _trmiss        | numeric(10,3) | 
+--  _trserr        | numeric(10,3) | 
+--  _trsmiss       | numeric(10,3) | 
+-- Indexes:
+--     "idx_pivot_count" btree (_filename_id)
+-- 
+--            Table "u01.pivot_time"
+--      Column     |     Type      | Modifiers 
+-- ----------------+---------------+-----------
+--  _filename_id   | numeric(30,0) | 
+--  _actual        | numeric(10,3) | 
+--  _bndrcgstop    | numeric(10,3) | 
+--  _bndstop       | numeric(10,3) | 
+--  _brcg          | numeric(10,3) | 
+--  _brcgstop      | numeric(10,3) | 
+--  _bwait         | numeric(10,3) | 
+--  _cderr         | numeric(10,3) | 
+--  _change        | numeric(10,3) | 
+--  _cmerr         | numeric(10,3) | 
+--  _cnvstop       | numeric(10,3) | 
+--  _cperr         | numeric(10,3) | 
+--  _crerr         | numeric(10,3) | 
+--  _cterr         | numeric(10,3) | 
+--  _cwait         | numeric(10,3) | 
+--  _dataedit      | numeric(10,3) | 
+--  _fbstop        | numeric(10,3) | 
+--  _fwait         | numeric(10,3) | 
+--  _idle          | numeric(10,3) | 
+--  _jointpasswait | numeric(10,3) | 
+--  _judgestop     | numeric(10,3) | 
+--  _load          | numeric(10,3) | 
+--  _mcfwait       | numeric(10,3) | 
+--  _mcrwait       | numeric(10,3) | 
+--  _mente         | numeric(10,3) | 
+--  _mhrcgstop     | numeric(10,3) | 
+--  _mount         | numeric(10,3) | 
+--  _otherlstop    | numeric(10,3) | 
+--  _othrstop      | numeric(10,3) | 
+--  _poweron       | numeric(10,3) | 
+--  _prdstop       | numeric(10,3) | 
+--  _prod          | numeric(10,3) | 
+--  _prodview      | numeric(10,3) | 
+--  _pwait         | numeric(10,3) | 
+--  _rwait         | numeric(10,3) | 
+--  _scestop       | numeric(10,3) | 
+--  _scstop        | numeric(10,3) | 
+--  _swait         | numeric(10,3) | 
+--  _totalstop     | numeric(10,3) | 
+--  _trbl          | numeric(10,3) | 
+--  _trserr        | numeric(10,3) | 
+--  _unitadjust    | numeric(10,3) | 
+-- Indexes:
+--     "idx_pivot_time" btree (_filename_id)
+-- 
+--          Table "u01.rst_filename_data"
+--        Column       |     Type      | Modifiers 
+-- --------------------+---------------+-----------
+--  _filename_id       | numeric(30,0) | 
+--  _machine           | text          | 
+--  _lane              | integer       | 
+--  _date_time         | text          | 
+--  _serial_number     | text          | 
+--  _inspection_result | text          | 
+--  _board_removed     | text          | 
+-- Indexes:
+--     "idx_rst_filename_data" btree (_filename_id)
+-- 
+--              Table "u01.time"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _name        | text          | 
+--  _value       | text          | 
+-- Indexes:
+--     "idx_time" btree (_filename_id)
+-- 
+--               View "u01.time_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename_route     | text          | 
+--  _machine_order      | integer       | 
+--  _lane_no            | integer       | 
+--  _stage_no           | integer       | 
+--  _filename_timestamp | bigint        | 
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _date               | text          | 
+--  _pcb_serial         | text          | 
+--  _pcb_id             | text          | 
+--  _output_no          | integer       | 
+--  _pcb_id_lot_no      | text          | 
+--  _pcb_id_serial_no   | text          | 
+--  _timestamp          | bigint        | 
+--  _mjsid              | text          | 
+--  _lotname            | text          | 
+--  _actual             | numeric(10,3) | 
+--  _bndrcgstop         | numeric(10,3) | 
+--  _bndstop            | numeric(10,3) | 
+--  _brcg               | numeric(10,3) | 
+--  _brcgstop           | numeric(10,3) | 
+--  _bwait              | numeric(10,3) | 
+--  _cderr              | numeric(10,3) | 
+--  _change             | numeric(10,3) | 
+--  _cmerr              | numeric(10,3) | 
+--  _cnvstop            | numeric(10,3) | 
+--  _cperr              | numeric(10,3) | 
+--  _crerr              | numeric(10,3) | 
+--  _cterr              | numeric(10,3) | 
+--  _cwait              | numeric(10,3) | 
+--  _dataedit           | numeric(10,3) | 
+--  _fbstop             | numeric(10,3) | 
+--  _fwait              | numeric(10,3) | 
+--  _idle               | numeric(10,3) | 
+--  _jointpasswait      | numeric(10,3) | 
+--  _judgestop          | numeric(10,3) | 
+--  _load               | numeric(10,3) | 
+--  _mcfwait            | numeric(10,3) | 
+--  _mcrwait            | numeric(10,3) | 
+--  _mente              | numeric(10,3) | 
+--  _mhrcgstop          | numeric(10,3) | 
+--  _mount              | numeric(10,3) | 
+--  _otherlstop         | numeric(10,3) | 
+--  _othrstop           | numeric(10,3) | 
+--  _poweron            | numeric(10,3) | 
+--  _prdstop            | numeric(10,3) | 
+--  _prod               | numeric(10,3) | 
+--  _prodview           | numeric(10,3) | 
+--  _pwait              | numeric(10,3) | 
+--  _rwait              | numeric(10,3) | 
+--  _scestop            | numeric(10,3) | 
+--  _scstop             | numeric(10,3) | 
+--  _swait              | numeric(10,3) | 
+--  _totalstop          | numeric(10,3) | 
+--  _trbl               | numeric(10,3) | 
+--  _trserr             | numeric(10,3) | 
+--  _unitadjust         | numeric(10,3) | 
+-- 
+--          Table "u01.u0x_filename_data"
+--       Column       |     Type      | Modifiers 
+-- -------------------+---------------+-----------
+--  _filename_id      | numeric(30,0) | 
+--  _date             | text          | 
+--  _machine_order    | integer       | 
+--  _stage_no         | integer       | 
+--  _lane_no          | integer       | 
+--  _pcb_serial       | text          | 
+--  _pcb_id           | text          | 
+--  _output_no        | integer       | 
+--  _pcb_id_lot_no    | text          | 
+--  _pcb_id_serial_no | text          | 
+-- Indexes:
+--     "idx_u0x_filename_data" btree (_filename_id)
+-- 
+--             Table "u03.brecg"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _idnum       | text          | 
+--  _brecx       | text          | 
+--  _brecy       | text          | 
+-- Indexes:
+--     "idx_brecg" btree (_filename_id)
+-- 
+--           Table "u03.brecgcalc"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _idnum       | text          | 
+--  _breccalcx   | text          | 
+--  _breccalcy   | text          | 
+-- Indexes:
+--     "idx_brecgcalc" btree (_filename_id)
+-- 
+--        Table "u03.crb_filename_data"
+--      Column     |     Type      | Modifiers 
+-- ----------------+---------------+-----------
+--  _filename_id   | numeric(30,0) | 
+--  _history_id    | text          | 
+--  _time_stamp    | text          | 
+--  _crb_file_name | text          | 
+--  _product_name  | text          | 
+-- Indexes:
+--     "idx_crb_filename_data" btree (_filename_id)
+-- 
+--        Table "u03.elapsetimerecog"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _beamno      | text          | 
+--  _targetno    | text          | 
+--  _f           | text          | 
+--  _recx        | text          | 
+--  _recy        | text          | 
+--  _recz        | text          | 
+--  _rect        | text          | 
+--  _stockerno   | text          | 
+--  _turnno      | text          | 
+-- Indexes:
+--     "idx_elapsetimerecog" btree (_filename_id)
+-- 
+--            Table "u03.filename_to_fid"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_timestamp | bigint        | 
+--  _filename_route     | text          | 
+--  _filename_id        | numeric(30,0) | 
+-- Indexes:
+--     "idx_filename_to_fid_1" btree (_filename_id)
+--     "idx_filename_to_fid_2" btree (_filename_timestamp)
+--     "idx_filename_to_fid_3" btree (_filename_id, _filename_timestamp)
+--     "idx_filename_to_fid_4" btree (_filename_timestamp, _filename_id)
+-- 
+--          Table "u03.heightcorrect"
+--      Column     |     Type      | Modifiers 
+-- ----------------+---------------+-----------
+--  _filename_id   | numeric(30,0) | 
+--  _b             | text          | 
+--  _idnum         | text          | 
+--  _measureresult | text          | 
+-- Indexes:
+--     "idx_heightcorrect" btree (_filename_id)
+-- 
+--             Index "u03.idx_brecg"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.brecg"
+-- 
+--           Index "u03.idx_brecgcalc"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.brecgcalc"
+-- 
+--       Index "u03.idx_crb_filename_data"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.crb_filename_data"
+-- 
+--        Index "u03.idx_elapsetimerecog"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.elapsetimerecog"
+-- 
+--       Index "u03.idx_filename_to_fid_1"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.filename_to_fid"
+-- 
+--          Index "u03.idx_filename_to_fid_2"
+--        Column        |  Type  |     Definition      
+-- ---------------------+--------+---------------------
+--  _filename_timestamp | bigint | _filename_timestamp
+-- btree, for table "u03.filename_to_fid"
+-- 
+--              Index "u03.idx_filename_to_fid_3"
+--        Column        |     Type      |     Definition      
+-- ---------------------+---------------+---------------------
+--  _filename_id        | numeric(30,0) | _filename_id
+--  _filename_timestamp | bigint        | _filename_timestamp
+-- btree, for table "u03.filename_to_fid"
+-- 
+--              Index "u03.idx_filename_to_fid_4"
+--        Column        |     Type      |     Definition      
+-- ---------------------+---------------+---------------------
+--  _filename_timestamp | bigint        | _filename_timestamp
+--  _filename_id        | numeric(30,0) | _filename_id
+-- btree, for table "u03.filename_to_fid"
+-- 
+--         Index "u03.idx_heightcorrect"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.heightcorrect"
+-- 
+--             Index "u03.idx_index"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.index"
+-- 
+--          Index "u03.idx_information"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.information"
+-- 
+--       Index "u03.idx_mountexchangereel"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.mountexchangereel"
+-- 
+--        Index "u03.idx_mountlatestreel"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.mountlatestreel"
+-- 
+--       Index "u03.idx_mountnormaltrace"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.mountnormaltrace"
+-- 
+--       Index "u03.idx_mountqualitytrace"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.mountqualitytrace"
+-- 
+--       Index "u03.idx_rst_filename_data"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.rst_filename_data"
+-- 
+--            Index "u03.idx_sboard"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.sboard"
+-- 
+--       Index "u03.idx_u0x_filename_data"
+--     Column    |     Type      |  Definition  
+-- --------------+---------------+--------------
+--  _filename_id | numeric(30,0) | _filename_id
+-- btree, for table "u03.u0x_filename_data"
+-- 
+--             Table "u03.index"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _name        | text          | 
+--  _value       | text          | 
+-- Indexes:
+--     "idx_index" btree (_filename_id)
+-- 
+--          Table "u03.information"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _name        | text          | 
+--  _value       | text          | 
+-- Indexes:
+--     "idx_information" btree (_filename_id)
+-- 
+--       Table "u03.mountexchangereel"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _blkcode     | text          | 
+--  _blkserial   | text          | 
+--  _ftype       | text          | 
+--  _fadd        | text          | 
+--  _fsadd       | text          | 
+--  _use         | text          | 
+--  _pestatus    | text          | 
+--  _pcstatus    | text          | 
+--  _remain      | text          | 
+--  _init        | text          | 
+--  _partsname   | text          | 
+--  _custom1     | text          | 
+--  _custom2     | text          | 
+--  _custom3     | text          | 
+--  _custom4     | text          | 
+--  _reelid      | text          | 
+--  _partsemp    | text          | 
+--  _active      | text          | 
+-- Indexes:
+--     "idx_mountexchangereel" btree (_filename_id)
+-- 
+--         View "u03.mountexchangereel_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename_route     | text          | 
+--  _machine_order      | integer       | 
+--  _lane_no            | integer       | 
+--  _stage_no           | integer       | 
+--  _filename_timestamp | bigint        | 
+--  _fadd               | text          | 
+--  _fsadd              | text          | 
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _date               | text          | 
+--  _pcb_serial         | text          | 
+--  _pcb_id             | text          | 
+--  _output_no          | integer       | 
+--  _pcb_id_lot_no      | text          | 
+--  _pcb_id_serial_no   | text          | 
+--  _blkcode            | text          | 
+--  _blkserial          | text          | 
+--  _ftype              | text          | 
+--  _use                | text          | 
+--  _pestatus           | text          | 
+--  _pcstatus           | text          | 
+--  _remain             | text          | 
+--  _init               | text          | 
+--  _partsname          | text          | 
+--  _custom1            | text          | 
+--  _custom2            | text          | 
+--  _custom3            | text          | 
+--  _custom4            | text          | 
+--  _reelid             | text          | 
+--  _partsemp           | text          | 
+--  _active             | text          | 
+-- 
+--        Table "u03.mountlatestreel"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _blkcode     | text          | 
+--  _blkserial   | text          | 
+--  _ftype       | text          | 
+--  _fadd        | text          | 
+--  _fsadd       | text          | 
+--  _use         | text          | 
+--  _pestatus    | text          | 
+--  _pcstatus    | text          | 
+--  _remain      | text          | 
+--  _init        | text          | 
+--  _partsname   | text          | 
+--  _custom1     | text          | 
+--  _custom2     | text          | 
+--  _custom3     | text          | 
+--  _custom4     | text          | 
+--  _reelid      | text          | 
+--  _partsemp    | text          | 
+--  _active      | text          | 
+--  _tgserial    | text          | 
+-- Indexes:
+--     "idx_mountlatestreel" btree (_filename_id)
+-- 
+--          View "u03.mountlatestreel_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename_route     | text          | 
+--  _machine_order      | integer       | 
+--  _lane_no            | integer       | 
+--  _stage_no           | integer       | 
+--  _filename_timestamp | bigint        | 
+--  _fadd               | text          | 
+--  _fsadd              | text          | 
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _date               | text          | 
+--  _pcb_serial         | text          | 
+--  _pcb_id             | text          | 
+--  _output_no          | integer       | 
+--  _pcb_id_lot_no      | text          | 
+--  _pcb_id_serial_no   | text          | 
+--  _blkcode            | text          | 
+--  _blkserial          | text          | 
+--  _ftype              | text          | 
+--  _use                | text          | 
+--  _pestatus           | text          | 
+--  _pcstatus           | text          | 
+--  _remain             | text          | 
+--  _init               | text          | 
+--  _partsname          | text          | 
+--  _custom1            | text          | 
+--  _custom2            | text          | 
+--  _custom3            | text          | 
+--  _custom4            | text          | 
+--  _reelid             | text          | 
+--  _partsemp           | text          | 
+--  _active             | text          | 
+--  _tgserial           | text          | 
+-- 
+--        Table "u03.mountnormaltrace"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _b           | text          | 
+--  _idnum       | text          | 
+--  _fadd        | text          | 
+--  _fsadd       | text          | 
+--  _nhadd       | text          | 
+--  _ncadd       | text          | 
+--  _reelid      | text          | 
+-- Indexes:
+--     "idx_mountnormaltrace" btree (_filename_id)
+-- 
+--         View "u03.mountnormaltrace_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename_route     | text          | 
+--  _machine_order      | integer       | 
+--  _lane_no            | integer       | 
+--  _stage_no           | integer       | 
+--  _fadd               | text          | 
+--  _fsadd              | text          | 
+--  _nhadd              | text          | 
+--  _ncadd              | text          | 
+--  _filename_timestamp | bigint        | 
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _date               | text          | 
+--  _pcb_serial         | text          | 
+--  _pcb_id             | text          | 
+--  _output_no          | integer       | 
+--  _pcb_id_lot_no      | text          | 
+--  _pcb_id_serial_no   | text          | 
+--  _b                  | text          | 
+--  _idnum              | text          | 
+--  _reelid             | text          | 
+-- 
+--        Table "u03.mountqualitytrace"
+--     Column     |     Type      | Modifiers 
+-- ---------------+---------------+-----------
+--  _filename_id  | numeric(30,0) | 
+--  _b            | integer       | 
+--  _idnum        | integer       | 
+--  _turn         | integer       | 
+--  _ms           | integer       | 
+--  _ts           | integer       | 
+--  _fadd         | integer       | 
+--  _fsadd        | integer       | 
+--  _fblkcode     | text          | 
+--  _fblkserial   | text          | 
+--  _nhadd        | integer       | 
+--  _ncadd        | integer       | 
+--  _nblkcode     | text          | 
+--  _nblkserial   | text          | 
+--  _reelid       | text          | 
+--  _f            | integer       | 
+--  _rcgx         | numeric(10,3) | 
+--  _rcgy         | numeric(10,3) | 
+--  _rcga         | numeric(10,3) | 
+--  _tcx          | numeric(10,3) | 
+--  _tcy          | numeric(10,3) | 
+--  _mposirecx    | numeric(10,3) | 
+--  _mposirecy    | numeric(10,3) | 
+--  _mposireca    | numeric(10,3) | 
+--  _mposirecz    | numeric(10,3) | 
+--  _thmax        | numeric(10,3) | 
+--  _thave        | numeric(10,3) | 
+--  _mntcx        | numeric(10,3) | 
+--  _mntcy        | numeric(10,3) | 
+--  _mntca        | numeric(10,3) | 
+--  _tlx          | numeric(10,3) | 
+--  _tly          | numeric(10,3) | 
+--  _inspectarea  | integer       | 
+--  _didnum       | integer       | 
+--  _ds           | integer       | 
+--  _dispenseid   | text          | 
+--  _parts        | integer       | 
+--  _warpz        | numeric(10,3) | 
+--  _prepickuplot | text          | 
+--  _prepickupsts | text          | 
+-- Indexes:
+--     "idx_mountqualitytrace" btree (_filename_id)
+-- 
+--         View "u03.mountqualitytrace_view"
+--        Column        |     Type      | Modifiers 
+-- ---------------------+---------------+-----------
+--  _filename_route     | text          | 
+--  _machine_order      | integer       | 
+--  _lane_no            | integer       | 
+--  _stage_no           | integer       | 
+--  _filename_timestamp | bigint        | 
+--  _fadd               | integer       | 
+--  _fsadd              | integer       | 
+--  _nhadd              | integer       | 
+--  _ncadd              | integer       | 
+--  _filename           | text          | 
+--  _filename_type      | text          | 
+--  _filename_id        | numeric(30,0) | 
+--  _date               | text          | 
+--  _pcb_serial         | text          | 
+--  _pcb_id             | text          | 
+--  _output_no          | integer       | 
+--  _pcb_id_lot_no      | text          | 
+--  _pcb_id_serial_no   | text          | 
+--  _b                  | integer       | 
+--  _idnum              | integer       | 
+--  _turn               | integer       | 
+--  _ms                 | integer       | 
+--  _ts                 | integer       | 
+--  _fblkcode           | text          | 
+--  _fblkserial         | text          | 
+--  _nblkcode           | text          | 
+--  _nblkserial         | text          | 
+--  _reelid             | text          | 
+--  _f                  | integer       | 
+--  _rcgx               | numeric(10,3) | 
+--  _rcgy               | numeric(10,3) | 
+--  _rcga               | numeric(10,3) | 
+--  _tcx                | numeric(10,3) | 
+--  _tcy                | numeric(10,3) | 
+--  _mposirecx          | numeric(10,3) | 
+--  _mposirecy          | numeric(10,3) | 
+--  _mposireca          | numeric(10,3) | 
+--  _mposirecz          | numeric(10,3) | 
+--  _thmax              | numeric(10,3) | 
+--  _thave              | numeric(10,3) | 
+--  _mntcx              | numeric(10,3) | 
+--  _mntcy              | numeric(10,3) | 
+--  _mntca              | numeric(10,3) | 
+--  _tlx                | numeric(10,3) | 
+--  _tly                | numeric(10,3) | 
+--  _inspectarea        | integer       | 
+--  _didnum             | integer       | 
+--  _ds                 | integer       | 
+--  _dispenseid         | text          | 
+--  _parts              | integer       | 
+--  _warpz              | numeric(10,3) | 
+--  _prepickuplot       | text          | 
+--  _prepickupsts       | text          | 
+-- 
+--          Table "u03.rst_filename_data"
+--        Column       |     Type      | Modifiers 
+-- --------------------+---------------+-----------
+--  _filename_id       | numeric(30,0) | 
+--  _machine           | text          | 
+--  _lane              | integer       | 
+--  _date_time         | text          | 
+--  _serial_number     | text          | 
+--  _inspection_result | text          | 
+--  _board_removed     | text          | 
+-- Indexes:
+--     "idx_rst_filename_data" btree (_filename_id)
+-- 
+--             Table "u03.sboard"
+--     Column    |     Type      | Modifiers 
+-- --------------+---------------+-----------
+--  _filename_id | numeric(30,0) | 
+--  _b           | text          | 
+--  _scode       | text          | 
+--  _sbcrstatus  | text          | 
+-- Indexes:
+--     "idx_sboard" btree (_filename_id)
+-- 
+--          Table "u03.u0x_filename_data"
+--       Column       |     Type      | Modifiers 
+-- -------------------+---------------+-----------
+--  _filename_id      | numeric(30,0) | 
+--  _date             | text          | 
+--  _machine_order    | integer       | 
+--  _stage_no         | integer       | 
+--  _lane_no          | integer       | 
+--  _pcb_serial       | text          | 
+--  _pcb_id           | text          | 
+--  _output_no        | integer       | 
+--  _pcb_id_lot_no    | text          | 
+--  _pcb_id_serial_no | text          | 
+-- Indexes:
+--     "idx_u0x_filename_data" btree (_filename_id)
+-- 
+
+select
+    count(*) as count_count
+from
+    u01.count_view
+;
+
+select
+    count(*) as good_count
+from
+    u01.count_view ucv
+inner join
+    aoi.good_view agv
+on
+    ucv._pcb_id = agv._c2d;
+;
+
+select
+    count(*) as no_good_count
+from
+    u01.count_view ucv
+inner join
+    aoi.no_good_view angv
+on
+    ucv._pcb_id = angv._c2d;
+;
+
+select
+    count(*) as good_count
+from
+    u01.count_view 
+where
+    _pcb_id in ( select _c2d from aoi.good_view )
+and
+    _pcb_id not in ( select _c2d from aoi.no_good_view )
+;
+
+select
+    count(*) as no_good_count
+from
+    u01.count_view 
+where
+    _pcb_id not in ( select _c2d from aoi.good_view )
+and
+    _pcb_id in ( select _c2d from aoi.no_good_view )
+;
+
+select
+    count(*) as unknown_count
+from
+    u01.count_view
+where
+    _pcb_id not in ( select _c2d from aoi.good_view )
+and
+    _pcb_id not in ( select _c2d from aoi.no_good_view )
+;
+
