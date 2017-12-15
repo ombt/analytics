@@ -94,6 +94,8 @@ my %special_field_types = (
     "_filename_id" => "numeric(30,0)",
     "_filename_timestamp" => "bigint",
     "_lot_number" => "integer",
+    "_lotnum" => "integer",
+    "_idnum" => "integer"
 );
 #
 my $fid_table_name = "filename_to_fid";
@@ -512,6 +514,7 @@ sub add_columns_to_table
         #
         foreach my $col (@file_minus_table)
         {
+            $col =~ tr/A-Z/a-z/;
             if (exists($special_field_types{$col}))
             {
                 $sql .= "add column \"$col\" $special_field_types{$col}, ";
@@ -546,6 +549,7 @@ sub create_table
     foreach my $col (@{$pcols})
     {
         # $sql .= "\"$col\" text, ";
+        $col =~ tr/A-Z/a-z/;
         if (exists($special_field_types{$col}))
         {
             $sql .= "$col $special_field_types{$col}, ";
