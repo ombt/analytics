@@ -19,6 +19,8 @@ drop view if exists aoi.good_view
 ;
 drop view if exists aoi.good_no_view
 ;
+drop view if exists aoi.pcb_status_view
+;
 drop view if exists u01.count_view
 ;
 drop view if exists u01.time_view
@@ -430,6 +432,46 @@ and
 -- no - no ordering
 -- order by
     -- ftf._filename_timestamp asc
+;
+
+create view aoi.pcb_status_view
+as
+select
+    ftf._filename,
+    ftf._filename_type,
+    ftf._filename_timestamp,
+    ftf._filename_route,
+    ftf._filename_id,
+    -- afd._filename_id,
+    afd._aoi_pcbid,
+    afd._date_time,
+    -- i._filename_id,
+    i._cid,
+    i._timestamp,
+    i._crc,
+    i._c2d,
+    i._recipename,
+    i._mid,
+    -- p._filename_id,
+    p._p,
+    p._cmp as cmp_idx,
+    p._sc,
+    p._pid,
+    p._fc
+from
+    aoi.filename_to_fid ftf
+inner join
+    aoi.aoi_filename_data afd
+on
+    afd._filename_id = ftf._filename_id
+inner join
+    aoi.insp i
+on
+    i._filename_id = ftf._filename_id
+inner join
+    aoi.p p
+on
+    p._filename_id = ftf._filename_id
 ;
 
 create view u01.count_view
