@@ -82,12 +82,12 @@ and
     dpc._lane_no = ufd._lane_no
 and
     dpc._stage_no = ufd._stage_no
-order by
-    ftf._filename_route,
-    ufd._machine_order,
-    ufd._lane_no,
-    ufd._stage_no,
-    ftf._filename_timestamp
+-- order by
+    -- ftf._filename_route,
+    -- ufd._machine_order,
+    -- ufd._lane_no,
+    -- ufd._stage_no,
+    -- ftf._filename_timestamp
 ;
 
 create view u01.time_view
@@ -173,12 +173,12 @@ and
     dpt._lane_no = ufd._lane_no
 and
     dpt._stage_no = ufd._stage_no
-order by
-    ftf._filename_route,
-    ufd._machine_order,
-    ufd._lane_no,
-    ufd._stage_no,
-    ftf._filename_timestamp
+-- order by
+    -- ftf._filename_route,
+    -- ufd._machine_order,
+    -- ufd._lane_no,
+    -- ufd._stage_no,
+    -- ftf._filename_timestamp
 ;
 
 create view u01.feeder_view
@@ -236,14 +236,14 @@ and
     df._lane_no = ufd._lane_no
 and
     df._stage_no = ufd._stage_no
-order by
-    ftf._filename_route,
-    ufd._machine_order,
-    ufd._lane_no,
-    ufd._stage_no,
-    ftf._filename_timestamp,
-    df._fadd,
-    df._fsadd
+-- order by
+    -- ftf._filename_route,
+    -- ufd._machine_order,
+    -- ufd._lane_no,
+    -- ufd._stage_no,
+    -- ftf._filename_timestamp,
+    -- df._fadd,
+    -- df._fsadd
 ;
 
 create view u01.nozzle_view
@@ -298,14 +298,14 @@ and
     dn._lane_no = ufd._lane_no
 and
     dn._stage_no = ufd._stage_no
-order by
-    ftf._filename_route,
-    ufd._machine_order,
-    ufd._lane_no,
-    ufd._stage_no,
-    ftf._filename_timestamp,
-    dn._nhadd,
-    dn._ncadd
+-- order by
+    -- ftf._filename_route,
+    -- ufd._machine_order,
+    -- ufd._lane_no,
+    -- ufd._stage_no,
+    -- ftf._filename_timestamp,
+    -- dn._nhadd,
+    -- dn._ncadd
 ;
 
 create view u01.index_view
@@ -346,12 +346,12 @@ inner join
     u01.pivot_index upi
 on
     upi._filename_id = ftf._filename_id
-order by
-    ftf._filename_route,
-    ufd._machine_order,
-    ufd._lane_no,
-    ufd._stage_no,
-    ftf._filename_timestamp
+-- order by
+    -- ftf._filename_route,
+    -- ufd._machine_order,
+    -- ufd._lane_no,
+    -- ufd._stage_no,
+    -- ftf._filename_timestamp
 ;
 
 create view u01.information_view
@@ -395,12 +395,12 @@ inner join
     u01.pivot_information upi
 on
     upi._filename_id = ftf._filename_id
-order by
-    ftf._filename_route,
-    ufd._machine_order,
-    ufd._lane_no,
-    ufd._stage_no,
-    ftf._filename_timestamp
+-- order by
+    -- ftf._filename_route,
+    -- ufd._machine_order,
+    -- ufd._lane_no,
+    -- ufd._stage_no,
+    -- ftf._filename_timestamp
 ;
 
 create view u01.index_information_view
@@ -458,11 +458,11 @@ inner join
     u01.pivot_information upi
 on
     upi._filename_id = ftf._filename_id
-order by
-    ftf._filename_route,
-    ufd._machine_order,
-    ufd._lane_no,
-    ufd._stage_no,
-    ftf._filename_timestamp
+-- order by
+    -- ftf._filename_route,
+    -- ufd._machine_order,
+    -- ufd._lane_no,
+    -- ufd._stage_no,
+    -- ftf._filename_timestamp
 ;
 

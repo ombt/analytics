@@ -1,0 +1,21 @@
+             _mjsid             |  _lotname   | count 
+--------------------------------+-------------+-------
+ RSD160RA-SA-NEW                | RSD160SA-05 |   140
+ RSA_Nissan_14DA_PP1-NEW-PART2  | RSD160NF-00 |  2028
+ NISSAN_DA_RS_RR_MASTER-part5   | RSD160MA-01 | 13638
+ RSD000FH-HA-MA-SF-UF-NEW-PART2 | RSD000MA-05 |  1275
+ RSD160NA                       | RSD160NA-06 |  3013
+ RSD160-171-AF-BF-CF-NEW        | RSD160CF-06 |  7536
+ RSD160-171-AF-BF-CF-NEW        | RSD160AF-06 |  3180
+ NISSAN_DA_RS_RR_MASTER-part5   | RSD160DA-01 |  1740
+ RSA_Nissan_14DA_PP1-NEW-PART2  | RSD160QF-00 |  2230
+ NISSAN_DA_RS_RR_MASTER-part4   | RSD160LF-00 |  6045
+ RSD000UF                       | RSD000UF-06 |  2470
+ RSD160PA                       | RSD160PA-06 |   265
+ NISSAN_DA_RS_RR_MASTER-part5   | RSD160CA-01 |  6555
+ NISSAN_DA_RS_RR_MASTER-part5   | RSD171CA-01 |  5769
+ RSD160RA-SA-NEW                | RSD160RA-05 |  2505
+ RSD000SH-NEW                   | RSD000LA-06 |  2500
+ RSD160-171-AF-BF-CF-NEW        | RSD171AF-06 |  6010
+(17 rows)
+

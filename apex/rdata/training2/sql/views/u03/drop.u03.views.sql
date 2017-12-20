@@ -15,5 +15,3 @@ drop view if exists u03.index_information_view
 ;
 drop view if exists u03.index_info_mqt_view
 ;
-drop view if exists u03.index_info_mqt_no_view
-;
