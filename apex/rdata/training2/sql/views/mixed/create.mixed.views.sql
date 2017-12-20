@@ -1330,6 +1330,15 @@ select
     ufd._output_no as ufd_output_no,
     ufd._pcb_id_lot_no as ufd_pcb_id_lot_no,
     ufd._pcb_id_serial_no as ufd_pcb_id_serial_no,
+    upx._author as upx_author,
+    upx._authortype as upx_authortype,
+    upx._comment as upx_comment,
+    upx._date as upx_date,
+    upx._diff as upx_diff,
+    upx._format as upx_format,
+    upx._machine as upx_machine,
+    upx._mjsid as upx_mjsid,
+    upx._version as upx_version,
     upi._filename_id as upi_filename_id,
     upi._bcrstatus as upi_bcrstatus,
     upi._code as upi_code,
@@ -1391,6 +1400,10 @@ inner join
 on
     ufd._filename_id = ftf._filename_id
 inner join
+    u01.pivot_index upx
+on
+    upx._filename_id = ftf._filename_id
+inner join
     u01.pivot_information upi
 on
     upi._filename_id = ftf._filename_id
@@ -1434,6 +1447,15 @@ select
     ufd._output_no as ufd_output_no,
     ufd._pcb_id_lot_no as ufd_pcb_id_lot_no,
     ufd._pcb_id_serial_no as ufd_pcb_id_serial_no,
+    upx._author as upx_author,
+    upx._authortype as upx_authortype,
+    upx._comment as upx_comment,
+    upx._date as upx_date,
+    upx._diff as upx_diff,
+    upx._format as upx_format,
+    upx._machine as upx_machine,
+    upx._mjsid as upx_mjsid,
+    upx._version as upx_version,
     upi._filename_id as upi_filename_id,
     upi._bcrstatus as upi_bcrstatus,
     upi._code as upi_code,
@@ -1492,6 +1514,10 @@ inner join
 on
     ufd._filename_id = ftf._filename_id
 inner join
+    u01.pivot_index upx
+on
+    upx._filename_id = ftf._filename_id
+inner join
     u01.pivot_information upi
 on
     upi._filename_id = ftf._filename_id
@@ -1535,6 +1561,15 @@ select
     ufd._output_no as ufd_output_no,
     ufd._pcb_id_lot_no as ufd_pcb_id_lot_no,
     ufd._pcb_id_serial_no as ufd_pcb_id_serial_no,
+    upx._author as upx_author,
+    upx._authortype as upx_authortype,
+    upx._comment as upx_comment,
+    upx._date as upx_date,
+    upx._diff as upx_diff,
+    upx._format as upx_format,
+    upx._machine as upx_machine,
+    upx._mjsid as upx_mjsid,
+    upx._version as upx_version,
     upi._filename_id as upi_filename_id,
     upi._bcrstatus as upi_bcrstatus,
     upi._code as upi_code,
@@ -1624,6 +1659,10 @@ inner join
 on
     ufd._filename_id = ftf._filename_id
 inner join
+    u01.pivot_index upx
+on
+    upx._filename_id = ftf._filename_id
+inner join
     u01.pivot_information upi
 on
     upi._filename_id = ftf._filename_id
@@ -1667,6 +1706,16 @@ select
     ufd._output_no as ufd_output_no,
     ufd._pcb_id_lot_no as ufd_pcb_id_lot_no,
     ufd._pcb_id_serial_no as ufd_pcb_id_serial_no,
+    upx._filename_id as upx_filename_id,
+    upx._author as upx_author,
+    upx._authortype as upx_authortype,
+    upx._comment as upx_comment,
+    upx._date as upx_date,
+    upx._diff as upx_diff,
+    upx._format as upx_format,
+    upx._machine as upx_machine,
+    upx._mjsid as upx_mjsid,
+    upx._version as upx_version,
     upi._filename_id as upi_filename_id,
     upi._bcrstatus as upi_bcrstatus,
     upi._code as upi_code,
@@ -1807,6 +1856,10 @@ inner join
 on
     ufd._filename_id = ftf._filename_id
 inner join
+    u01.pivot_index upx
+on
+    upx._filename_id = ftf._filename_id
+inner join
     u01.pivot_information upi
 on
     upi._filename_id = ftf._filename_id
@@ -1854,6 +1907,16 @@ select
     ufd._output_no as ufd_output_no,
     ufd._pcb_id_lot_no as ufd_pcb_id_lot_no,
     ufd._pcb_id_serial_no as ufd_pcb_id_serial_no,
+    upx._filename_id as upx_filename_id,
+    upx._author as upx_author,
+    upx._authortype as upx_authortype,
+    upx._comment as upx_comment,
+    upx._date as upx_date,
+    upx._diff as upx_diff,
+    upx._format as upx_format,
+    upx._machine as upx_machine,
+    upx._mjsid as upx_mjsid,
+    upx._version as upx_version,
     upi._filename_id as upi_filename_id,
     upi._bcrstatus as upi_bcrstatus,
     upi._code as upi_code,
@@ -1942,6 +2005,10 @@ inner join
     u01.u0x_filename_data ufd
 on
     ufd._filename_id = ftf._filename_id
+inner join
+    u01.pivot_index upx
+on
+    upx._filename_id = ftf._filename_id
 inner join
     u01.pivot_information upi
 on

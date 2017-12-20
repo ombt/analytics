@@ -90,7 +90,14 @@ pg_open_db <- function(db_name,
                           port=db_port)
     }
     #
-    return(list("db"=db_conn, "tbls"=dbListTables(db_conn)))
+    query <- "select table_schema, table_name from information_schema.tables where table_schema not in ( 'pg_catalog', 'information_schema' ) and table_type = 'VIEW'"
+    results <- dbGetQuery(db_conn, query)
+    #
+    return(list("db"=db_conn, 
+                "tbls"=dbListTables(db_conn),
+                "vws"=paste(results$table_schema,
+                            results$table_name,
+                            sep=".")))
 }
 #
 # close connection
@@ -110,7 +117,8 @@ pg_load_table <- function(db,schema_table_name,nrows=0)
     tokens = unlist(strsplit(schema_table_name, "\\."))
     table_name = tokens[length(tokens)]
     #
-    if (table_name %in% db$tbls)
+    if ((table_name %in% db$tbls) ||
+        (schema_table_name %in% db$vws))
     {
         if (nrows > 0)
         {
@@ -127,6 +135,7 @@ pg_load_table <- function(db,schema_table_name,nrows=0)
     }
     else
     {
+        print(sprintf("Table not found: %s", table_name))
         return(data.frame())
     }
 }
@@ -148,7 +157,8 @@ pg_load_table_return_matrix <- function(db,schema_table_name,nrows=0)
     tokens = unlist(strsplit(schema_table_name, "\\."))
     table_name = tokens[length(tokens)]
     #
-    if (table_name %in% db$tbls)
+    if ((table_name %in% db$tbls) ||
+        (schema_table_name %in% db$vws))
     {
         if (nrows > 0)
         {
