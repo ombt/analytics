@@ -1,0 +1,167 @@
+aoi.aoi_filename_data
+ _aoi_pcbid
+
+aoi.cmp
+ _p
+ _cmp
+ _ref
+
+aoi.defect
+ _cmp
+
+aoi.insp
+ _crc
+ _c2d
+ _recipename
+
+aoi.p
+ _p
+ _cmp
+
+Table crb.crb_filename_data
+ _crb_file_name
+ _product_name
+
+Table crb.lotnames
+ _idnum
+ _lotnum
+ _lot
+ _productionid
+ _dgspcbname
+ _c
+
+Table crb.lotoptions
+ _lot_number
+
+Table crb.partsdata
+ _idnum
+ _c
+
+Table crb.partsgroup
+ _idnum
+ _parts
+
+Table crb.partsgroupnames
+ _idnum
+
+Table crb.pivot_index
+ _mjsid
+
+Table crb.positiondata
+ _lot_number
+ _idnum
+ _parts
+ _c
+
+Table crb.shapebase
+ _idnum
+
+Table crb.tactinfo
+ _lot_number
+
+Table crb.u0x_filename_data
+ _stage_no
+ _lane_no
+ _pcb_serial
+ _pcb_id
+ _pcb_id_lot_no
+ _pcb_id_serial_no
+
+Table u01.crb_filename_data
+ _crb_file_name
+ _product_name
+
+Table u01.delta_feeder
+ _pcb_id
+ _pcb_serial
+ _lane_no
+ _stage_no
+ _mjsid
+ _lotname
+ _partsname
+
+Table u01.delta_nozzle
+ _pcb_id
+ _pcb_serial
+ _lane_no
+ _stage_no
+ _mjsid
+ _lotname
+
+Table u01.delta_pivot_count
+ _pcb_id
+ _pcb_serial
+ _lane_no
+ _stage_no
+ _mjsid
+ _lotname
+
+Table u01.delta_pivot_time
+ _pcb_id
+ _pcb_serial
+ _lane_no
+ _stage_no
+ _mjsid
+ _lotname
+
+Table u01.pivot_index
+ _mjsid
+
+Table u01.pivot_information
+ _lotname
+ _lotnumber
+
+Table u01.u0x_filename_data
+ _stage_no
+ _lane_no
+ _pcb_serial
+ _pcb_id
+ _pcb_id_lot_no
+ _pcb_id_serial_no
+
+Table u03.crb_filename_data
+ _crb_file_name
+ _product_name
+
+Table u03.mountnormaltrace
+ _idnum
+
+Table u03.mountqualitytrace
+ _idnum
+ _parts
+
+Table u03.pcb_mqt_pos_aoi_data
+ ufd_lane_no
+ ufd_stage_no
+ ufd_pcb_id
+ upx_mjsid
+ upi_lotname
+ upi_lotnumber
+
+ ai_c2d
+ ai_recipename
+ ap_p
+ ap_cmp
+
+ ccfd_crb_file_name
+ ccfd_product_name
+
+ cl_idnum
+ cl_lotnum
+ cl_lot
+ cl_c
+ cp_lot_number
+ cp_idnum
+
+Table u03.pivot_information
+ _code
+ _lotname
+ _lotnumber
+
+Table u03.u0x_filename_data
+ _stage_no
+ _lane_no
+ _pcb_serial
+ _pcb_id
+ _pcb_id_lot_no
+ _pcb_id_serial_no

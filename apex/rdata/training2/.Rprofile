@@ -21,6 +21,7 @@ options(max.print=100)
     library(RPostgreSQL)
     library(ggplot2)
     library(sqldf)
+    library(plyr)
     #
     if (file.exists("source_all.R"))
     {
