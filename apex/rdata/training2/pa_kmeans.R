@@ -180,7 +180,7 @@ pa_count_km_cols <- c(
     "ufd_machine_order",
     "ufd_lane_no",
     "ufd_stage_no",
-    "ufd_filename_id",
+    # "ufd_filename_id",
     "p_cmp",
     "dpc_bndrcgstop",
     "dpc_bndstop",
@@ -335,7 +335,7 @@ pa_time_km_cols <- c(
     "ufd_machine_order",
     "ufd_lane_no",
     "ufd_stage_no",
-    "ufd_filename_id",
+    # "ufd_filename_id",
     "p_cmp",
     "dpt_actual",
     "dpt_bndrcgstop",
@@ -390,7 +390,7 @@ pa = get_pa_data_per_project("training_data2")
 #
 # clean data. remove counts and times which are
 # less than zero. removing pickup counts less
-# than zero removes the negative times and counts.
+# than zero removes the negative times and couqqs.
 #
 pa_clean <- pa[pa$dpc_tpickup>=0,]
 
@@ -398,43 +398,75 @@ pa_clean <- pa[pa$dpc_tpickup>=0,]
 # split data by product
 #
 pa_clean_prod = split(pa_clean, pa_clean$upx_mjsid)
-# 
+
 #
 # cycle over each mjsid and calculate k-means clustering.
 #
-for (mjsid in names(pa_clean_prod))
+for (machine_order in sort(unique(pa_clean$ufd_machine_order)))
 {
-    print(sprintf("MJSID ... %s", mjsid))
+    for (lane_no in sort(unique(pa_clean$ufd_lane_no)))
+    {
+        for (stage_no in sort(unique(pa_clean$ufd_stage_no)))
+        {
+            for (mjsid in names(pa_clean_prod))
+            {
+                #
+                # get the data for this product
+                #
+                pa_prod = pa_clean_prod[[mjsid]]
+                pa_km_data = 
+                    pa_prod[((pa_prod$ufd_machine_order == machine_order) &
+                             (pa_prod$ufd_lane_no == lane_no) &
+                             (pa_prod$ufd_stage_no == stage_no)),]
 
-    #
-    # get the data for this product
-    #
-    pa_prod = pa_clean_prod[[mjsid]]
-    print(sprintf("NROW of pa_prod (%s) = %d", mjsid, nrow(pa_prod)))
+                #
+                # check if we have any data
+                #
+                pa_km_data_rows = nrow(pa_km_data)
+                if (pa_km_data_rows == 0)
+                {
+                    # print(sprintf("Skipping since NO DATA."))
+                    next
+                }
+                print(sprintf("(machine,lane,stage,mjsid,nrow) ... (%d,%d,%d,%s,%d)", 
+                              machine_order, 
+                              lane_no, 
+                              stage_no, 
+                              mjsid, 
+                              pa_km_data_rows))
 
-    #
-    # separate counts and time data
-    #
-    pa_km_count <- subset(pa_prod,
-                          select=pa_count_km_cols)
-    pa_km_time <- subset(pa_prod,
-                          select=pa_time_km_cols)
+                #
+                # separate counts and time data
+                #
+                pa_km_count <- subset(pa_km_data,
+                                      select=pa_count_km_cols)
+                pa_km_time <- subset(pa_km_data,
+                                     select=pa_time_km_cols)
 
-    #
-    # run kmeans for two clusters: pass or fail for AOI
-    #
-    fit_count = kmeans(pa_km_count, 2)
-    fit_time = kmeans(pa_km_time, 2)
+                print(count(pa_km_count$dpc_tpickup))
+                # print(count(pa_km_time$dpt_actual))
+                # print(unique(pa_km_count$ufd_machine_order))
+                # print(unique(pa_km_count$ufd_lane_no))
+                # print(unique(pa_km_count$ufd_stage_no))
 
-    #
-    # check the fit
-    #
-    print("AOI Results")
-    print(count(pa_prod$p_cmp))
-    print("COUNT")
-    print(count(fit_count$cluster))
-    print("TIME")
-    print(count(fit_time$cluster))
+                #
+                # run kmeans for two clusters: pass or fail for AOI
+                #
+                fit_count = kmeans(pa_km_count, 2, iter.max=50)
+                fit_time = kmeans(pa_km_time, 2, iter.max=50)
+
+                #
+                # check the fit
+                #
+                print("AOI Results")
+                print(count(pa_km_data$p_cmp))
+                print("COUNT")
+                print(count(fit_count$cluster))
+                print("TIME")
+                print(count(fit_time$cluster))
+            }
+        }
+    }
 }
 
 # sink()

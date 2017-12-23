@@ -98,3 +98,23 @@ lf <- function(globpat="*",env.pos=1)
               envir=as.environment(env.pos)))
 }
 #
+# open/close a sink file
+#
+open_sink <- function(sink_file)
+{
+    print(sprintf("OPEN SINK FILE: <%s>", sink_file))
+    if (sink_file != "")
+    {
+        sink(sink_file)
+    }
+}
+
+close_sink <- function(sink_file)
+{
+    print(sprintf("CLOSE SINK FILE: <%s>", sink_file))
+    if (sink_file != "")
+    {
+        sink()
+    }
+}
+
