@@ -20,3 +20,6 @@ drop view if exists u01.pa_pcb_times_aoi_per_machine_view
 drop view if exists u01.pa_pcb_feeder_aoi_per_machine_view
 ;
 drop view if exists u01.pa_pcb_nozzle_aoi_per_machine_view
+;
+drop view if exists u03.mqt_pcb_aoi_bad_per_machine_view
+;

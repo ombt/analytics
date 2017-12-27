@@ -1,74 +1,4 @@
 #
-get_pa_data_per_project <- function(db_name="", mjsid="", lotname="")
-{
-    pa_view <- attr(get_pa_data_per_project,"view");
-    #
-    query_mjsid_lotname_format <- 
-        "select * from %s where upx_mjsid='%s' and upi_lotname='%s'"
-    query_mjsid_format <- 
-        "select * from %s where upx_mjsid='%s'"
-    query_lotname_format <- 
-        "select * from %s where upi_lotname='%s'"
-    query_format <- 
-        "select * from %s"
-    #
-    # db name is mandatory
-    #
-    if (nchar(db_name) == 0)
-    {
-        stop(sprintf("DB name was not given."))
-    }
-    #
-    # if no product was given, then just read the
-    # entire table. 
-    #
-    if ((nchar(mjsid) != 0) && (nchar(lotname) != 0))
-    {
-        format <- attr(get_pa_data_per_project,
-                      "query_mjsid_lotname_format")
-        query = sprintf(format, pa_view, mjsid, lotname);
-    }
-    else if (nchar(mjsid) != 0)
-    {
-        format <- attr(get_pa_data_per_project,"query_mjsid_format")
-        query = sprintf(format, pa_view, mjsid);
-    }
-    else if (nchar(lotname) != 0)
-    {
-        format <- attr(get_pa_data_per_project,"query_lotname_format")
-        query = sprintf(format, pa_view, lotname);
-    }
-    else
-    {
-        format <- attr(get_pa_data_per_project,"query_format")
-        query = sprintf(format, pa_view);
-    }
-    #
-    pa = data.frame();
-    db = pg_open_db(db_name);
-    #
-    pa = pg_exec_query(db, query)
-    #
-    pg_close_db(db)
-    #
-    attr(pa, "mjsid") = mjsid;
-    attr(pa, "lotname") = lotname;
-    #
-    return(pa);
-}
-#
-attr(get_pa_data_per_project,"view") <- 
-        "u01.pa_pcb_totals_aoi_per_machine_view"
-attr(get_pa_data_per_project,"query_mjsid_lotname_format") <- 
-        "select * from %s where upx_mjsid='%s' and upi_lotname='%s'"
-attr(get_pa_data_per_project,"query_mjsid_format") <- 
-        "select * from %s where upx_mjsid='%s'"
-attr(get_pa_data_per_project,"query_lotname_format") <- 
-        "select * from %s where upi_lotname='%s'"
-attr(get_pa_data_per_project,"query_format") <- 
-        "select * from %s"
-
-#
 pa_count_cols <- c(
     "ftf_filename_route",
     "ufd_machine_order",
@@ -469,6 +399,209 @@ pa_time_count_km_cols <- c(
     "dpt_unitadjust"
 )
 
+get_bad_pcb_per_machine <- function(db_name="", 
+                                    mjsids=c(),
+                                    lotnames=c(),
+                                    machines=c(),
+                                    lanes=c(),
+                                    stages=c())
+{
+    #
+    # db name is mandatory
+    #
+    if (nchar(db_name) == 0)
+    {
+        stop(sprintf("DB name was not given."))
+    }
+    #
+    # build where-clause, if any
+    #
+    where_clause <- "";
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("upx_mjsid", 
+                                                 mjsids))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("upi_lotname", 
+                                                 lotnames))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("ufd_machine_order", 
+                                                 machines))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("ufd_lane_no", 
+                                                 lanes))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("ufd_stage_no", 
+                                                 stages))
+    #
+    # build entire query.
+    #
+    pa_view <- "u03.mqt_pcb_aoi_bad_per_machine_view"
+    query <- sprintf("select * from %s", pa_view);
+    if (nchar(where_clause) > 0)
+    {
+        query <- paste(query, "where", where_clause)
+    }
+    #
+    # get data
+    #
+    pa = data.frame();
+    db = pg_open_db(db_name);
+    #
+    pa = pg_exec_query(db, query)
+    #
+    pg_close_db(db)
+    #
+    attr(pa, "mjsid") = mjsids;
+    attr(pa, "lotname") = lotnames;
+    #
+    return(pa);
+}
+
+get_pa_data_per_project <- function(db_name="", 
+                                    mjsids=c(),
+                                    lotnames=c(),
+                                    machines=c(),
+                                    lanes=c(),
+                                    stages=c())
+{
+    #
+    # db name is mandatory
+    #
+    if (nchar(db_name) == 0)
+    {
+        stop(sprintf("DB name was not given."))
+    }
+    #
+    # build where-clause, if any
+    #
+    where_clause <- "";
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("upx_mjsid", 
+                                                 mjsids))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("upi_lotname", 
+                                                 lotnames))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("ufd_machine_order", 
+                                                 machines))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("ufd_lane_no", 
+                                                 lanes))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("ufd_stage_no", 
+                                                 stages))
+    #
+    # build entire query.
+    #
+    pa_view <- "u01.pa_pcb_totals_aoi_per_machine_view"
+    query <- sprintf("select * from %s", pa_view);
+    if (nchar(where_clause) > 0)
+    {
+        query <- paste(query, "where", where_clause)
+    }
+    #
+    pa = data.frame();
+    db = pg_open_db(db_name);
+    #
+    pa = pg_exec_query(db, query)
+    #
+    pg_close_db(db)
+    #
+    attr(pa, "mjsid") = mjsids;
+    attr(pa, "lotname") = lotnames;
+    #
+    return(pa);
+}
+
+# get_pa_data_per_project <- function(db_name="", mjsid="", lotname="")
+# {
+#     pa_view <- attr(get_pa_data_per_project,"view");
+#     #
+#     query_mjsid_lotname_format <- 
+#         "select * from %s where upx_mjsid='%s' and upi_lotname='%s'"
+#     query_mjsid_format <- 
+#         "select * from %s where upx_mjsid='%s'"
+#     query_lotname_format <- 
+#         "select * from %s where upi_lotname='%s'"
+#     query_format <- 
+#         "select * from %s"
+#     #
+#     # db name is mandatory
+#     #
+#     if (nchar(db_name) == 0)
+#     {
+#         stop(sprintf("DB name was not given."))
+#     }
+#     #
+#     # if no product was given, then just read the
+#     # entire table. 
+#     #
+#     if ((nchar(mjsid) != 0) && (nchar(lotname) != 0))
+#     {
+#         format <- attr(get_pa_data_per_project,
+#                       "query_mjsid_lotname_format")
+#         query = sprintf(format, pa_view, mjsid, lotname);
+#     }
+#     else if (nchar(mjsid) != 0)
+#     {
+#         format <- attr(get_pa_data_per_project,"query_mjsid_format")
+#         query = sprintf(format, pa_view, mjsid);
+#     }
+#     else if (nchar(lotname) != 0)
+#     {
+#         format <- attr(get_pa_data_per_project,"query_lotname_format")
+#         query = sprintf(format, pa_view, lotname);
+#     }
+#     else
+#     {
+#         format <- attr(get_pa_data_per_project,"query_format")
+#         query = sprintf(format, pa_view);
+#     }
+#     #
+#     pa = data.frame();
+#     db = pg_open_db(db_name);
+#     #
+#     pa = pg_exec_query(db, query)
+#     #
+#     pg_close_db(db)
+#     #
+#     attr(pa, "mjsid") = mjsid;
+#     attr(pa, "lotname") = lotname;
+#     #
+#     return(pa);
+# }
+# 
+# attr(get_pa_data_per_project,"view") <- 
+#         "u01.pa_pcb_totals_aoi_per_machine_view"
+# attr(get_pa_data_per_project,"query_mjsid_lotname_format") <- 
+#         "select * from %s where upx_mjsid='%s' and upi_lotname='%s'"
+# attr(get_pa_data_per_project,"query_mjsid_format") <- 
+#         "select * from %s where upx_mjsid='%s'"
+# attr(get_pa_data_per_project,"query_lotname_format") <- 
+#         "select * from %s where upi_lotname='%s'"
+# attr(get_pa_data_per_project,"query_format") <- 
+#         "select * from %s"
+# 
 pa_kmeans <- function(pa,
                       arg_mjsids=c(),
                       arg_lotnames=c(),
@@ -724,7 +857,8 @@ pa_kmeans <- function(pa,
     close_sink(sink.file)
 }
 
-pa_kmeans_for_cols <- function(pa,
+pa_kmeans_for_cols <- function(db_name,
+                               pa,
                                pa_km_cols,
                                arg_mjsids=c(),
                                arg_lotnames=c(),
@@ -793,7 +927,7 @@ pa_kmeans_for_cols <- function(pa,
     }
     if (length(mjsids) == 0)
     {
-        sink();
+        close_sink(sink.file);
         stop("MJSIDS is still a null-list")
     }
 
@@ -888,6 +1022,19 @@ pa_kmeans_for_cols <- function(pa,
             }
 
             #
+            # determine which machine contained the failed
+            # part detected by the AOI machine, if possible.
+            #
+            bad_pcbs <- get_bad_pcb_per_machine(db_name,
+                                                mjsids=c(mjsid),
+                                                lotnames=c(lotname),
+                                                machines=machines,
+                                                lanes=lanes,
+                                                stages=stages)
+            print(sprintf("Number of BAD PCBS per MACHINE: %d",
+                          nrow(bad_pcbs)))
+
+            #
             # cycle and calculate k-means clustering.
             #
             for (machine in machines)
@@ -938,7 +1085,7 @@ pa_kmeans_for_cols <- function(pa,
                         selected_max = lapply(lapply(selected, abs), max)
                         selected_max[selected_max == 0] = 1
                         selected_normalized = selected/selected_max
-                        
+
                         #
                         # run kmeans for two clusters: pass or fail for AOI
                         #

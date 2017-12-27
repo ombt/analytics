@@ -791,7 +791,7 @@ pg_u0x_load_data <- function(db,
     order_by_clause = "";
     where_clause = "";
     #
-    # generate where-clauses for equals on in-group
+    # generate where-clauses for equals or in-group
     #
     where_clause = 
         sql_add_to_clause("AND",
