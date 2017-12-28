@@ -438,6 +438,45 @@ pa_count_time_hclust_cols <- c(
     "dpt_scstop"
 )
 
+pa_count_logit_cols <- c(
+    "dpc_fwait",
+    "dpc_mcfwait",
+    "dpc_mcrwait",
+    "dpc_rwait",
+    "dpc_scestop",
+    "dpc_scstop",
+    "dpc_tpickup",
+    "dpc_tpmiss",
+    "dpc_trmiss"
+)
+
+pa_time_logit_cols <- c(
+    "dpt_brcg",
+    "dpt_mcfwait",
+    "dpt_mcrwait",
+    "dpt_prdstop",
+    "dpt_scestop",
+    "dpt_scstop"
+)
+
+pa_count_time_logit_cols <- c(
+    "dpc_fwait",
+    "dpc_mcfwait",
+    "dpc_mcrwait",
+    "dpc_rwait",
+    "dpc_scestop",
+    "dpc_scstop",
+    "dpc_tpickup",
+    "dpc_tpmiss",
+    "dpc_trmiss",
+    "dpt_brcg",
+    "dpt_mcfwait",
+    "dpt_mcrwait",
+    "dpt_prdstop",
+    "dpt_scestop",
+    "dpt_scstop"
+)
+
 get_bad_pcb_per_machine <- function(db_name="", 
                                     mjsids=c(),
                                     lotnames=c(),
