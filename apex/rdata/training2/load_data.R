@@ -110,7 +110,7 @@ pa_count_km_cols <- c(
     # "ufd_lane_no",
     # "ufd_stage_no",
     # "ufd_filename_id",
-    "p_cmp",
+    # "p_cmp",
     "dpc_bndrcgstop",
     "dpc_bndstop",
     "dpc_board",
@@ -265,7 +265,7 @@ pa_time_km_cols <-c(
     # "ufd_lane_no",
     # "ufd_stage_no",
     # "ufd_filename_id",
-    "p_cmp",
+    # "p_cmp",
     "dpt_actual",
     "dpt_bndrcgstop",
     "dpt_bndstop",
@@ -314,7 +314,7 @@ pa_time_count_km_cols <- c(
     # "ufd_lane_no",
     # "ufd_stage_no",
     # "ufd_filename_id",
-    "p_cmp",
+    # "p_cmp",
     "dpc_bndrcgstop",
     "dpc_bndstop",
     "dpc_board",
@@ -868,6 +868,7 @@ pa_kmeans_for_cols <- function(db_name,
                                sink.file="",
                                min.dpc_tpickup=1,
                                num.clusters=2,
+                               num.starts=20,
                                max.iters=50)
 {
     #
@@ -1025,14 +1026,14 @@ pa_kmeans_for_cols <- function(db_name,
             # determine which machine contained the failed
             # part detected by the AOI machine, if possible.
             #
-            bad_pcbs <- get_bad_pcb_per_machine(db_name,
-                                                mjsids=c(mjsid),
-                                                lotnames=c(lotname),
-                                                machines=machines,
-                                                lanes=lanes,
-                                                stages=stages)
-            print(sprintf("Number of BAD PCBS per MACHINE: %d",
-                          nrow(bad_pcbs)))
+#             bad_pcbs <- get_bad_pcb_per_machine(db_name,
+#                                                 mjsids=c(mjsid),
+#                                                 lotnames=c(lotname),
+#                                                 machines=machines,
+#                                                 lanes=lanes,
+#                                                 stages=stages)
+#             print(sprintf("Number of BAD PCBS per MACHINE: %d",
+#                           nrow(bad_pcbs)))
 
             #
             # cycle and calculate k-means clustering.
@@ -1089,13 +1090,22 @@ pa_kmeans_for_cols <- function(db_name,
                         #
                         # run kmeans for two clusters: pass or fail for AOI
                         #
-                        fit = kmeans(selected_normalized, 
+                        fit <<- kmeans(selected_normalized, 
                                      num.clusters, 
+                                     nstart=num.starts,
                                      iter.max=max.iters)
    
                         #
                         # check the fit
                         #
+                        print("====>>>> Table AOI Results <<<<====")
+                        table_results <- 
+                            100.0*table(fit$cluster, 
+                                        pa_km_data$p_cmp)/pa_km_data_rows
+                        # print(100.0*table(fit$cluster, pa_km_data$p_cmp)/pa_km_data_rows)
+                        colnames(table_results) <- c("Pass", "Fail")
+                        print(table_results)
+
                         print("====>>>> AOI Results <<<<====")
                         print(count(pa_km_data$p_cmp))
                         aoi_pass = 
@@ -1129,6 +1139,267 @@ pa_kmeans_for_cols <- function(db_name,
                                       100*count_cluster2_aoi_pass/aoi_pass))
                         print(sprintf("cluster 2 fail/aoi fail = %f %%",
                                       100*count_cluster2_aoi_fail/aoi_fail))
+                    }
+                }
+            }
+        }
+    }
+    #
+    close_sink(sink.file);
+}
+
+pa_hclust_for_cols <- function(db_name,
+                               pa,
+                               pa_km_cols,
+                               arg_mjsids=c(),
+                               arg_lotnames=c(),
+                               arg_machines=c(),
+                               arg_lanes=c(),
+                               arg_stages=c(),
+                               sink.file="",
+                               min.dpc_tpickup=1,
+                               max.clusters=2,
+                               method="average")
+{
+    #
+    # get PA training data
+    #
+    # pa = get_pa_data_per_project("training_data2")
+
+    #
+    # do we have a log file?
+    #
+    open_sink(sink.file)
+
+    #
+    # sanity checks
+    #
+    if ((nrow(pa) == 0) || (ncol(pa) == 0))
+    {
+        close_sink(sink.file);
+        stop(sprintf("Data frames has no data."))
+    }
+    if (length(pa_km_cols) == 0)
+    {
+        close_sink(sink.file);
+        stop(sprintf("List of PA columns is empty."))
+    }
+    if (max.clusters < 2)
+    {
+        close_sink(sink.file);
+        stop(sprintf("Number of clusters is less than 2."))
+    }
+
+    #
+    # clean data. remove counts and times which are
+    # less than zero. removing pickup counts less
+    # than zero removes the negative times and counts.
+    #
+    pa_clean <- pa[pa$dpc_tpickup>=min.dpc_tpickup,]
+
+    #
+    # split data by product
+    #
+    pa_clean_prods <- split(pa_clean, pa_clean$upx_mjsid)
+
+    #
+    # get list of products
+    #
+    mjsids <- arg_mjsids
+    if (length(mjsids) == 0)
+    {
+        print("setting MJSIDS to default")
+        mjsids <- names(pa_clean_prods)
+    }
+    if (length(mjsids) == 0)
+    {
+        close_sink(sink.file);
+        stop("MJSIDS is still a null-list")
+    }
+
+    #
+    # cycle over each mjsid, etc. and calculate k-means clustering.
+    #
+    for (mjsid in mjsids)
+    {
+        #
+        # get data for a product
+        #
+        pa_prod = pa_clean_prods[[mjsid]]
+        if (is.null(pa_prod))
+        {
+            print(sprintf("NO DATA for this MSJID: %s", mjsid))
+            next
+        }
+
+        #
+        # list of lot names
+        #
+        lotnames <- arg_lotnames
+        if (length(lotnames) == 0)
+        {
+            print("setting LOTNAMES to default")
+            lotnames <- sort(unique(pa_prod$upi_lotname))
+        }
+        if (length(lotnames) == 0)
+        {
+            print(sprintf("LOTNAMES is still a null-list. Skipping %s.",
+                          mjsid))
+            next
+        }
+        pa_prod_lotnames <- split(pa_prod, pa_prod$upi_lotname)
+
+        #
+        # cycle over list of lotnames
+        #
+        for (lotname in lotnames)
+        {
+            #
+            # get data for this mjsid and lotname
+            #
+            pa_prod_lotname = pa_prod_lotnames[[lotname]]
+            if (is.null(pa_prod_lotname))
+            {
+                print(sprintf("NO DATA for this MSJID,LOTNAME: %s,%s",
+                              mjsid, lotname))
+                next
+            }
+
+            #
+            # get machine, lane and stage values lists.
+            #
+            machines <- arg_machines
+            if (length(machines) == 0)
+            {
+                print("setting MACHINES to default")
+                machines <- sort(unique(pa_prod_lotname$ufd_machine_order))
+            }
+            if (length(machines) == 0)
+            {
+                print(sprintf("MACHINES is still a null-list. Skipping %s.",
+                              mjsid))
+                next
+            }
+
+            lanes <- arg_lanes
+            if (length(lanes) == 0)
+            {
+                print("setting LANES to default")
+                lanes <- sort(unique(pa_prod_lotname$ufd_lane_no))
+            }
+            if (length(lanes) == 0)
+            {
+                print(sprintf("LANES is still a null-list. Skipping %s.",
+                              mjsid))
+                next
+            }
+
+            stages <- arg_stages
+            if (length(stages) == 0)
+            {
+                print("setting STAGES to default")
+                stages <- sort(unique(pa_prod_lotname$ufd_stage_no))
+            }
+            if (length(stages) == 0)
+            {
+                print(sprintf("STAGES is still a null-list. Skipping %s.",
+                              mjsid))
+                next
+            }
+
+            #
+            # determine which machine contained the failed
+            # part detected by the AOI machine, if possible.
+            #
+#             bad_pcbs <- get_bad_pcb_per_machine(db_name,
+#                                                 mjsids=c(mjsid),
+#                                                 lotnames=c(lotname),
+#                                                 machines=machines,
+#                                                 lanes=lanes,
+#                                                 stages=stages)
+#             print(sprintf("Number of BAD PCBS per MACHINE: %d",
+#                           nrow(bad_pcbs)))
+
+            #
+            # cycle and calculate k-means clustering.
+            #
+            for (machine in machines)
+            {
+                for (lane in lanes)
+                {
+                    for (stage in stages)
+                    {
+                        #
+                        # get the data for this product
+                        #
+                        pa_km_data = 
+                            pa_prod_lotname[((pa_prod_lotname$ufd_machine_order == machine) &
+                                             (pa_prod_lotname$ufd_lane_no == lane) &
+                                             (pa_prod_lotname$ufd_stage_no == stage)),]
+            
+                        #
+                        # check if we have any data
+                        #
+                        pa_km_data_rows = nrow(pa_km_data)
+                        if (pa_km_data_rows == 0)
+                        {
+                            print(sprintf("Skipping since NO DATA."))
+                            next
+                        }
+                        print(sprintf("(mjsid,lotname,machine,lane,stage,nrow) ... (%s,%s,%d,%d,%d,%d)", 
+                                      mjsid, 
+                                      lotname, 
+                                      machine, 
+                                      lane, 
+                                      stage, 
+                                      pa_km_data_rows))
+        
+                        #
+                        # get counts for kmeans
+                        #
+                        selected <- subset(pa_km_data, select=pa_km_cols)
+    
+                        # print(count(selected$dpc_tpickup))
+                        # print(count(selected$dpt_actual))
+                        # print(unique(selected$ufd_machine_order))
+                        # print(unique(selected$ufd_lane_no))
+                        # print(unique(selected$ufd_stage_no))
+    
+                        #
+                        # normalize the data
+                        #
+                        selected_max = lapply(lapply(selected, abs), max)
+                        selected_max[selected_max == 0] = 1
+                        selected_normalized = selected/selected_max
+
+                        #
+                        # run hclusts
+                        #
+                        dist_sn <<- dist(selected_normalized)
+                        clusters <<- hclust(dist_sn, method="average")
+   
+                        #
+                        # plot clusters
+                        #
+                        # plot(clusters, hang=-1, cex=0.8, main="Average Linkage Clustering")
+
+                        #
+                        # use table to show clusters
+                        #
+                        for (iclusts in 2:max.clusters)
+                        {
+                            print(sprintf("Cluster size: %d", iclusts))
+
+                            num=length(pa_km_data$p_cmp)
+                            print(100.0*count(pa_km_data$p_cmp)/num)
+
+                            clusterCut <- cutree(clusters, iclusts)
+                            table_results <- 
+                                table(clusterCut, pa_km_data$p_cmp)
+                            colnames(table_results) <- c("Pass", "Fail")
+                            print(table_results)
+
+                        }
                     }
                 }
             }
