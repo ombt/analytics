@@ -1,4 +1,26 @@
 
+-- create a delta function.
+
+create or replace function
+get_delta
+(
+    curr numeric(10,3),
+    prev numeric(10,3)
+)
+returns numeric(10,3) as $$
+begin
+    if (curr > prev)
+    then
+        return (curr - prev);
+    elseif (curr < prev)
+    then
+        return (curr);
+    else
+        return (0);
+    end if;
+end;
+$$ language plpgsql;
+
 create table if not exists u01.delta_pivot_time
 (
     _filename_id numeric(30,0),
@@ -268,47 +290,49 @@ select
     curr.mjsid as mjsid,
     curr.lotname as lotname,
     curr.output_no as output_no,
-    curr.actual - prev.actual as actual,
-    curr.bndrcgstop - prev.bndrcgstop as bndrcgstop,
-    curr.bndstop - prev.bndstop as bndstop,
-    curr.brcg - prev.brcg as brcg,
-    curr.brcgstop - prev.brcgstop as brcgstop,
-    curr.bwait - prev.bwait as bwait,
-    curr.cderr - prev.cderr as cderr,
-    curr.change - prev.change as change,
-    curr.cmerr - prev.cmerr as cmerr,
-    curr.cnvstop - prev.cnvstop as cnvstop,
-    curr.cperr - prev.cperr as cperr,
-    curr.crerr - prev.crerr as crerr,
-    curr.cterr - prev.cterr as cterr,
-    curr.cwait - prev.cwait as cwait,
-    curr.dataedit - prev.dataedit as dataedit,
-    curr.fbstop - prev.fbstop as fbstop,
-    curr.fwait - prev.fwait as fwait,
-    curr.idle - prev.idle as idle,
-    curr.jointpasswait - prev.jointpasswait as jointpasswait,
-    curr.judgestop - prev.judgestop as judgestop,
-    curr.load - prev.load as load,
-    curr.mcfwait - prev.mcfwait as mcfwait,
-    curr.mcrwait - prev.mcrwait as mcrwait,
-    curr.mente - prev.mente as mente,
-    curr.mhrcgstop - prev.mhrcgstop as mhrcgstop,
-    curr.mount - prev.mount as mount,
-    curr.otherlstop - prev.otherlstop as otherlstop,
-    curr.othrstop - prev.othrstop as othrstop,
-    curr.poweron - prev.poweron as poweron,
-    curr.prdstop - prev.prdstop as prdstop,
-    curr.prod - prev.prod as prod,
-    curr.prodview - prev.prodview as prodview,
-    curr.pwait - prev.pwait as pwait,
-    curr.rwait - prev.rwait as rwait,
-    curr.scestop - prev.scestop as scestop,
-    curr.scstop - prev.scstop as scstop,
-    curr.swait - prev.swait as swait,
-    curr.totalstop - prev.totalstop as totalstop,
-    curr.trbl - prev.trbl as trbl,
-    curr.trserr - prev.trserr as trserr,
-    curr.unitadjust - prev.unitadjust as unitadjust
+
+    get_delta(curr.actual, prev.actual) as actual,
+    get_delta(curr.bndrcgstop, prev.bndrcgstop) as bndrcgstop,
+    get_delta(curr.bndstop, prev.bndstop) as bndstop,
+    get_delta(curr.brcg, prev.brcg) as brcg,
+    get_delta(curr.brcgstop, prev.brcgstop) as brcgstop,
+    get_delta(curr.bwait, prev.bwait) as bwait,
+    get_delta(curr.cderr, prev.cderr) as cderr,
+    get_delta(curr.change, prev.change) as change,
+    get_delta(curr.cmerr, prev.cmerr) as cmerr,
+    get_delta(curr.cnvstop, prev.cnvstop) as cnvstop,
+    get_delta(curr.cperr, prev.cperr) as cperr,
+    get_delta(curr.crerr, prev.crerr) as crerr,
+    get_delta(curr.cterr, prev.cterr) as cterr,
+    get_delta(curr.cwait, prev.cwait) as cwait,
+    get_delta(curr.dataedit, prev.dataedit) as dataedit,
+    get_delta(curr.fbstop, prev.fbstop) as fbstop,
+    get_delta(curr.fwait, prev.fwait) as fwait,
+    get_delta(curr.idle, prev.idle) as idle,
+    get_delta(curr.jointpasswait, prev.jointpasswait) as jointpasswait,
+    get_delta(curr.judgestop, prev.judgestop) as judgestop,
+    get_delta(curr.load, prev.load) as load,
+    get_delta(curr.mcfwait, prev.mcfwait) as mcfwait,
+    get_delta(curr.mcrwait, prev.mcrwait) as mcrwait,
+    get_delta(curr.mente, prev.mente) as mente,
+    get_delta(curr.mhrcgstop, prev.mhrcgstop) as mhrcgstop,
+    get_delta(curr.mount, prev.mount) as mount,
+    get_delta(curr.otherlstop, prev.otherlstop) as otherlstop,
+    get_delta(curr.othrstop, prev.othrstop) as othrstop,
+    get_delta(curr.poweron, prev.poweron) as poweron,
+    get_delta(curr.prdstop, prev.prdstop) as prdstop,
+    get_delta(curr.prod, prev.prod) as prod,
+    get_delta(curr.prodview, prev.prodview) as prodview,
+    get_delta(curr.pwait, prev.pwait) as pwait,
+    get_delta(curr.rwait, prev.rwait) as rwait,
+    get_delta(curr.scestop, prev.scestop) as scestop,
+    get_delta(curr.scstop, prev.scstop) as scstop,
+    get_delta(curr.swait, prev.swait) as swait,
+    get_delta(curr.totalstop, prev.totalstop) as totalstop,
+    get_delta(curr.trbl, prev.trbl) as trbl,
+    get_delta(curr.trserr, prev.trserr) as trserr,
+    get_delta(curr.unitadjust, prev.unitadjust) as unitadjust
+
 from 
     prod_time_cte curr
 inner join

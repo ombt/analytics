@@ -1,4 +1,26 @@
 
+-- create a delta function.
+
+create or replace function
+get_delta
+(
+    curr numeric(10,3),
+    prev numeric(10,3)
+)
+returns numeric(10,3) as $$
+begin
+    if (curr > prev)
+    then
+        return (curr - prev);
+    elseif (curr < prev)
+    then
+        return (curr);
+    else
+        return (0);
+    end if;
+end;
+$$ language plpgsql;
+
 create table if not exists u01.delta_feeder
 (
     _filename_id   numeric(30),
@@ -168,14 +190,14 @@ select
     curr.partsname,
     curr.blkserial,
     curr.output_no,
-    curr.pickup - prev.pickup,
-    curr.pmiss - prev.pmiss,
-    curr.rmiss - prev.rmiss,
-    curr.dmiss - prev.dmiss,
-    curr.mmiss - prev.mmiss,
-    curr.hmiss - prev.hmiss,
-    curr.trsmiss - prev.trsmiss,
-    curr.mount - prev.mount
+    get_delta(curr.pickup, prev.pickup),
+    get_delta(curr.pmiss, prev.pmiss),
+    get_delta(curr.rmiss, prev.rmiss),
+    get_delta(curr.dmiss, prev.dmiss),
+    get_delta(curr.mmiss, prev.mmiss),
+    get_delta(curr.hmiss, prev.hmiss),
+    get_delta(curr.trsmiss, prev.trsmiss),
+    get_delta(curr.mount, prev.mount)
 from 
     feeder_cte curr
 inner join

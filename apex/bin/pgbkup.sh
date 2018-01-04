@@ -1,10 +1,12 @@
-#!/usr/bin/bash -x
+#!/usr/bin/bash
 #
 if [[ $# -eq 0 ]]
 then
 	echo "usage: $0 db_name [...]"
 	exit 2
 fi
+#
+set -x
 #
 for db in "${@}"
 do
