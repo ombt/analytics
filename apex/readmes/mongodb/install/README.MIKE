@@ -89,3 +89,53 @@ command line syntax.
 Copyright © Microsoft Corporation. All rights reserved.
 Portions of this software are based in part on the work of the Independent JPEG Group.
 
+------------------------------------------------------------------------
+
+To start MONGODB as a service:
+
+Configure a Windows Service for MongoDB Community Edition
+
+1 Open an Administrator command prompt.
+
+Press the Win key, type cmd.exe, and press Ctrl + Shift + Enter to run the Command Prompt as Administrator.
+
+Execute the remaining steps from the Administrator command prompt.
+
+2 Create directories.
+
+Create directories for your database and log files:
+
+mkdir c:\data\db
+mkdir c:\data\log
+
+3 Create a configuration file.
+
+Create a configuration file. The file must set systemLog.path. Include additional configuration options as appropriate.
+
+For example, create a file at C:\Program Files\MongoDB\Server\3.6\mongod.cfg that specifies both systemLog.path and storage.dbPath:
+
+systemLog:
+    destination: file
+    path: c:\data\log\mongod.log
+storage:
+    dbPath: c:\data\db
+
+4 Install the MongoDB service.
+
+Important
+
+Run all of the following commands in Command Prompt with ¿Administrative Privileges¿.
+
+Install the MongoDB service by starting mongod.exe with the --install option and the -config option to specify the previously created configuration file.
+
+"C:\Program Files\MongoDB\Server\3.6\bin\mongod.exe" --config "C:\Program Files\MongoDB\Server\3.6\mongod.cfg" --install
+
+To use an alternate dbpath, specify the path in the configuration file (e.g. C:\mongodb\mongod.cfg) or on the command line with the --dbpath option.
+
+If needed, you can install services for multiple instances of mongod.exe or mongos.exe. Install each service with a unique --serviceName and --serviceDisplayName. Use multiple instances only when sufficient system resources exist and your system design requires it.
+
+5 Start the MongoDB service.
+
+net start MongoDB
+
+
