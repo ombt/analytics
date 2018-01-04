@@ -135,7 +135,7 @@ pa_time_count_km_cols <- c(
 
 pa_clean = pa[pa$dpc_tpickup>=1,]
 
-pa_clean_prods = split(pac, pac$upx_mjsid)
+pa_clean_prods = split(pa_clean, pa_clean$upx_mjsid)
 
 pa_clean_prod = pa_clean_prods[["NISSAN_DA_RS_RR_MASTER-part4"]]
 
