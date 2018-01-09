@@ -931,6 +931,8 @@ pa_kmeans_for_cols <- function(db_name,
     # less than zero. removing pickup counts less
     # than zero removes the negative times and counts.
     #
+    # not needed anymore, but leave it in for now ... mar, 01/04/2017
+    #
     pa_clean <- pa[pa$dpc_tpickup>=min.dpc_tpickup,]
 
     #
@@ -1170,7 +1172,8 @@ pa_kmeans_for_cols <- function(db_name,
 }
 
 pa_hclust_for_cols <- function(db_name="training_data2",
-                               pa_km_cols=pa_time_count_km_cols,
+                               pa=data.frame(),
+                               pa_hclust_cols=pa_time_count_km_cols,
                                arg_mjsids=c(),
                                arg_lotnames=c(),
                                arg_machines=c(),
@@ -1178,18 +1181,27 @@ pa_hclust_for_cols <- function(db_name="training_data2",
                                arg_stages=c(),
                                sink.file="",
                                min.dpc_tpickup=1,
-                               max.clusters=5,
+                               max.clusters=2,
                                method="average")
 {
-    #
-    # get PA training data
-    #
-    pa = get_pa_data_per_project(db_name)
-
     #
     # do we have a log file?
     #
     open_sink(sink.file)
+
+    #
+    # get PA training data
+    #
+    if ((nrow(pa) == 0) || (ncol(pa) == 0))
+    {
+        if (nchar(db_name) == 0)
+        {
+            stop(sprintf("DB name was not given."))
+        }
+        print(sprintf("Data frames has no data. Read data for DB %s.",
+                      db_name))
+        pa = get_pa_data_per_project(db_name)
+    }
 
     #
     # sanity checks
@@ -1199,7 +1211,7 @@ pa_hclust_for_cols <- function(db_name="training_data2",
         close_sink(sink.file);
         stop(sprintf("Data frames has no data."))
     }
-    if (length(pa_km_cols) == 0)
+    if (length(pa_hclust_cols) == 0)
     {
         close_sink(sink.file);
         stop(sprintf("List of PA columns is empty."))
@@ -1339,7 +1351,7 @@ pa_hclust_for_cols <- function(db_name="training_data2",
                         #
                         # get the data for this product
                         #
-                        pa_km_data = 
+                        pa_hclust_data = 
                             pa_prod_lotname[((pa_prod_lotname$ufd_machine_order == machine) &
                                              (pa_prod_lotname$ufd_lane_no == lane) &
                                              (pa_prod_lotname$ufd_stage_no == stage)),]
@@ -1347,8 +1359,8 @@ pa_hclust_for_cols <- function(db_name="training_data2",
                         #
                         # check if we have any data
                         #
-                        pa_km_data_rows = nrow(pa_km_data)
-                        if (pa_km_data_rows == 0)
+                        pa_hclust_data_rows = nrow(pa_hclust_data)
+                        if (pa_hclust_data_rows == 0)
                         {
                             print(sprintf("Skipping since NO DATA."))
                             next
@@ -1359,12 +1371,13 @@ pa_hclust_for_cols <- function(db_name="training_data2",
                                       machine, 
                                       lane, 
                                       stage, 
-                                      pa_km_data_rows))
+                                      pa_hclust_data_rows))
         
                         #
                         # get counts for kmeans
                         #
-                        selected <- subset(pa_km_data, select=pa_km_cols)
+                        selected <- subset(pa_hclust_data, 
+                                           select=pa_hclust_cols)
     
                         # print(count(selected$dpc_tpickup))
                         # print(count(selected$dpt_actual))
@@ -1397,19 +1410,19 @@ pa_hclust_for_cols <- function(db_name="training_data2",
                         {
                             print(sprintf("Cluster size: %d", iclusts))
 
-                            print(count(pa_km_data$p_cmp))
+                            print(count(pa_hclust_data$p_cmp))
 
                             clusterCut <- cutree(clusters, iclusts)
                             table_results <- 
-                                table(clusterCut, pa_km_data$p_cmp)
+                                table(clusterCut, pa_hclust_data$p_cmp)
                             colnames(table_results) <- c("Pass", "Fail")
                             print(table_results)
 
-                            for (xxx in names(selected_normalized))
-                            {
-                                print(sprintf("Field: %s", xxx))
-                                print(table(clusterCut, selected_normalized[[xxx]]))
-                            }
+                            # for (xxx in names(selected_normalized))
+                            # {
+                                # print(sprintf("Field: %s", xxx))
+                                # print(table(clusterCut, selected_normalized[[xxx]]))
+                            # }
                         }
                     }
                 }
