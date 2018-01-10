@@ -1,0 +1,9 @@
+grouped_pa_aoi=split(pa_aoi, 
+                     list(pa_aoi$ftf_filename_route,
+                          pa_aoi$ufd_machine_order,
+                          pa_aoi$ufd_lane_no,
+                          pa_aoi$ufd_stage_no,
+                          pa_aoi$upx_mjsid,
+                          pa_aoi$upi_lotname),
+                     sep=";",
+                     drop=TRUE)

@@ -611,6 +611,72 @@ get_pa_data_per_project <- function(db_name="",
     return(pa);
 }
 
+get_pcb_pa_aoi_status_per_machine <- function(db_name="", 
+                                              mjsids=c(),
+                                              lotnames=c(),
+                                              machines=c(),
+                                              lanes=c(),
+                                              stages=c())
+{
+    #
+    # db name is mandatory
+    #
+    if (nchar(db_name) == 0)
+    {
+        stop(sprintf("DB name was not given."))
+    }
+    #
+    # build where-clause, if any
+    #
+    where_clause <- "";
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("upx_mjsid", 
+                                                 mjsids))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("upi_lotname", 
+                                                 lotnames))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("ufd_machine_order", 
+                                                 machines))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("ufd_lane_no", 
+                                                 lanes))
+    where_clause <-
+        sql_add_to_clause("AND",
+                          where_clause,
+                          sql_generate_in_clause("ufd_stage_no", 
+                                                 stages))
+    #
+    # build entire query.
+    #
+    pa_view <- "u01.pcb_pa_aoi_status_per_machine_view"
+    query <- sprintf("select * from %s", pa_view);
+    if (nchar(where_clause) > 0)
+    {
+        query <- paste(query, "where", where_clause)
+    }
+    #
+    pa = data.frame();
+    db = pg_open_db(db_name);
+    #
+    pa = pg_exec_query(db, query)
+    #
+    pg_close_db(db)
+    #
+    attr(pa, "mjsid") = mjsids;
+    attr(pa, "lotname") = lotnames;
+    #
+    return(pa);
+}
+
 # get_pa_data_per_project <- function(db_name="", mjsid="", lotname="")
 # {
 #     pa_view <- attr(get_pa_data_per_project,"view");
@@ -1988,4 +2054,19 @@ pa_pca_for_cols <- function(db_name="training_data2",
     #
     close_sink(sink.file);
 }
+
+create_grouped_pa_aoi <- function()
+{
+    grouped_pa_aoi <<- 
+        split(pa_aoi, 
+              list(pa_aoi$ftf_filename_route,
+                   pa_aoi$ufd_machine_order,
+                   pa_aoi$ufd_lane_no,
+                   pa_aoi$ufd_stage_no,
+                   pa_aoi$upx_mjsid,
+                   pa_aoi$upi_lotname),
+              sep=";",
+              drop=TRUE)
+}
+
 
