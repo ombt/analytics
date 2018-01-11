@@ -142,84 +142,6 @@
  # save.history()
  # savehistory()
  # 
-plot_data <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06")
-{
-    ymax = max(grp_pa_aoi[[label]]$dpc_tpickup)
-    ymin = -1
-    ylim=c(ymin,ymax)
-
-    plot(grp_pa_aoi[[label]]$dpc_tpickup, ylim=ylim, col="green")
-    points(grp_pa_aoi[[label]]$aoi_error_count, ylim=ylim, col="red")
-}
-
-plot_data2 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06")
-{
-    ymax = max(grp_pa_aoi[[label]]$dpc_tpickup)
-    ymin = -1
-    ylim=c(ymin,ymax)
-
-    plot(grp_pa_aoi[[label]]$dpc_tpickup, ylim=ylim, col="green")
-    points(grp_pa_aoi[[label]]$aoi_error_count, ylim=ylim, col="red")
-
-    for (irow in 1:length(grp_pa_aoi[[label]]$aoi_error_count))
-    {
-        error_count = grp_pa_aoi[[label]]$aoi_error_count[irow]
-        if (error_count > 0)
-        {
-            abline(v=irow,col="red")
-        }
-    }
-}
-
-plot_data3 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06")
-{
-    tpickup = grp_pa_aoi[[label]]$dpc_tpickup + 1
-    aoi_err = grp_pa_aoi[[label]]$aoi_error_count + 1
-
-    ymin = 1
-    ymax = max(tpickup)
-    ylim=c(ymin,ymax)
-
-    plot(tpickup, ylim=ylim, col="green", log="y")
-    points(aoi_err, ylim=ylim, col="red")
-
-    for (irow in 1:length(aoi_err))
-    {
-        error_count = aoi_err[irow]
-        if (error_count > 1)
-        {
-            abline(v=irow,col="red")
-        }
-    }
-}
-
-plot_data4 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06",
-                       ycol="dpc_tpickup",
-                       errcol="aoi_error_count",
-                       plot_err=FALSE)
-{
-    ydata   = grp_pa_aoi[[label]][[ycol]]
-    errdata = grp_pa_aoi[[label]][[errcol]]
-
-    ymin = 0
-    ymax = max(ydata)
-    ylim=c(ymin,ymax)
-
-    plot(ydata, ylim=ylim, main=ycol, col="black")
-    if (plot_err == TRUE)
-    {
-        points(errdata, ylim=ylim, col="red")
-    }
-
-    for (irow in 1:length(errdata))
-    {
-        error_count = errdata[irow]
-        if (error_count > 0)
-        {
-            abline(v=irow,col="red")
-        }
-    }
-}
 
  # ftf_filename_route
  # ufd_machine_order
@@ -377,27 +299,142 @@ plot_data4 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06",
  # dpt_unitadjust
  # aoi_error_count"
 
-plot_data5 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06",
+plot_data <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06")
+{
+    ymax = max(grp_pa_aoi[[label]]$dpc_tpickup)
+    ymin = -1
+    ylim=c(ymin,ymax)
+
+    plot(grp_pa_aoi[[label]]$dpc_tpickup, ylim=ylim, col="green")
+    points(grp_pa_aoi[[label]]$aoi_error_count, ylim=ylim, col="red")
+}
+
+plot_data2 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06")
+{
+    ymax = max(grp_pa_aoi[[label]]$dpc_tpickup)
+    ymin = -1
+    ylim=c(ymin,ymax)
+
+    plot(grp_pa_aoi[[label]]$dpc_tpickup, ylim=ylim, col="green")
+    points(grp_pa_aoi[[label]]$aoi_error_count, ylim=ylim, col="red")
+
+    for (irow in 1:length(grp_pa_aoi[[label]]$aoi_error_count))
+    {
+        error_count = grp_pa_aoi[[label]]$aoi_error_count[irow]
+        if (error_count > 0)
+        {
+            abline(v=irow,col="red")
+        }
+    }
+}
+
+plot_data3 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06")
+{
+    tpickup = grp_pa_aoi[[label]]$dpc_tpickup + 1
+    aoi_err = grp_pa_aoi[[label]]$aoi_error_count + 1
+
+    ymin = 1
+    ymax = max(tpickup)
+    ylim=c(ymin,ymax)
+
+    plot(tpickup, ylim=ylim, col="green", log="y")
+    points(aoi_err, ylim=ylim, col="red")
+
+    for (irow in 1:length(aoi_err))
+    {
+        error_count = aoi_err[irow]
+        if (error_count > 1)
+        {
+            abline(v=irow,col="red")
+        }
+    }
+}
+
+plot_data4 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06",
+                       ycol="dpc_tpickup",
                        errcol="aoi_error_count",
                        plot_err=FALSE)
 {
+    ydata   = grp_pa_aoi[[label]][[ycol]]
+    errdata = grp_pa_aoi[[label]][[errcol]]
+
+    ymin = 0
+    ymax = max(ydata)
+    ylim=c(ymin,ymax)
+
+    plot(ydata, ylim=ylim, main=ycol, col="black")
+    if (plot_err == TRUE)
+    {
+        points(errdata, ylim=ylim, col="red")
+    }
+
+    for (irow in 1:length(errdata))
+    {
+        error_count = errdata[irow]
+        if (error_count > 0)
+        {
+            abline(v=irow,col="red")
+        }
+    }
+}
+
+plot_data5 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06",
+                       errcol="aoi_error_count",
+                       always_plot=FALSE,
+                       plot_err=FALSE)
+{
+    if (my.exists(saved_fields) && is.list(saved_fields))
+    {
+        saved_fields[[label]] <<- c()
+    }
+    else
+    {
+        saved_fields <<- list()
+        saved_fields[[label]] <<- c()
+    }
+
     for (ycol in names(grp_pa_aoi[[label]]))
     {
         rycol=range(grp_pa_aoi[[label]][[ycol]])
         if (is.numeric(rycol[2]) && (rycol[2] > 0))
         {
-            answer = readline(prompt=sprintf("Plot %s [y/n/cr=y]: ", ycol))
-            if ((answer == "y") ||
-                (answer == ""))
+            if (always_plot == FALSE)
+            {
+                answer = readline(prompt=sprintf("Plot %s [y/n/q/cr=y]: ", ycol))
+                if ((answer == "y") || (answer == ""))
+                {
+                    plot_data4(label,
+                               ycol=ycol,
+                               errcol=errcol,
+                               plot_err=plot_err)
+                    answer = readline(prompt=sprintf("Save field %s [y/n/cr=n]: ", ycol))
+                    if (answer == "y")
+                    {
+                        saved_fields[[label]] <<- c(saved_fields[[label]], 
+                                                    ycol)
+                    }
+                }
+                else if (answer == "q")
+                {
+                    stop("Quitting ...")
+                }
+            }
+            else
             {
                 plot_data4(label,
                            ycol=ycol,
                            errcol=errcol,
                            plot_err=plot_err)
-            }
-            else if (answer == "q")
-            {
-                stop("Quitting ...")
+                answer = readline(prompt=sprintf("Save field %s [y/n/q/cr=n]: ", ycol))
+                if (answer == "y")
+                {
+                    saved_fields[[label]] <<- c(saved_fields[[label]], 
+                                                ycol)
+                }
+                else if (answer == "q")
+                {
+                    stop("Quitting ...")
+                }
             }
         }
         else
@@ -406,3 +443,59 @@ plot_data5 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06",
         }
     }
 }
+
+plot_ydata <- function(main_label,
+                       ydata, 
+                       errdata, 
+                       plot_err=FALSE)
+{
+    ymin = 0
+    ymax = max(ydata)
+    ylim=c(ymin,ymax)
+
+    plot(ydata, ylim=ylim, main=main_label, col="black")
+    if (plot_err == TRUE)
+    {
+        points(errdata, ylim=ylim, col="red")
+    }
+
+    for (irow in 1:length(errdata))
+    {
+        error_count = errdata[irow]
+        if (error_count > 0)
+        {
+            abline(v=irow,col="red")
+        }
+    }
+}
+
+plot_data6 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06",
+                       ycols=c("dpc_tpickup"),
+                       errcol="aoi_error_count",
+                       plot_err=FALSE)
+{
+    if (length(ycols) <= 0)
+    {
+        stop("List of column names is null-length")
+    }
+    else if (length(ycols) == 1)
+    {
+        ydata = grp_pa_aoi[[label]][[ycols[1]]]
+        main_label = ycols[1]
+        errdata = grp_pa_aoi[[label]][[errcol]]
+        plot_ydata(main_label, ydata, errdata, plot_err=plot_err)
+    }
+    else
+    {
+        ydata = grp_pa_aoi[[label]][[ycols[1]]]
+        for (iy in 2:length(ycols))
+        {
+            ydata = ydata + grp_pa_aoi[[label]][[ycols[iy]]]
+        }
+        main_label = paste(ycols, collapse="+")
+        errdata = grp_pa_aoi[[label]][[errcol]]
+        plot_ydata(main_label, ydata, errdata, plot_err=plot_err)
+    }
+
+}
+

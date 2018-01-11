@@ -118,3 +118,13 @@ close_sink <- function(sink_file)
     }
 }
 
+#
+# check if a symbol exists without having to quote it.
+#
+my.exists <- function(sym, inherits=TRUE)
+{
+    sym <- deparse(substitute(sym))
+    env <- parent.frame()
+    return(exists(sym, env, inherits=inherits))
+}
+
