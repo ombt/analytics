@@ -499,3 +499,22 @@ plot_data6 <- function(label="LINEA10;1;1;1;RSD160NA;RSD160NA-06",
 
 }
 
+plot_saved_fields_data <- function(errcol="aoi_error_count",
+                                   plot_err=FALSE)
+{
+    for (label in names(saved_fields))
+    {
+        answer = readline(prompt=sprintf("Plot %s [y/n/q/cr=y]: ", label))
+        if ((answer == "y") || (answer == ""))
+        {
+            plot_data6(label,
+                       ycols=saved_fields[[label]],
+                       errcol=errcol,
+                       plot_err=plot_err)
+        }
+        else if (answer == "q")
+        {
+            stop("Quitting ...")
+        }
+    }
+}

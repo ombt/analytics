@@ -128,3 +128,57 @@ my.exists <- function(sym, inherits=TRUE)
     return(exists(sym, env, inherits=inherits))
 }
 
+#
+# union the columns in a dataframe
+#
+df_union <- function(mydf)
+{
+    if ( ! is.data.frame(mydf))
+    {
+        stop(sprintf("%s is NOT a data frame.",
+                     deparse(substitute(mydf))))
+    }
+    else if (ncol(mydf) == 0)
+    {
+        return(c())
+    }
+    else if (ncol(mydf) == 1)
+    {
+        return(mydf[[1]])
+    }
+    else
+    {
+        udf = mydf[[1]]
+        for (i in 2:ncol(mydf))
+        {
+            udf = union(udf, mydf[[i]])
+        }
+        return(udf)
+    }
+}
+
+list_union <- function(myl)
+{
+    if ( ! is.list(myl))
+    {
+        stop(sprintf("%s is NOT a list.", deparse(substitute(myl))))
+    }
+    else if (length(myl) == 0)
+    {
+        return(c())
+    }
+    else if (length(myl) == 1)
+    {
+        return(myl[[1]])
+    }
+    else
+    {
+        umyl = myl[[1]]
+        for (i in 2:length(myl))
+        {
+            umyl = union(umyl, myl[[i]])
+        }
+        return(umyl)
+    }
+}
+
