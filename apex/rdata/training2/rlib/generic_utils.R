@@ -182,3 +182,28 @@ list_union <- function(myl)
     }
 }
 
+list_intersection <- function(myl)
+{
+    if ( ! is.list(myl))
+    {
+        stop(sprintf("%s is NOT a list.", deparse(substitute(myl))))
+    }
+    else if (length(myl) == 0)
+    {
+        return(c())
+    }
+    else if (length(myl) == 1)
+    {
+        return(c())
+    }
+    else
+    {
+        int_myl = myl[[1]]
+        for (i in 2:length(myl))
+        {
+            int_myl = intersection(int_myl, myl[[i]])
+        }
+        return(int_myl)
+    }
+}
+
