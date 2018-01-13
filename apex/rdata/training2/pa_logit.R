@@ -484,7 +484,6 @@ pa_independent_logit_cols <- c(
     "dpt_scstop",
     "dpt_stage_no",
     "dpt_swait",
-    "dpt_timestamp",
     "dpt_totalstop",
     "dpt_trbl",
     "dpt_trserr",
@@ -509,7 +508,8 @@ for (label in names(grp_pa_aoi))
     # number of failed boards
     #
     failed_boards = sum(label_data[["aoi_error_count"]]>0)
-    min_non_zero_values = max(failed_boards/2, 2)
+    # min_non_zero_values = max(failed_boards/2, 2)
+    min_non_zero_values = max(failed_boards, 2)
     #
     # determine the fields which have useable data
     #
@@ -521,20 +521,17 @@ for (label in names(grp_pa_aoi))
                 (rcol[1] < rcol[2]) &&
                 (rcol[2] > 0)))
         {
-            print(sprintf("Field %s is NOT USABLE ...", col))
+            # print(sprintf("Field %s is NOT USABLE ...", col))
             next
         }
         #
         non_zero_values=sum(label_data[[col]]>0)
         if (non_zero_values<min_non_zero_values)
         {
-            print(sprintf("Field %s is NOT USABLE (%f<%f) ...", 
-                           col,
-                           non_zero_values,
-                           min_non_zero_values))
+            # print(sprintf("Field %s is NOT USABLE (%f<%f) ...", col, non_zero_values, min_non_zero_values))
             next
         }
-        print(sprintf("Field %s is USABLE ...", col))
+        # print(sprintf("Field %s is USABLE ...", col))
         usable_flds = c(usable_flds, col)
         
     }
