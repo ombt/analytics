@@ -124,7 +124,7 @@ usage: $arg0 [-?] [-h]  \\
         [-s section[,section...] \\
         [-d delimiter] \\
         [-r] [-C|-c] [-L] \\
-        maihime-file ...
+        [maihime-file ... ]
 
 where:
     -? or -h - print this usage.
