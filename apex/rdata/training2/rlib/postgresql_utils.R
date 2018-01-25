@@ -93,7 +93,7 @@ pg_open_db <- function(db_name,
     query <- "select table_schema, table_name from information_schema.tables where table_schema not in ( 'pg_catalog', 'information_schema' ) and table_type = 'VIEW'"
     results <- dbGetQuery(db_conn, query)
     #
-    return(list("db"=db_conn, 
+    return(list("conn"=db_conn, 
                 "tbls"=dbListTables(db_conn),
                 "vws"=paste(results$table_schema,
                             results$table_name,
@@ -104,7 +104,7 @@ pg_open_db <- function(db_name,
 #
 pg_close_db <- function(db)
 {
-    status = dbDisconnect(db$db)
+    status = dbDisconnect(db$conn)
 }
 #
 # read in a table
@@ -130,7 +130,7 @@ pg_load_table <- function(db,schema_table_name,nrows=0)
             # quote the table name since Index is a key-word in SQL
             query=paste("select * from ", schema_table_name, sep="")
         }
-        results = dbGetQuery(db$db, query)
+        results = dbGetQuery(db$conn, query)
         return(results)
     }
     else
@@ -144,7 +144,7 @@ pg_load_table <- function(db,schema_table_name,nrows=0)
 #
 pg_exec_query <- function(db, query)
 {
-    return(dbGetQuery(db$db, query))
+    return(dbGetQuery(db$conn, query))
 }
 #
 # read in a table and return as a matrix
@@ -170,7 +170,7 @@ pg_load_table_return_matrix <- function(db,schema_table_name,nrows=0)
             # quote the table name since Index is a key-word in SQL
             query=paste("select * from ", schema_table_name, sep="")
         }
-        results = dbGetQuery(db$db, query)
+        results = dbGetQuery(db$conn, query)
         return(as.matrix(results))
     }
     else
@@ -183,6 +183,6 @@ pg_load_table_return_matrix <- function(db,schema_table_name,nrows=0)
 #
 pg_exec_query_return_matrix <- function(db, query)
 {
-    return(as.matrix(dbGetQuery(db$db, query)))
+    return(as.matrix(dbGetQuery(db$conn, query)))
 }
 

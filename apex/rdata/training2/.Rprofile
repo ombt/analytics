@@ -22,6 +22,7 @@ options(max.print=100)
     library(ggplot2)
     library(sqldf)
     library(plyr)
+    library(shiny)
     #
     if (file.exists("source_all.R"))
     {
