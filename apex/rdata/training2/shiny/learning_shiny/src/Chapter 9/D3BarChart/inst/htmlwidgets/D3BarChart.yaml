@@ -1,0 +1,10 @@
+# (uncomment to add a dependency)
+ dependencies:
+  - name: d3
+    version: 3.5.6
+    src: "htmlwidgets/libraries"
+    script: d3.min.js
+  - name: divstyle
+    version: 0.0.1
+    src: "htmlwidgets/styles"
+    stylesheet: divstyle.css

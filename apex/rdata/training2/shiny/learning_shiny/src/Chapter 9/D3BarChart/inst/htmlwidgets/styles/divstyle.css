@@ -1,0 +1,13 @@
+.tooltips {position: fixed;
+		   text-align: center; 
+		   width: 80px; 
+		   height: 50px; 
+		   padding: 2px; 
+		   font: 12px sans-serif; 
+		   color: white; 
+		   background: red; 
+		   border: 0px; 
+		   border-radius: 8px; 
+		   left: 0; 
+		   top:0; 
+		   display:none;}
