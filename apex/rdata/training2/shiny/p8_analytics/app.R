@@ -76,20 +76,20 @@ ui <- fluidPage(
             ),
             dateRangeInput(
                 inputId = "date_range",
-                label = "Analysis start/end date: ",
+                label = h4("Analysis start/end date: "),
                 start = Sys.Date() - 1,
                 end = Sys.Date(),
                 format = "yyyy-mm-dd"
             ),
             timeInput(
                 inputId = "start_time",
-                label = "Analysis start time: ",
+                label = h4("Analysis start time: "),
                 value = strptime("00:00", "%R"),
                 seconds = FALSE
             ),
             timeInput(
                 inputId = "end_time",
-                label = "Analysis end time: ",
+                label = h4("Analysis end time: "),
                 value = strptime("23:59", "%R"),
                 seconds = FALSE
             )
@@ -101,7 +101,8 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
 
-    values <- reactiveValues(route = "")
+    values <- reactiveValues(route = "",
+                             product = "")
 
     observe(
     {
@@ -147,6 +148,71 @@ server <- function(input, output, session) {
                     session = session,
                     inputId = "machinesgroup",
                     choices = list()
+                )
+            }
+        }
+    } )
+    observe(
+    {
+        input$product
+        if (input$product != values$product)
+        {
+            values$product = input$product
+
+            if (input$product != "Unknown")
+            {
+                parts <- unlist(strsplit(input$product, 
+                                         " ",
+                                         fixed = TRUE))
+                prod_times = get_product_times(
+                                 db_name = isolate(input$db_name), 
+                                 route = isolate(input$route), 
+                                 mjsid = parts[1], 
+                                 lotname = parts[2], 
+                                 lotnumber = parts[3], 
+                                 lane = parts[4])
+
+                prod_start_date <- 
+                    as.Date(substr(prod_times$min_date,1,8), 
+                            format="%Y%m%d")
+                prod_end_date <- 
+                    as.Date(substr(prod_times$max_date,1,8), 
+                            format="%Y%m%d")
+    
+                updateDateRangeInput(
+                    session = session,
+                    inputId = "date_range",
+                    start = prod_start_date,
+                    end = prod_end_date
+                )
+                updateTimeInput(
+                    session = session,
+                    inputId = "start_time",
+                    value = strptime("00:00", "%R")
+                )
+                updateTimeInput(
+                    session = session,
+                    inputId = "end_time",
+                    value = strptime("23:59", "%R")
+                )
+            }
+            else
+            {
+                updateDateRangeInput(
+                    session = session,
+                    inputId = "date_range",
+                    start = Sys.Date() - 1,
+                    end = Sys.Date()
+                )
+                updateTimeInput(
+                    session = session,
+                    inputId = "start_time",
+                    value = strptime("00:00", "%R")
+                )
+                updateTimeInput(
+                    session = session,
+                    inputId = "end_time",
+                    value = strptime("23:59", "%R")
                 )
             }
         }
