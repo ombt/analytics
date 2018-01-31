@@ -1,0 +1,5 @@
+# /home/MRumore/f/bin/compal.sql.sh feeders/create.feeder.delta.counts.table.sql
+
+/home/MRumore/f/bin/compal.sql.sh count/create.production.delta.counts.pivot.table.sql
+/home/MRumore/f/bin/compal.sql.sh nozzles/create.nozzle.delta.counts.table.sql
+/home/MRumore/f/bin/compal.sql.sh time/create.production.delta.times.pivot.table.sql
