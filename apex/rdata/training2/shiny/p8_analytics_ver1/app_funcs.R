@@ -138,7 +138,6 @@ get_product_times <- function(db_name,
     {
         return(c())
     }
-
     cache_key <- paste(db_name, 
                        route, 
                        mjsid, 
@@ -146,7 +145,7 @@ get_product_times <- function(db_name,
                        lotnumber, 
                        lane,
                        sep="_")
-
+  
     if ( ! (cache_key %in% names(db_product_times_cache)) )
     {
         pg_db <- pg_open_db(db_name=db_name)
@@ -158,17 +157,5 @@ print(product_times[,c(6,7)])
     }
 
     return(db_product_times_cache[[cache_key]])
-}
-
-not_equal_to <- function(lhs, rhs, msg)
-{
-    if (lhs != rhs)
-    {
-        return(NULL)
-    }
-    else
-    {
-        return(msg)
-    }
 }
 

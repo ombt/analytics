@@ -42,15 +42,23 @@ if (length(db_routes) <= 0)
 db_routes[["Unknown"]] = list(route=c("Unknown"))
 
 #
+# types of analysis
+#
+analysis_types <- c("NONE", 
+                    "PLOT", 
+                    "PA-SPC", 
+                    "TRACE-SPC", 
+                    "POST-PRODUCTION")
+
+#
 # UI interface (paints the widgets)
 #
 ui <- fluidPage(
-    titlePanel(
-        title = h2("PanaCIM Enterprise Analytics"),
-        windowTitle = h2("PanaCIM Enterprise Analytics")
-    ),
-    sidebarLayout(
-        sidebarPanel(
+    navbarPage(
+        title = h2("PanaCIM EA"),
+        id = "main_page",
+        tabPanel(
+            title = "Data",
             selectInput(
                 inputId = "db_name",
                 label = h4("Select Database: "),
@@ -70,7 +78,7 @@ ui <- fluidPage(
                 selected = "Unknown"
             ),
             checkboxGroupInput(
-                inputId = "machinesgroup",
+                inputId = "machines",
                 label = h4("Select Placement Machines: "),
                 choices = list()
             ),
@@ -92,9 +100,81 @@ ui <- fluidPage(
                 label = h4("Analysis end time: "),
                 value = strptime("23:59", "%R"),
                 seconds = FALSE
+            ),
+            actionButton(
+                inputId = "collect_data",
+                label = h3("Collect Data")
+            ),
+            h3(textOutput("collect_data_status"))
+        ),
+        tabPanel(
+            title = "Analysis to Perform",
+            sidebarLayout(
+                sidebarPanel(
+                    selectInput(
+                        inputId = "analysis_type",
+                        label = h4("Select Operation: "),
+                        choices = analysis_types,
+                        selected = "none"
+                    ),
+                    actionButton(
+                        inputId = "choose_analysis",
+                        label = h4("Choose Analysis")
+                    ),
+                    h3(textOutput("choose_analysis_status"))
+                ),
+                mainPanel(
+                    conditionalPanel(
+                        condition = "input.analysis_type == 'NONE'",
+                        h4("Nothing Chosen")
+                    ),
+                    conditionalPanel(
+                        condition = "input.analysis_type == 'PLOT'",
+                        h4("PLOT DATA"),
+                        actionButton(
+                            inputId = "start_plot",
+                            label = h4("Continue")
+                        ),
+                        h3(textOutput("start_plot_status"))
+                    ),
+                    conditionalPanel(
+                        condition = "input.analysis_type == 'PA-SPC'",
+                        h4("PRODUCTION ANALYSIS STATISTICAL PROCESS CONTROL - PA-SPC"),
+                        actionButton(
+                            inputId = "start_pa_spc",
+                            label = h4("Continue")
+                        ),
+                        h3(textOutput("start_pa_spc_status"))
+                    ),
+                    conditionalPanel(
+                        condition = "input.analysis_type == 'TRACE-SPC'",
+                        h4("TRACE STATISTICAL PROCESS CONTROL - TRACE-SPC"),
+                        actionButton(
+                            inputId = "start_trace_spc",
+                            label = h4("Continue")
+                        ),
+                        h3(textOutput("start_trace_spc_status"))
+                    ),
+                    conditionalPanel(
+                        condition = "input.analysis_type == 'POST-PRODUCTION'",
+                        h4("POST-PRODUCTION ANALYSIS"),
+                        actionButton(
+                            inputId = "start_post_prod",
+                            label = h4("Continue")
+                        ),
+                        h3(textOutput("start_post_prod_status"))
+                    )
+                )
             )
         ),
-        mainPanel(
+        tabPanel(
+            title = "Analysis Results",
+            sidebarLayout(
+                sidebarPanel(
+                ),
+                mainPanel(
+                )
+            )
         )
     )
 )
@@ -102,7 +182,8 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
     values <- reactiveValues(route = "",
-                             product = "")
+                             product = "",
+                             data = list())
 
     observe(
     {
@@ -131,7 +212,7 @@ server <- function(input, output, session) {
                 )
                 updateCheckboxGroupInput(
                     session = session,
-                    inputId = "machinesgroup",
+                    inputId = "machines",
                     inline  = TRUE,
                     choices = get_machines(isolate(input$db_name),
                                            input$route)
@@ -146,15 +227,17 @@ server <- function(input, output, session) {
                 )
                 updateCheckboxGroupInput(
                     session = session,
-                    inputId = "machinesgroup",
+                    inputId = "machines",
                     choices = list()
                 )
             }
         }
     } )
+
     observe(
     {
         input$product
+
         if (input$product != values$product)
         {
             values$product = input$product
@@ -217,6 +300,126 @@ server <- function(input, output, session) {
             }
         }
     } )
+
+    observeEvent(
+        input$collect_data,
+        isolate(
+        {
+            values$data[["status"]]     <- FALSE
+            values$data[["db_name"]]    <- ""
+            values$data[["route"]]      <- ""
+            values$data[["product"]]    <- ""
+            values$data[["machines"]]   <- NULL
+            values$data[["date_range"]] <- NULL
+            values$data[["start_time"]] <- NULL
+            values$data[["end_time"]]   <- NULL
+
+            if (input$db_name == "Unknown")
+            {
+                output$collect_data_status <-
+                    renderText( { "STATUS: Database is UNKNOWN" } )
+                return();
+            }
+            else if (input$route == "Unknown")
+            {
+                output$collect_data_status <-
+                    renderText( { "STATUS: Route is UNKNOWN" } )
+                return();
+            }
+            else if (input$product == "Unknown")
+            {
+                output$collect_data_status <-
+                    renderText( { "STATUS: Product is UNKNOWN" } )
+                return();
+            }
+            else if (is.null(input$machines))
+            {
+                output$collect_data_status <-
+                    renderText( { "STATUS: Machines are UNKNOWN" } )
+                return();
+            }
+
+            values$data[["status"]]     <- TRUE
+            values$data[["db_name"]]    <- input$db_name
+            values$data[["route"]]      <- input$route
+            values$data[["product"]]    <- input$product
+            values$data[["machines"]]   <- input$machines
+            values$data[["date_range"]] <- input$date_range
+            values$data[["start_time"]] <- input$start_time
+            values$data[["end_time"]]   <- input$end_time
+
+            output$collect_data_status <-
+                renderText( { "STATUS: Data collection is OK" } )
+        } ),
+        ignoreInit = TRUE
+    )
+
+    observeEvent(
+        input$choose_analysis,
+        isolate(
+        {
+            if (input$analysis_type != "NONE")
+            {
+                output$choose_analysis_status <-
+                    renderText( { "STATUS: Operation is OK" } )
+            }
+            else
+            {
+                output$choose_analysis_status <-
+                    renderText( { "STATUS: Operation is NOT OK" } )
+            }
+        } ),
+        ignoreInit = TRUE
+    )
+
+    observeEvent(
+        input$analysis_type,
+        isolate(
+        {
+            output$choose_analysis_status <- renderText( { "" } )
+        } ),
+        ignoreInit = TRUE
+    )
+
+    observeEvent(
+        input$start_plot,
+        isolate(
+        {
+            output$start_plot_status <-
+                renderText( { "STATUS: Operation is OK" } )
+        } ),
+        ignoreInit = TRUE
+    )
+
+    observeEvent(
+        input$start_pa_spc,
+        isolate(
+        {
+            output$start_pa_spc_status <-
+                renderText( { "STATUS: Operation is OK" } )
+        } ),
+        ignoreInit = TRUE
+    )
+
+    observeEvent(
+        input$start_trace_spc,
+        isolate(
+        {
+            output$start_trace_spc_status <-
+                renderText( { "STATUS: Operation is OK" } )
+        } ),
+        ignoreInit = TRUE
+    )
+
+    observeEvent(
+        input$start_post_prod,
+        isolate(
+        {
+            output$start_post_prod_status <-
+                renderText( { "STATUS: Operation is OK" } )
+        } ),
+        ignoreInit = TRUE
+    )
 }
 
 shinyApp(ui=ui, server=server)
