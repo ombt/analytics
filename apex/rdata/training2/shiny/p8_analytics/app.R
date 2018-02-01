@@ -45,7 +45,8 @@ db_routes[["Unknown"]] = list(route=c("Unknown"))
 # types of analysis
 #
 analysis_types <- c("NONE", 
-                    "PLOT", 
+                    "PA-PLOT", 
+                    "TRACE-PLOT", 
                     "PA-SPC", 
                     "TRACE-SPC", 
                     "POST-PRODUCTION")
@@ -129,13 +130,48 @@ ui <- fluidPage(
                         h4("Nothing Chosen")
                     ),
                     conditionalPanel(
-                        condition = "input.analysis_type == 'PLOT'",
-                        h4("PLOT DATA"),
+                        condition = "input.analysis_type == 'PA-PLOT'",
+                        h4("PLOT PA DATA"),
+                        selectInput(
+                            inputId = "pa_plot_data_type",
+                            label = h4("Select Data: "),
+                            choices = c("none",
+                                        "feeder",
+                                        "nozzle",
+                                        "time",
+                                        "count"),
+                            selected = "none"
+                        ),
+                        conditionalPanel(
+                            condition = "input.pa_plot_data_type == 'feeder'",
+                            h4("FEEDER PA DATA")
+                        ),
+                        conditionalPanel(
+                            condition = "input.pa_plot_data_type == 'nozzle'",
+                            h4("NOZZLE PA DATA")
+                        ),
+                        conditionalPanel(
+                            condition = "input.pa_plot_data_type == 'time'",
+                            h4("TIME PA DATA")
+                        ),
+                        conditionalPanel(
+                            condition = "input.pa_plot_data_type == 'count'",
+                            h4("COUNT PA DATA")
+                        ),
                         actionButton(
-                            inputId = "start_plot",
+                            inputId = "start_pa_plot",
                             label = h4("Continue")
                         ),
-                        h3(textOutput("start_plot_status"))
+                        h3(textOutput("start_pa_plot_status"))
+                    ),
+                    conditionalPanel(
+                        condition = "input.analysis_type == 'TRACE-PLOT'",
+                        h4("PLOT TRACE DATA"),
+                        actionButton(
+                            inputId = "start_trace_plot",
+                            label = h4("Continue")
+                        ),
+                        h3(textOutput("start_plot_trace_status"))
                     ),
                     conditionalPanel(
                         condition = "input.analysis_type == 'PA-SPC'",
@@ -382,10 +418,20 @@ server <- function(input, output, session) {
     )
 
     observeEvent(
-        input$start_plot,
+        input$start_pa_plot,
         isolate(
         {
-            output$start_plot_status <-
+            output$start_pa_plot_status <-
+                renderText( { "STATUS: Operation is OK" } )
+        } ),
+        ignoreInit = TRUE
+    )
+
+    observeEvent(
+        input$start_trace_plot,
+        isolate(
+        {
+            output$start_trace_plot_status <-
                 renderText( { "STATUS: Operation is OK" } )
         } ),
         ignoreInit = TRUE
