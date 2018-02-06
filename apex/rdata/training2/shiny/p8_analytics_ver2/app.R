@@ -56,9 +56,8 @@ analysis_types <- c("NONE",
 #
 ui <- fluidPage(
     navbarPage(
-        id = "main_page",
         title = h2("PanaCIM EA"),
-        # header = img(src = "PanaCIM_Logo.gif", align = "right"),
+        id = "main_page",
         tabPanel(
             title = "Data",
             selectInput(

@@ -43,24 +43,14 @@ get_db_routes <- function(db_name="cim")
         }
 
         #
-        # check if u01 schema and table pivot_index exists.
+        # get list of schemas. check if u01 schema exists.
         #
         db_schemas[[db_name]] <- 
-            pg_exec_query(pg_db, "
-select 
-    table_schema, 
-    table_name, 
-    column_name, 
-    data_type 
-from 
-    information_schema.columns 
-where 
-    table_name = 'pivot_index' 
-and 
-    table_schema = 'u01' ")
+            pg_exec_query(pg_db, 
+                         "select schema_name from information_schema.schemata where schema_name = 'u01' ")
         if (nrow(db_schemas[[db_name]]) <= 0)
         {
-            print(sprintf("No u01.pivot_index table in DB: %s", db_name))
+            print(sprintf("No u01 schema in DB: %s", db_name))
             pg_close_db(pg_db)
             next
         }
@@ -69,11 +59,8 @@ and
         # get list of available route from u01.filename_to_ids table.
         #
         tmp_db_routes <- 
-            pg_exec_query(pg_db, "
-select distinct 
-    _filename_route as \"route\" 
-from 
-    u01.filename_to_fid ")
+            pg_exec_query(pg_db, 
+                         "select distinct _filename_route as \"route\" from u01.filename_to_fid ")
         if (nrow(tmp_db_routes) <= 0)
         {
             print(sprintf("No routes in DB: %s", db_name))
@@ -106,19 +93,7 @@ get_machines <- function(db_name, route)
     {
         pg_db <- pg_open_db(db_name=db_name)
         machines <- 
-            pg_exec_query(pg_db, sprintf("
-select distinct 
-    ufd._machine_order as machine
-from 
-    u01.u0x_filename_data ufd 
-inner join 
-    u01.filename_to_fid ftf 
-on 
-    ftf._filename_route = '%s' 
-and 
-    ufd._filename_id = ftf._filename_id 
-order by 
-    ufd._machine_order asc", route))
+            pg_exec_query(pg_db, sprintf("select distinct ufd._machine_order as machine from u01.u0x_filename_data ufd inner join u01.filename_to_fid ftf on ftf._filename_route = '%s' and ufd._filename_id = ftf._filename_id order by ufd._machine_order asc", route))
         pg_close_db(pg_db)
         db_machines_cache[[cache_key]] <<- machines$machine
     }
@@ -141,36 +116,7 @@ get_products <- function(db_name, route)
     {
         pg_db <- pg_open_db(db_name=db_name)
         products <- 
-            pg_exec_query(pg_db, sprintf("
-select distinct 
-    ftf._filename_route, 
-    px._mjsid, 
-    pi._lotname, 
-    pi._lotnumber, 
-    pi._lane 
-from 
-    u01.filename_to_fid ftf 
-inner join 
-    u01.u0x_filename_data ufd 
-on 
-    ufd._filename_id = ftf._filename_id 
-inner join 
-    u01.pivot_index px 
-on 
-    px._filename_id = ftf._filename_id 
-inner join 
-    u01.pivot_information pi 
-on 
-    pi._filename_id = ftf._filename_id 
-where 
-    ftf._filename_route = '%s' 
-and 
-    ufd._output_no in ( 3, 4 ) 
-order by 
-    ftf._filename_route, 
-    px._mjsid, pi._lotname, 
-    pi._lotnumber, 
-    pi._lane ", route))
+            pg_exec_query(pg_db, sprintf("select distinct ftf._filename_route, px._mjsid, pi._lotname, pi._lotnumber, pi._lane from u01.filename_to_fid ftf inner join u01.u0x_filename_data ufd on ufd._filename_id = ftf._filename_id inner join u01.pivot_index px on px._filename_id = ftf._filename_id inner join u01.pivot_information pi on pi._filename_id = ftf._filename_id where ftf._filename_route = '%s' and ufd._output_no in ( 3, 4 ) order by ftf._filename_route, px._mjsid, pi._lotname, pi._lotnumber, pi._lane ", route))
         pg_close_db(pg_db)
         db_products_cache[[cache_key]] = 
             do.call(paste,products[,-1])
@@ -204,47 +150,7 @@ get_product_times <- function(db_name,
     if ( ! (cache_key %in% names(db_product_times_cache)) )
     {
         pg_db <- pg_open_db(db_name=db_name)
-        sql_query <- sprintf("
-select distinct 
-    ftf._filename_route, 
-    px._mjsid, 
-    pi._lotname, 
-    pi._lotnumber, 
-    pi._lane, 
-    min(ufd._date) as min_date, 
-    max(ufd._date) as max_date 
-from 
-    u01.filename_to_fid ftf 
-inner join 
-    u01.u0x_filename_data ufd 
-on 
-    ufd._filename_id = ftf._filename_id 
-and 
-    ufd._output_no in ( 3, 4 ) 
-inner join 
-    u01.pivot_index px 
-on 
-    px._filename_id = ftf._filename_id 
-and 
-    px._mjsid = '%s' 
-inner join 
-    u01.pivot_information pi 
-on 
-    pi._filename_id = ftf._filename_id 
-and 
-    pi._lotname = '%s' 
-and 
-    pi._lotnumber = %s 
-and 
-    pi._lane = %s 
-where 
-    ftf._filename_route = '%s' 
-group by 
-    ftf._filename_route, 
-    px._mjsid, 
-    pi._lotname, 
-    pi._lotnumber, 
-    pi._lane", mjsid, lotname, lotnumber, lane, route)
+        sql_query <- sprintf("select distinct ftf._filename_route, px._mjsid, pi._lotname, pi._lotnumber, pi._lane, min(ufd._date) as min_date, max(ufd._date) as max_date from u01.filename_to_fid ftf inner join u01.u0x_filename_data ufd on ufd._filename_id = ftf._filename_id and ufd._output_no in ( 3, 4 ) inner join u01.pivot_index px on px._filename_id = ftf._filename_id and px._mjsid = '%s' inner join u01.pivot_information pi on pi._filename_id = ftf._filename_id and pi._lotname = '%s' and pi._lotnumber = %s and pi._lane = %s where ftf._filename_route = '%s' group by ftf._filename_route, px._mjsid, pi._lotname, pi._lotnumber, pi._lane", mjsid, lotname, lotnumber, lane, route)
         product_times <- pg_exec_query(pg_db, sql_query)
         pg_close_db(pg_db)
         db_product_times_cache[[cache_key]] = product_times[,c(6,7)]

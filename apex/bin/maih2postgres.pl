@@ -116,6 +116,15 @@ my @fid_table_index3_cols = ( "_filename_id", "_filename_timestamp" );
 my $fid_table_index4_name = "idx_filename_to_fid_4";
 my @fid_table_index4_cols = ( "_filename_timestamp", "_filename_id" );
 #
+my $fid_table_index5_name = "idx_filename_to_fid_5";
+my @fid_table_index5_cols = ( "_filename_id", "_filename_route" );
+#
+my $fid_table_index6_name = "idx_filename_to_fid_6";
+my @fid_table_index6_cols = ( "_filename_route", "_filename_id" );
+#
+my $fid_table_index7_name = "idx_filename_to_fid_7";
+my @fid_table_index7_cols = ( "_filename_route" );
+#
 my $u0x_table_name = "u0x_filename_data";
 my @u0x_table_cols = ( "_filename_id", 
                        "_date",
@@ -129,6 +138,12 @@ my @u0x_table_cols = ( "_filename_id",
                        "_pcb_id_serial_no" );
 my $u0x_table_index_name = "idx_u0x_filename_data";
 my @u0x_table_index_cols = ( "_filename_id" );
+my $u0x_table_index2_name = "idx_u0x_filename_data_2";
+my @u0x_table_index2_cols = ( "_output_no" );
+my $u0x_table_index3_name = "idx_u0x_filename_data_3";
+my @u0x_table_index3_cols = ( "_filename_id", "_output_no" );
+my $u0x_table_index4_name = "idx_u0x_filename_data_4";
+my @u0x_table_index4_cols = ( "_output_no", "_filename_id" );
 #
 my $crb_table_name = "crb_filename_data";
 my @crb_table_cols = ( "_filename_id", 
@@ -1038,7 +1053,15 @@ sub make_tables
             (create_table_index($schema, 
                                 $fid_table_name, 
                                 $fid_table_index4_name,
-                               \@fid_table_index4_cols) != TRUE))
+                               \@fid_table_index4_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $fid_table_name, 
+                                $fid_table_index5_name,
+                               \@fid_table_index5_cols) != TRUE) ||
+            (create_table_index($schema, 
+                                $fid_table_name, 
+                                $fid_table_index6_name,
+                               \@fid_table_index6_cols) != TRUE))
         {
             $plog->log_err("Unable to create table or index for %s.%s\n", 
                            $schema, $fid_table_name);

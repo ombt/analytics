@@ -2,7 +2,7 @@
 echo "the script maih2postgres.sql now creates these indexes"
 echo "automatically. there is no reason to run this script anymore."
 #
-db_name=training_data
+# db_name=training_data
 #
 # for schema in aoi crb u01 u03
 # do
@@ -40,5 +40,35 @@ db_name=training_data
 # 	_filename_id:_lane_no:_stage_no \
 # 	idx_delta_pivot_time_fid_lnno_stgno \
 # 	localhost
+#
+# db_name=training_data2
+# db_name=compal
+#
+# for schema in aoi crb u01 u03
+# do
+# 	/home/MRumore/f/testbin/postgres/pg.create.table.index.pl ${db_name} ${schema}.filename_to_fid _filename_id:_filename_route idx_filename_to_fid_5 localhost
+# 	#
+# 	/home/MRumore/f/testbin/postgres/pg.create.table.index.pl ${db_name} ${schema}.filename_to_fid _filename_route:_filename_id idx_filename_to_fid_6 localhost
+# done
+#
+# db_name=training_data2
+# db_name=compal
+#
+#for schema in aoi crb u01 u03
+#do
+#	/home/MRumore/f/testbin/postgres/pg.create.table.index.pl ${db_name} ${schema}.u0x_filename_data _output_no idx_u0x_filename_data_2 localhost
+#	#
+#	/home/MRumore/f/testbin/postgres/pg.create.table.index.pl ${db_name} ${schema}.u0x_filename_data _filename_id:_output_no idx_u0x_filename_data_3 localhost
+#	#
+#	/home/MRumore/f/testbin/postgres/pg.create.table.index.pl ${db_name} ${schema}.u0x_filename_data _output_no:_filename_id idx_u0x_filename_data_4 localhost
+#done
+#
+for db_name in training_data2 compal
+do
+	for schema in aoi crb u01 u03
+	do
+		/home/MRumore/f/testbin/postgres/pg.create.table.index.pl ${db_name} ${schema}.filename_to_fid _filename_route idx_filename_to_fid_7 localhost
+	done
+done
 #
 exit 0
