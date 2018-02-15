@@ -1,5 +1,7 @@
 #!/bin/bash -x
 #
+# script to export data to mongo
+#
 cat all.dirs |
 grep /201 |
 grep /proc |
