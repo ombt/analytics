@@ -1,0 +1,2 @@
+export http_proxy="http://rm-proxy.panasonic.com:8102"
+export https_proxy="http://rm-proxy.panasonic.com:8102"
