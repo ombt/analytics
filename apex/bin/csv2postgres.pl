@@ -53,6 +53,7 @@ die "Unable to create utils: $!" unless (defined($putils));
 my $logfile = '';
 my $delimiter = ",";
 my $debug_flag = FALSE;
+my $use_utf8_encoding = FALSE;
 #
 my $host_name = "localhost";
 my $database_name = undef; # the site name
@@ -89,7 +90,7 @@ usage: $arg0 [-?] [-h]  \\
         [-d row delimiter] \\
         [-u user name] [-p passwd] \\
         [-P port ] \\
-        -D db_name -S schema_name [-X] \\
+        -D db_name -S schema_name [-X] [-8] \\
         [CSV-file ...] or reads STDIN
 
 where:
@@ -107,6 +108,7 @@ where:
     -P port - PostgreSQL port (default = 5432)
     -D db_name - name of PostgreSQL database (site name)
     -S schema_name - name of PostgreSQL schema (file type)
+    -8 - use UTF8 encoding for copying CSV file
 
 EOF
 }
@@ -456,6 +458,7 @@ sub add_columns_to_table
     return SUCCESS;
 }
 #
+
 sub create_table
 {
     my ($schema, $table, $pcols) = @_;
@@ -498,6 +501,7 @@ sub create_table_index
     #
     my $sql = "create index $index_name on $schema.$table ( ";
     #
+
     foreach my $col (@{$pcols})
     {
         # $sql .= "\"$col\", ";
@@ -543,6 +547,7 @@ sub make_table_and_index
                            $schema_name, $table_name);
             return FAIL;
         }
+
     }
     #
     return SUCCESS;
@@ -597,6 +602,7 @@ sub open_db
     #
     return SUCCESS;
 }
+
 #
 sub close_db
 {
@@ -615,6 +621,7 @@ sub export_to_postgres
     #
     $plog->log_msg("Exporting data file to Postgres: %s\n", $prod_file);
     #
+
     my $file_name = basename($prod_file);
     if ($file_name !~ m/\.csv$/i)
     {
@@ -634,7 +641,7 @@ sub export_to_postgres
     $header =~ tr/A-Z/a-z/;
     #
     my @cols = split /${delimiter}/, $header;
-    s/^(.*)$/_$1/ for @{cols};
+    s/^ *"*([^"]*) *"*$/_$1/ for @{cols};
     #
     $plog->log_msg("Table: %s, Header: %s\n", $table, $header);
     #
@@ -650,7 +657,15 @@ sub export_to_postgres
     #
     my $full_prod_file = abs_path($prod_file);
     #
-    my $sql = "copy ${schema}.${table} ( " . join(",", @cols) . " ) from '${full_prod_file}' with ( format csv, delimiter '${delimiter}', header ) ";
+    my $sql = '';
+    if ($use_utf8_encoding == TRUE)
+    {
+        $sql = "copy ${schema}.${table} ( " . join(",", @cols) . " ) from '${full_prod_file}' with ( format csv, delimiter '${delimiter}', header, encoding 'UTF8'  ) ";
+    }
+    else
+    {
+        $sql = "copy ${schema}.${table} ( " . join(",", @cols) . " ) from '${full_prod_file}' with ( format csv, delimiter '${delimiter}', header ) ";
+    }
     #
     $plog->log_msg("COPY CMD: %s\n", $sql);
     #
@@ -715,6 +730,7 @@ $alwd_opts .= 'p:'; # -p passwd - PostgresQL user password
 $alwd_opts .= 'P:'; # -P port - PostgreSQL port (default = 5432)
 $alwd_opts .= 'D:'; # -D db_name - name of PostgreSQL database (site name)
 $alwd_opts .= 'S:'; # -S schema_name - name of PostgreSQL schema (file type)
+$alwd_opts .= '8';  # -8 - use UTF8 encoding for copying CSV file
 #
 my %opts;
 if (getopts($alwd_opts, \%opts) != 1)
@@ -785,6 +801,10 @@ foreach my $opt (%opts)
     elsif ($opt eq 'S')
     {
         $schema_name = $opts{$opt};
+    }
+    elsif ($opt eq '8')
+    {
+        $use_utf8_encoding = TRUE;
     }
 }
 #

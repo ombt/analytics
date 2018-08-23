@@ -1,0 +1,11 @@
+default startup files for Rstudio:
+
+-- /cygdrive/c/./cygwin64/lib/R/library/base/R/Rprofile
+-- /cygdrive/c/./Program Files/R/R-3.4.3/etc/Rprofile.site
+-- /cygdrive/c/./Program Files/R/R-3.4.3/library/base/R/Rprofile
+
+this is the file that RStudio reads when it comes up.
+you can reset the startup directory in this file.
+
+/cygdrive/c/./Program Files/R/R-3.4.3/library/base/R/Rprofile
+
