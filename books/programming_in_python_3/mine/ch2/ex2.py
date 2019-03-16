@@ -165,7 +165,7 @@ print("sin(1-1j) = ", cmath.sin(11-1j))
 # decimal module:
 #
 import decimal
-3
+#
 a = decimal.Decimal(9876)
 print("decimal a ... ", a)
 b = decimal.Decimal("54321.1234567890987654321")
@@ -195,7 +195,52 @@ print("a+ b ... ", a+b)
 # \xhh Character with the given 8-bit hexadecimal value
 #
 #
+# raw strings instead of having to escape characters in strings.
 #
-
+#
+# The solution is to use raw strings. These are quoted or triple quoted strings
+# whose first quote is preceded by the letter r. Inside such strings all characters
+# are taken to be literals, so no escaping is necessary. Here is the phone regular
+# expression using a raw string:
+# phone2 = re.compile(r"^((?:[(]\d+[)])?\s*\d+(?:-\d+)?)$")
+# If we want to write a long string literal spread over two or more lines but without
+# using a triple quoted string there are a couple of approaches we can take:
+# t = "This is not the best way to join two long strings " + \
+# "together since it relies on ugly newline escaping"
+# s = ("This is the nice way to join two long strings "
+# "together; it relies on string literal concatenation.")
+# Notice that in the second case we must use parentheses to create a single
+# expression—without them, s would be assigned only to the first string, and
+# the second string would cause an IndentationError exception to be raised. The
+# Python documentation’s “Idioms and Anti-Idioms” HOWTO document recommends
+# always using parentheses to spread statements of any kind over multiple
+# lines rather than escaping newlines; a recommendation we endeavor to
+# follow
+# 
+# strings comparison:
+#
+# <, <=, ==, !=, >, >=
+#
+# care must be taken when sorting different languages because of unicode, or
+# when mixing different languages.
+#
+s = "abcdefghijklmenop"
+#
+print("s = ", s)
+print("s[-3:-1] = ", s[-3:-1])
+print("s[-8:-2:2] = ", s[-8:-2:2])
+#
+t = "xyz"
+print("t = ", t)
+print("s[:10]+t+s[10:] = ", s[:10]+t+s[10:])
+#
+# Here we have used the default start and end indexes, so s[::-2] starts at the
+# last character and extracts every second character counting toward the start
+# of the string. Similarly, s[::3] starts at the first character and extracts every
+# third character counting toward the end.
+#
+print("s[::2] = ", s[::2])
+print("s[::-2] = ", s[::-2])
+#
 exit(0);
 
