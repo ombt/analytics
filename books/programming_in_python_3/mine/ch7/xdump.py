@@ -12,6 +12,7 @@ import time
 ###################################################################3
 #
 # constants and globals
+    main()
 #
 CMD_LINE_SHORT_OPTIONS = "hb:de:"
 CMD_LINE_LONG_OPTIONS = [ "help", 
@@ -27,7 +28,7 @@ USAGE = """
         file [file2 ...]
  
     where:
-        blocksize is in [8-80] bits (default=16)
+        blocksize is in [8-80] bytes (default=16)
         encoding is in [ ascii, utf-8, .... utf-32] (default=utf-8)
 
 """
@@ -40,7 +41,7 @@ def usage():
 def process_args():
     #
     opts = dict(blocksize=16, 
-                decimal=True, 
+                decimal=False, 
                 encoding="utf-8" )
     #
     try:
@@ -52,7 +53,7 @@ def process_args():
                 usage()
                 sys.exit(2)
             elif opt in ("-b", "--blocksize"):
-                opts["blocksize"] = optval
+                opts["blocksize"] = int(optval)
             elif opt in ("-d", "--decimal"):
                 opts["decimal"] = True
             elif opt in ("-e", "--encoding"):
@@ -94,7 +95,15 @@ def process_path(opts, fpath):
     blocksize = opts["blocksize"]
     #
     for buffer in bytes_from_file(fpath, blocksize):
-        print("{0} {1}".format(offset, buffer))
+        format_statement = ""
+        #
+        if opts["decimal"] == True:
+            format_statement = "{0:08} "
+        else:
+            format_statement = "{0:08X} "
+        # format_statement += "{1:" + str(len(buffer)) + "X}"
+        format_statement += "{1}"
+        print(format_statement.format(offset, buffer))
         offset += len(buffer)
 #
 def main():
