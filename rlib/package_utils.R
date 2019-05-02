@@ -1,5 +1,5 @@
 #
-# remove item from environment
+#  remove item from environment
 #
 ifrm <- function(x, env=globalenv())
 {
